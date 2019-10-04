@@ -20,4 +20,4 @@ jobs:
         uses: actions/checkout@master
         
       - name: go get 
-        run: go get -u github.com/$GITHUB_REPOSITORY
+        run: go get -u github.com/(echo $GITHUB_REPOSITORY)
