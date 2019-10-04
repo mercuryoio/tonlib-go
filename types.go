@@ -39,7 +39,7 @@ type InputKey struct {
 }
 
 type InternalTransactionId struct {
-	Lt   int    `json:"lt"`
+	Lt   string `json:"lt"`
 	Hash string `json:"hash"`
 }
 
@@ -125,6 +125,7 @@ type TONAccountState struct {
 	Message           string           `json:"message"`
 	Balance           string           `json:"balance"`
 	LastTransactionID TONTransactionID `json:"last_transaction_id"`
+	FrozenHash        string           `json:"frozen_hash"`
 	SyncUTime         uint
 }
 

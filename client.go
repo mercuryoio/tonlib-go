@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	_ "github.com/mercuryoio/tonlib-go/lib"
 	"math/rand"
 	"strconv"
 	"time"
@@ -82,9 +83,17 @@ func (client *Client) WalletGetAddress(pubKey string) (*TONAccountAddress, error
 }
 
 // get wallet address method
-func (client *Client) WalletSendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress string, amount string) error {
+func (client *Client) WalletState(address string) (*TONAccountState, error) {
 	if client.wallet == nil {
-		return fmt.Errorf("You must init wallet before. ")
+		return nil, fmt.Errorf("You must init wallet before. ")
+	}
+	return client.wallet.getState(address)
+}
+
+// get wallet address method
+func (client *Client) WalletSendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress string, amount string) (*TONResult, error) {
+	if client.wallet == nil {
+		return nil, fmt.Errorf("You must init wallet before. ")
 	}
 	return client.wallet.sendGRAMM2Address(key, password, fromAddress, toAddress, amount)
 }
@@ -170,24 +179,39 @@ func (client *Client) GetAccountState(address string) (state *TONAccountState, e
 	return state, nil
 }
 
-func (client *Client) updateSendLiteServerQuery(id, data string) (res *TONResult, err error) {
-	queryID, err := strconv.Atoi(id)
-	if err != nil {
-		return
-	}
+// send gramm to address
+func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress string, amount string) (*TONResult, error) {
 	st := struct {
-		Type  string `json:"@type"`
-		Id    int32  `json:"id"`
-		Bytes []byte `json:"bytes"`
+		Type        string            `json:"@type"`
+		Seqno       int64             `json:"seqno"`
+		Amount      string            `json:"amount"`
+		PrivateKey  InputKey          `json:"private_key"`
+		Destination TONAccountAddress `json:"destination"`
+		ValidUntil  uint              `json:"valid_until"`
+		Source      TONAccountAddress `json:"source"`
 	}{
-		Type:  "onLiteServerQueryResult",
-		Bytes: []byte(data),
-		Id:    int32(queryID),
+		Type:       "generic.sendGrams",
+		PrivateKey: key.getInputKey(password),
+		Amount:     amount,
+		Destination: TONAccountAddress{
+			AccountAddress: toAddress,
+		},
+		Seqno: 2,
+		Source: TONAccountAddress{
+			AccountAddress: fromAddress,
+		},
 	}
-	return client.executeAsynchronously(st)
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return resp, err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return resp, fmt.Errorf("Error ton send gramms. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+	return resp, nil
 }
 
-// todo
+// send message to address
 func (client *Client) SendMessage(initialAddress, destinationAddress, data string) (res *TONResult, err error) {
 	st := struct {
 		Type                string            `json:"@type"`
@@ -205,43 +229,8 @@ func (client *Client) SendMessage(initialAddress, destinationAddress, data strin
 	return client.executeAsynchronously(st)
 }
 
-//
-func (client *Client) updateSendLiteServerError(id, data string) (res *TONResult, err error) {
-	queryID, err := strconv.Atoi(id)
-	if err != nil {
-		return
-	}
-	st := struct {
-		Type  string `json:"@type"`
-		Id    int32  `json:"id"`
-		Bytes []byte `json:"bytes"`
-	}{
-		Type:  "onLiteServerQueryError",
-		Bytes: []byte(data),
-		Id:    int32(queryID),
-	}
-	return client.executeAsynchronously(st)
-}
-
-func (client *Client) getLogStream(id, data string) (res *TONResult, err error) {
-	queryID, err := strconv.Atoi(id)
-	if err != nil {
-		return
-	}
-	st := struct {
-		Type  string `json:"@type"`
-		Id    int32  `json:"id"`
-		Bytes []byte `json:"bytes"`
-	}{
-		Type:  "getLogStream",
-		Bytes: []byte(data),
-		Id:    int32(queryID),
-	}
-	return client.executeAsynchronously(st)
-}
-
 //fetch address`s transactions
-func (client *Client) GetAccountTransactions(address string, lt int, hash string) (txs *TONTransactionsResponse, err error) {
+func (client *Client) GetAccountTransactions(address string, lt string, hash string) (txs *TONTransactionsResponse, err error) {
 	st := struct {
 		Type              string                `json:"@type"`
 		AccountAddress    TONAccountAddress     `json:"account_address"`
@@ -292,6 +281,26 @@ func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err
 	key = new(TONPrivateKey)
 	err = json.Unmarshal(resp.Raw, key)
 	return key, err
+}
+
+// create privateKey
+func (client *Client) DeletePrivateKey(key TONPrivateKey, password []byte) (err error) {
+	st := struct {
+		Type string   `json:"@type"`
+		Key  InputKey `json:"key"`
+	}{
+		Type: "deleteKey",
+		Key:  key.getInputKey(password),
+	}
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+
+	return nil
 }
 
 //change localPassword
@@ -370,4 +379,56 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	resB := []byte(res)
 	err := json.Unmarshal(resB, &updateData)
 	return &TONResult{Data: updateData, Raw: resB}, err
+}
+
+//
+func (client *Client) updateSendLiteServerError(id, data string) (res *TONResult, err error) {
+	queryID, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
+	st := struct {
+		Type  string `json:"@type"`
+		Id    int32  `json:"id"`
+		Bytes []byte `json:"bytes"`
+	}{
+		Type:  "onLiteServerQueryError",
+		Bytes: []byte(data),
+		Id:    int32(queryID),
+	}
+	return client.executeAsynchronously(st)
+}
+
+func (client *Client) getLogStream(id, data string) (res *TONResult, err error) {
+	queryID, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
+	st := struct {
+		Type  string `json:"@type"`
+		Id    int32  `json:"id"`
+		Bytes []byte `json:"bytes"`
+	}{
+		Type:  "getLogStream",
+		Bytes: []byte(data),
+		Id:    int32(queryID),
+	}
+	return client.executeAsynchronously(st)
+}
+
+func (client *Client) updateSendLiteServerQuery(id, data string) (res *TONResult, err error) {
+	queryID, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
+	st := struct {
+		Type  string `json:"@type"`
+		Id    int32  `json:"id"`
+		Bytes []byte `json:"bytes"`
+	}{
+		Type:  "onLiteServerQueryResult",
+		Bytes: []byte(data),
+		Id:    int32(queryID),
+	}
+	return client.executeAsynchronously(st)
 }

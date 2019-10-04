@@ -16,135 +16,169 @@ const (
 func TestClient_GetAccountState(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
-		t.Errorf("Config file not found: %v. ", err)
+		t.Fatal("Config file not found", err)
 	}
 	cln, err := NewClient(cnf, Config{})
 	if err != nil {
-		t.Errorf("Init client error: %v. ", err)
+		t.Fatal("Init client error", err)
 	}
 	defer cln.Destroy()
 	_, err = cln.GetAccountState(TEST_ADDRESS)
 	if err != nil {
-		t.Errorf("Ton get account state error: %v. ", err)
+		t.Fatal("Ton get account state error", err)
 	}
 }
 
 func TestClient_GetAccountTransactions(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
-		t.Errorf("Config file not found: %v. ", err)
+		t.Fatal("Config file not found", err)
 	}
 	cln, err := NewClient(cnf, Config{})
 	if err != nil {
-		t.Errorf("Init client error: %v. ", err)
+		t.Fatal("Init client error", err)
 	}
 	defer cln.Destroy()
-	_, err = cln.GetAccountTransactions(TEST_ADDRESS, TEST_TX_LT, TEST_TX_HASH)
+	state, err := cln.GetAccountState(TEST_ADDRESS)
 	if err != nil {
-		t.Errorf("Ton get account txs error: %v. ", err)
+		t.Fatal("Get state error error", err)
+	}
+	_, err = cln.GetAccountTransactions(TEST_ADDRESS, state.LastTransactionID.Lt, state.LastTransactionID.Hash)
+	if err != nil {
+		t.Fatal("Ton get account txs error", err)
 	}
 }
 
 func TestClient_CreatePrivateKey(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
-		t.Errorf("Config file not found: %v. ", err)
+		t.Fatal("Config file not found", err)
 	}
 	cln, err := NewClient(cnf, Config{})
 	if err != nil {
-		t.Errorf("Init client error: %v. ", err)
+		t.Fatal("Init client error", err)
 	}
 	defer cln.Destroy()
 	_, err = cln.CreatePrivateKey([]byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton create key error: %v. ", err)
+		t.Fatal("Ton create key error", err)
 	}
 }
 
-//func TestClient_ChangeLocalPassword(t *testing.T) {
-//	cln, err := NewClient(cnf, Config{})
-//	if err != nil {
-//		t.Errorf("Init client error: %v. ", err)
-//	}
-//	defer cln.Destroy()
-//	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
-//	if err != nil {
-//		t.Errorf("Ton create key for change password error: %v. ", err)
-//	}
-//	_, err = cln.ChangeLocalPassword(pKey, []byte(TEST_PASSWORD), []byte(TEST_CHANGE_PASSWORD))
-//	if err != nil {
-//		t.Errorf("Ton change key password error: %v. ", err)
-//	}
-//}
-
-func TestClient_InitWallet(t *testing.T) {
+//
+func TestClient_ChangeLocalPassword(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
-	if err != nil {
-		t.Errorf("Config file not found: %v. ", err)
-	}
 	cln, err := NewClient(cnf, Config{})
 	if err != nil {
-		t.Errorf("Init client error: %v. ", err)
+		t.Fatal("Init client error", err)
 	}
 	defer cln.Destroy()
 	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton create key for init wallet error: %v. ", err)
+		t.Fatal("Ton create key for change password error", err)
+	}
+	_, err = cln.ChangeLocalPassword(pKey, []byte(TEST_PASSWORD), []byte(TEST_CHANGE_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton change key password error", err)
+	}
+}
+
+func TestClient_InitWallet(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key for init wallet error", err)
 	}
 	err = cln.InitWallet(pKey, []byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton init wallet error: %v. ", err)
+		t.Fatal("Ton init wallet error", err)
 	}
 }
 
 func TestClient_WalletGetAddress(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
-		t.Errorf("Config file not found: %v. ", err)
+		t.Fatal("Config file not found", err)
 	}
 	cln, err := NewClient(cnf, Config{})
 	if err != nil {
-		t.Errorf("Init client error: %v. ", err)
+		t.Fatal("Init client error", err)
 	}
 	defer cln.Destroy()
 	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton create key for get wallet address error: %v. ", err)
+		t.Fatal("Ton create key for get wallet address error", err)
 	}
 	err = cln.InitWallet(pKey, []byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton init wallet for get wallet address error: %v. ", err)
+		t.Fatal("Ton init wallet for get wallet address error", err)
 	}
 	_, err = cln.WalletGetAddress(pKey.PublicKey)
 	if err != nil {
-		t.Errorf("Ton get wallet address error: %v. ", err)
+		t.Fatal("Ton get wallet address error", err)
 	}
 }
 
 func TestClient_WalletSendGRAMM2Address(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
-		t.Errorf("Config file not found: %v. ", err)
+		t.Fatal("Config file not found", err)
 	}
 	cln, err := NewClient(cnf, Config{})
 	if err != nil {
-		t.Errorf("Init client error: %v. ", err)
+		t.Fatal("Init client error", err)
 	}
 	defer cln.Destroy()
 	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton create key for init wallet error: %v. ", err)
+		t.Fatal("Ton create key for wallet send gramms error", err)
 	}
 	err = cln.InitWallet(pKey, []byte(TEST_PASSWORD))
 	if err != nil {
-		t.Errorf("Ton init wallet for send gramms error: %v. ", err)
+		t.Fatal("Ton init wallet for wallet send gramms error", err)
 	}
 	address, err := cln.WalletGetAddress(pKey.PublicKey)
 	if err != nil {
-		t.Errorf("Ton get address for send grams error: %v. ", err)
+		t.Fatal("Ton get address for wallet send grams error", err)
 	}
-	err = cln.WalletSendGRAMM2Address(pKey, []byte(TEST_PASSWORD), address.AccountAddress, TEST_ADDRESS, TEST_AMOUNT)
+	_, err = cln.WalletSendGRAMM2Address(pKey, []byte(TEST_PASSWORD), address.AccountAddress, TEST_ADDRESS, TEST_AMOUNT)
 	if err != nil {
-		t.Errorf("Ton send gramms error: %v. ", err)
+		t.Fatal("Ton wallet send gramms error", err)
+	}
+}
+
+func TestClient_SendGRAMM2Address(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key for send grams error", err)
+	}
+	err = cln.InitWallet(pKey, []byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton init wallet for send gramms error", err)
+	}
+	address, err := cln.WalletGetAddress(pKey.PublicKey)
+	if err != nil {
+		t.Fatal("Ton get address for send grams error", err)
+	}
+	_, err = cln.SendGRAMM2Address(pKey, []byte(TEST_PASSWORD), address.AccountAddress, TEST_ADDRESS, TEST_AMOUNT)
+	if err != nil && err.Error() != "Error ton send gramms. Code 500. Message NOT_ENOUGH_FUNDS. " {
+		t.Fatal("Ton send gramms error", err)
 	}
 }

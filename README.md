@@ -23,8 +23,8 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] packAccountAddress
 - [x] wallet.init
 - [x] wallet.getAccountAddress
-- [ ] wallet.getAccountState
-- [ ] wallet.sendGrams
+- [x] wallet.getAccountState
+- [x] wallet.sendGrams
 - [x] raw.sendMessage
 - [x] raw.getTransactions
 - [x] raw.getAccountState
