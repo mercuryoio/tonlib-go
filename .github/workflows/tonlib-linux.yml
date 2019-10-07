@@ -1,0 +1,41 @@
+name: Build tonlib Linux
+
+on:
+  push:
+    branches:
+    - tonlib
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@master
+        
+      - name: Fetch TON repo
+        run: |
+          cd ..
+          git clone --recursive https://github.com/ton-blockchain/ton
+        
+      - name: Build tonlibjson
+        run: |
+          cd ..
+          mkdir build
+          cd build
+          cmake ../ton
+          cmake --build . --target tonlibjson
+          
+      - name: Copy built lib
+        run: |
+          cp ../build/tonlib/libtonlib* lib/linux
+          
+      - name: Commit new linux tonlib files
+        uses: stefanzweifel/git-auto-commit-action@v2.1.0
+        with:
+          commit_message: Added new linux tonlib files
+          branch: tonlib
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
