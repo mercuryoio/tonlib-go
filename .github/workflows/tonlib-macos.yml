@@ -1,0 +1,41 @@
+name: Build tonlib Linux
+
+on:
+  push:
+    branches:
+    - tonlib
+
+jobs:
+  build:
+
+    runs-on: macOS-latest
+    
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@master
+        
+      - name: Fetch TON repo
+        run: |
+          cd ..
+          git clone --recursive https://github.com/ton-blockchain/ton
+        
+      - name: Build tonlibjson
+        run: |
+          cd ..
+          mkdir build
+          cd build
+          cmake ../ton -DOPENSSL_ROOT_DIR=$(brew --prefix)/opt/openssl
+          cmake --build . --target tonlibjson
+          
+      - name: Copy built lib
+        run: |
+          cp ../build/tonlib/libtonlib* lib/darwin
+          
+      - name: Commit updated MacOS tonlib files
+        uses: stefanzweifel/git-auto-commit-action@v2.1.0
+        with:
+          commit_message: Update MacOS tonlib files
+          branch: tonlib
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
