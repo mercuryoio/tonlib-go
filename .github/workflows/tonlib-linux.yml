@@ -15,10 +15,13 @@ jobs:
         uses: actions/checkout@master
         
       - name: Fetch TON repo
-        run: git clone --recursive https://github.com/ton-blockchain/ton
+        run: |
+          cd ..
+          git clone --recursive https://github.com/ton-blockchain/ton
         
       - name: Build tonlibjson
         run: |
+          cd ..
           mkdir build
           cd build
           cmake ../ton
@@ -26,6 +29,6 @@ jobs:
           
       - name: Copy built lib
         run: |
-          pwd
-          ls build/tonlib/
+          cp ../build/tonlib/libtonlib* lib/linux
+          ls -Ra
           
