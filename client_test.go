@@ -65,7 +65,44 @@ func TestClient_CreatePrivateKey(t *testing.T) {
 	}
 }
 
-//
+func TestClient_DeletePrivateKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	if err = cln.DeletePrivateKey(pkey, []byte(TEST_PASSWORD)); err != nil {
+		t.Fatal("Ton delete key error", err)
+	}
+}
+
+func TestClient_ExportPrivateKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	if _, err = cln.ExportPrivateKey(pkey, []byte(TEST_PASSWORD)); err != nil {
+		t.Fatal("Ton delete key error", err)
+	}
+}
+
 func TestClient_ChangeLocalPassword(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	cln, err := NewClient(cnf, Config{})
