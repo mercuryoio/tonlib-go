@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@master
         
       - name: Fetch TON repo
-        uses: git clone --recursive https://github.com/ton-blockchain/ton
+        run: git clone --recursive https://github.com/ton-blockchain/ton
         
       - name: Build tonlibjson
         run: |
