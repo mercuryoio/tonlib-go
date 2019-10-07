@@ -1,0 +1,31 @@
+name: Build tonlib Linux
+
+on:
+  push:
+    branches:
+    - tonlib
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@master
+        
+      - name: Fetch TON repo
+        uses: git clone --recursive https://github.com/ton-blockchain/ton
+        
+      - name: Build tonlibjson
+        run: |
+          mkdir build
+          cd build
+          cmake ../ton
+          cmake --build . --target tonlibjson
+          
+       - name: Copy built lib
+         run: |
+          pwd
+          ls build/tonlib/
+          
