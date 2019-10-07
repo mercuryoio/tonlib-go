@@ -24,8 +24,8 @@ jobs:
           cmake ../ton
           cmake --build . --target tonlibjson
           
-       - name: Copy built lib
-         run: |
+      - name: Copy built lib
+        run: |
           pwd
           ls build/tonlib/
           
