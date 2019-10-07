@@ -283,14 +283,15 @@ func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err
 	return key, err
 }
 
-// create privateKey
-func (client *Client) DeletePrivateKey(key TONPrivateKey, password []byte) (err error) {
+// delete private key
+func (client *Client) DeletePrivateKey(key *TONPrivateKey, password []byte) (err error) {
+	k := key.getInputKey(password)
 	st := struct {
 		Type string   `json:"@type"`
-		Key  InputKey `json:"key"`
+		Key  LocalKey `json:"key"`
 	}{
 		Type: "deleteKey",
-		Key:  key.getInputKey(password),
+		Key:  k.Key,
 	}
 	resp, err := client.executeAsynchronously(st)
 	if err != nil {
@@ -301,6 +302,33 @@ func (client *Client) DeletePrivateKey(key TONPrivateKey, password []byte) (err 
 	}
 
 	return nil
+}
+
+// delete private key
+func (client *Client) ExportPrivateKey(key *TONPrivateKey, password []byte) (wordList []string, err error) {
+	st := struct {
+		Type     string   `json:"@type"`
+		InputKey InputKey `json:"input_key"`
+	}{
+		Type:     "exportKey",
+		InputKey: key.getInputKey(password),
+	}
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return []string{}, err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return []string{}, fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+
+	mm := struct {
+		WordList []string `json:"word_list"`
+	}{}
+	err = json.Unmarshal(resp.Raw, &mm)
+	if err != nil {
+		return []string{}, err
+	}
+	return mm.WordList, nil
 }
 
 //change localPassword
