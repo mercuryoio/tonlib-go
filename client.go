@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/dvsekhvalnov/jose2go/base64url"
 	_ "github.com/mercuryoio/tonlib-go/lib"
 	"math/rand"
 	"strconv"
@@ -179,8 +180,8 @@ func (client *Client) GetAccountState(address string) (state *TONAccountState, e
 	return state, nil
 }
 
-// send gramm to address
-func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress string, amount string) (*TONResult, error) {
+// sends gramm to address and returns transaction`s hash
+func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string) (string, error) {
 	st := struct {
 		Type        string            `json:"@type"`
 		Seqno       int64             `json:"seqno"`
@@ -189,6 +190,7 @@ func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fro
 		Destination TONAccountAddress `json:"destination"`
 		ValidUntil  uint              `json:"valid_until"`
 		Source      TONAccountAddress `json:"source"`
+		Message     []byte            `json:"message"`
 	}{
 		Type:       "generic.sendGrams",
 		PrivateKey: key.getInputKey(password),
@@ -200,31 +202,41 @@ func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fro
 		Source: TONAccountAddress{
 			AccountAddress: fromAddress,
 		},
+		Message: []byte(base64url.Encode([]byte(message))),
 	}
 	resp, err := client.executeAsynchronously(st)
 	if err != nil {
-		return resp, err
+		return "", err
 	}
 	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return resp, fmt.Errorf("Error ton send gramms. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+		return "", fmt.Errorf("Error ton send gramms. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
 	}
-	return resp, nil
+
+	r := struct {
+		SentUntil int    `json:"sent_until"`
+		BodyHash  string `json:"body_hash"`
+	}{}
+	err = json.Unmarshal(resp.Raw, &r)
+	if err != nil {
+		return "", err
+	}
+	return r.BodyHash, nil
 }
 
 // send message to address
-func (client *Client) SendMessage(initialAddress, destinationAddress, data string) (res *TONResult, err error) {
+func (client *Client) SendMessage(destinationAddress string, initialAccountState, data []byte) (res *TONResult, err error) {
 	st := struct {
 		Type                string            `json:"@type"`
 		Destination         TONAccountAddress `json:"destination"`
-		InitialAccountState string            `json:"initial_account_state"`
-		Data                string            `json:"data"`
+		InitialAccountState []byte            `json:"initial_account_state"`
+		Data                []byte            `json:"data"`
 	}{
 		Type: "raw.sendMessage",
 		Data: data,
 		Destination: TONAccountAddress{
 			AccountAddress: destinationAddress,
 		},
-		InitialAccountState: initialAddress,
+		InitialAccountState: initialAccountState,
 	}
 	return client.executeAsynchronously(st)
 }
@@ -304,7 +316,7 @@ func (client *Client) DeletePrivateKey(key *TONPrivateKey, password []byte) (err
 	return nil
 }
 
-// delete private key
+// export private key
 func (client *Client) ExportPrivateKey(key *TONPrivateKey, password []byte) (wordList []string, err error) {
 	st := struct {
 		Type     string   `json:"@type"`
@@ -329,6 +341,65 @@ func (client *Client) ExportPrivateKey(key *TONPrivateKey, password []byte) (wor
 		return []string{}, err
 	}
 	return mm.WordList, nil
+}
+
+// export pem
+func (client *Client) ExportPemKey(key *TONPrivateKey, password, pemPassword []byte) (pem string, err error) {
+	st := struct {
+		Type        string   `json:"@type"`
+		InputKey    InputKey `json:"input_key"`
+		KeyPassword string   `json:"key_password"`
+	}{
+		Type:        "exportPemKey",
+		InputKey:    key.getInputKey(password),
+		KeyPassword: base64.StdEncoding.EncodeToString(pemPassword),
+	}
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return "", err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return "", fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+	return "", err
+
+	p := struct {
+		Pem string `json:"pem"`
+	}{}
+	err = json.Unmarshal(resp.Raw, &p)
+	if err != nil {
+		return "", err
+	}
+	return p.Pem, nil
+}
+
+// export encrypted key
+func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, pemPassword []byte) (data string, err error) {
+	st := struct {
+		Type        string   `json:"@type"`
+		InputKey    InputKey `json:"input_key"`
+		KeyPassword string   `json:"key_password"`
+	}{
+		Type:        "exportEncryptedKey",
+		InputKey:    key.getInputKey(password),
+		KeyPassword: base64.StdEncoding.EncodeToString(pemPassword),
+	}
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return "", err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return "", fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+
+	mm := struct {
+		Data string `json:"data"`
+	}{}
+	err = json.Unmarshal(resp.Raw, &mm)
+	if err != nil {
+		return "", err
+	}
+	return mm.Data, nil
 }
 
 //change localPassword
