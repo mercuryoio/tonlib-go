@@ -13,8 +13,8 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] createNewKey
 - [x] deleteKey
 - [x] exportKey
-- [ ] exportPemKey
-- [ ] exportEncryptedKey
+- [x] exportPemKey
+- [x] exportEncryptedKey
 - [ ] importKey
 - [ ] importPemKey
 - [ ] importEncryptedKey

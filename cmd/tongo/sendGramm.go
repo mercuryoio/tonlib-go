@@ -18,10 +18,11 @@ var sendGrammCmd = &cobra.Command{
 - password
 - addressDestination
 - amount
+- message for destination. not required
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 6 {
-			return fmt.Errorf("you have to use six args for this commaond \n")
+		if len(args) < 6 {
+			return fmt.Errorf("you have to use minimum six args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
@@ -39,6 +40,10 @@ func sendGramm(cmd *cobra.Command, args []string) {
 	password := args[3]
 	destinationAddr := args[4]
 	amount := args[5]
+	message := ""
+	if len(args) > 6 {
+		message = args[6]
+	}
 	err := initClient(confPath)
 	if err != nil {
 		fmt.Println("init connection error: ", err)
@@ -56,6 +61,6 @@ func sendGramm(cmd *cobra.Command, args []string) {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
-	resp, err := tonClient.SendGRAMM2Address(pKey, []byte(password), addr.AccountAddress, destinationAddr, amount)
-	fmt.Printf("Got a result: %v. Errors: %v \n", resp, err)
+	resp, err := tonClient.SendGRAMM2Address(pKey, []byte(password), addr.AccountAddress, destinationAddr, amount, message)
+	fmt.Printf("Got a result: hash %v. Errors: %v \n", resp, err)
 }

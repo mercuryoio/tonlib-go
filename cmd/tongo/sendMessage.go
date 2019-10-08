@@ -10,15 +10,14 @@ import (
 var sendMessageCmd = &cobra.Command{
 	Use:   "sendMessage",
 	Short: "Send short message command",
-	Long: `Send message command. It contains four attributes:
+	Long: `Send message command. It contains three attributes:
 - path2configfile. see tonlib.config.json.example
-- initialAddress
 - destinationAddress
-- data
+- data in boc format
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 4 {
-			return fmt.Errorf("you have to use four args for this commaond \n")
+		if len(args) != 3 {
+			return fmt.Errorf("you have to use three args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
@@ -35,6 +34,6 @@ func sendMessage(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	res, err := tonClient.SendMessage(args[1], args[2], args[3])
+	res, err := tonClient.SendMessage(args[1], []byte{}, []byte(args[2]))
 	fmt.Printf("Got a result: %v. Errors: %v", res, err)
 }
