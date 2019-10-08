@@ -13,13 +13,13 @@ var sendFileCmd = &cobra.Command{
 	Short: "Send boc file command",
 	Long: `Send message command. It contains four attributes:
 - path2configfile. see tonlib.config.json.example
-- initialAddress
 - destinationAddress
-- path2boc path to boc binary file 
+- path2boc path to boc binary file
+- path2initialAccountState path to boc file with initial account state (optional) 
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 4 {
-			return fmt.Errorf("you have to use four args for this commaond \n")
+		if len(args) < 3 {
+			return fmt.Errorf("you have to use minimum 3 args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
@@ -36,12 +36,20 @@ func sendFile(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	bocFile, err := ioutil.ReadFile(args[3])
+	bocFile, err := ioutil.ReadFile(args[2])
 	if err != nil {
 		fmt.Println("boc file dosn't exist", err)
 		os.Exit(0)
 	}
+	bocInitialStateFile := []byte{}
+	if len(args) > 3 {
+		bocInitialStateFile, err = ioutil.ReadFile(args[3])
+		if err != nil {
+			fmt.Println("boc file dosn't exist", err)
+			os.Exit(0)
+		}
+	}
 
-	res, err := tonClient.SendMessage(args[1], args[2], string(bocFile))
+	res, err := tonClient.SendMessage(args[1], bocInitialStateFile, bocFile)
 	fmt.Printf("Got a result: %v. Errors: %v", res, err)
 }
