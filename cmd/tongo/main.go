@@ -11,7 +11,8 @@ import (
 var tonClient *tonlib.Client
 
 func init() {
-	rootCmd.AddCommand(sendMessageCmd, sendFileCmd, createPKCmd, rawAccountStateCmd, walletAddressCmd, walletStateCmd, sendGrammCmd)
+	rootCmd.AddCommand(sendMessageCmd, sendFileCmd, createPKCmd, rawAccountStateCmd,
+		walletAddressCmd, walletStateCmd, sendGrammCmd, deletePKCmd, exportPKCmd, transactionsCmd)
 }
 
 func initClient(configPath string) error {

@@ -65,7 +65,82 @@ func TestClient_CreatePrivateKey(t *testing.T) {
 	}
 }
 
-//
+func TestClient_DeletePrivateKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	if err = cln.DeletePrivateKey(pkey, []byte(TEST_PASSWORD)); err != nil {
+		t.Fatal("Ton delete key error", err)
+	}
+}
+
+func TestClient_ExportPrivateKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	if _, err = cln.ExportPrivateKey(pkey, []byte(TEST_PASSWORD)); err != nil {
+		t.Fatal("Ton export private key error", err)
+	}
+}
+
+func TestClient_ExportPemKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	if _, err = cln.ExportPemKey(pkey, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD)); err != nil {
+		t.Fatal("Ton export pem key error", err)
+	}
+}
+
+func TestClient_ExportEncryptedKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	if _, err = cln.ExportEncryptedKey(pkey, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD)); err != nil {
+		t.Fatal("Ton export pem key error", err)
+	}
+}
+
 func TestClient_ChangeLocalPassword(t *testing.T) {
 	cnf, err := ParseConfigFile("./tonlib.config.json.example")
 	cln, err := NewClient(cnf, Config{})
@@ -177,7 +252,7 @@ func TestClient_SendGRAMM2Address(t *testing.T) {
 	if err != nil {
 		t.Fatal("Ton get address for send grams error", err)
 	}
-	_, err = cln.SendGRAMM2Address(pKey, []byte(TEST_PASSWORD), address.AccountAddress, TEST_ADDRESS, TEST_AMOUNT)
+	_, err = cln.SendGRAMM2Address(pKey, []byte(TEST_PASSWORD), address.AccountAddress, TEST_ADDRESS, TEST_AMOUNT, "")
 	if err != nil && err.Error() != "Error ton send gramms. Code 500. Message NOT_ENOUGH_FUNDS. " {
 		t.Fatal("Ton send gramms error", err)
 	}

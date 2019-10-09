@@ -11,10 +11,10 @@ import "github.com/mercuryoio/tonlib-go"
 ```
 ## Supported methods
 - [x] createNewKey
-- [ ] deleteKey
-- [ ] exportKey
-- [ ] exportPemKey
-- [ ] exportEncryptedKey
+- [x] deleteKey
+- [x] exportKey
+- [x] exportPemKey
+- [x] exportEncryptedKey
 - [ ] importKey
 - [ ] importPemKey
 - [ ] importEncryptedKey
