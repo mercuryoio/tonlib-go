@@ -1,4 +1,4 @@
-name: Build on commit or tag
+name: Build
 on:
   push:
     branches:
