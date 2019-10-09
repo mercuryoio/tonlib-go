@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dvsekhvalnov/jose2go/base64url"
+	"github.com/shopspring/decimal"
 )
 
 // TONResponse alias for use in TONResult
@@ -91,21 +92,28 @@ type TONInitRequest struct {
 }
 
 type TONMsg struct {
-	Type        string `json:"@type"`
-	Sourse      string `json:"sourse"`
-	Destination string `json:"destination"`
-	Value       string `json:"value"`
-	Message     string `json:"message"`
+	Type        string          `json:"@type"`
+	Sourse      string          `json:"sourse"`
+	Destination string          `json:"destination"`
+	Value       decimal.Decimal `json:"value"`
+	Message     string          `json:"message"`
+	FwdFee      decimal.Decimal `json:"fwd_fee"`
+	IhrFee      decimal.Decimal `json:"ihr_fee"`
+	CreatedLT   string          `json:"created_lt"`
+	BodyHash    string          `json:"body_hash"`
 }
 
 type TONTransaction struct {
-	Type          string           `json:"@type"`
-	Utime         uint             `json:"utime"`
-	Data          string           `json:"data"`
-	TransactionID TONTransactionID `json:"transaction_id"`
-	Fee           string           `json:"fee"`
-	InMsg         TONMsg           `json:"in_msg"`
-	OutMsgs       []TONMsg         `json:"out_msgs"`
+	Type                  string           `json:"@type"`
+	Utime                 uint             `json:"utime"`
+	Data                  string           `json:"data"`
+	TransactionID         TONTransactionID `json:"transaction_id"`
+	PreviousTransactionID TONTransactionID `json:"previous_transaction_id"`
+	StorageFee            decimal.Decimal  `json:"storage_fee"`
+	OtherFee              decimal.Decimal  `json:"other_fee"`
+	Fee                   decimal.Decimal  `json:"fee"`
+	InMsg                 TONMsg           `json:"in_msg"`
+	OutMsgs               []TONMsg         `json:"out_msgs"`
 }
 
 type TONTransactionsResponse struct {
@@ -123,7 +131,7 @@ type TONAccountState struct {
 	Type              string           `json:"@type"`
 	Code              string           `json:"code"`
 	Message           string           `json:"message"`
-	Balance           string           `json:"balance"`
+	Balance           decimal.Decimal  `json:"balance"`
 	LastTransactionID TONTransactionID `json:"last_transaction_id"`
 	FrozenHash        string           `json:"frozen_hash"`
 	SyncUTime         uint
