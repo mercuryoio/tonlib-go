@@ -425,6 +425,7 @@ func (client *Client) ChangeLocalPassword(key *TONPrivateKey, password, newPassw
 	return key, err
 }
 
+// Destroy client
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
 }
