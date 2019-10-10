@@ -1,4 +1,7 @@
 # TONLIB Golang library
+![](https://github.com/mercuryoio/tonlib-go/workflows/Build/badge.svg)
+
+
 TONLIB Golang library for accessing [Telegram Open Network](https://test.ton.org) with liteclient protocol, which is based itself on [tdlib](https://github.com/tdlib/td) library.
 **Warning:** this repository is under active development, not ready for production use
 ## Install
@@ -59,7 +62,9 @@ To install sample cli application:
 $ go get -u github.com/mercuryoio/tonlib-go/cmd/tongo
 ```
 To run sample cli app your have to set LD_LIBRARY_PATH:
+
 For linux `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path2repository>/lib/linux`
+
 For MacOS `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path2repository>/lib/darwin`
 ## Developers
 [Mercuryo.io](https://mercuryo.io)
