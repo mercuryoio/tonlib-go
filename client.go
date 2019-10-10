@@ -20,7 +20,7 @@ import (
 	"unsafe"
 )
 
-// client is the Telegram TdLib client
+// Client is the Telegram TdLib client
 type Client struct {
 	client unsafe.Pointer
 	config Config
@@ -51,7 +51,7 @@ func NewClient(tonCnf *TONInitRequest, config Config) (*Client, error) {
 	return &client, fmt.Errorf("Error ton client init. ")
 }
 
-// Init TonWallet and set it as default TonWallet for client
+// InitWallet wallet.init and set it as default wallet for client
 func (client *Client) InitWallet(key *TONPrivateKey, password []byte) (err error) {
 	st := struct {
 		Type       string   `json:"@type"`
@@ -75,7 +75,7 @@ func (client *Client) InitWallet(key *TONPrivateKey, password []byte) (err error
 	return fmt.Errorf("Error ton TonWallet init. ")
 }
 
-// get wallet address method
+// WalletGetAddress get wallet address method
 func (client *Client) WalletGetAddress(pubKey string) (*TONAccountAddress, error) {
 	if client.wallet == nil {
 		return nil, fmt.Errorf("You must init wallet before. ")
@@ -83,7 +83,7 @@ func (client *Client) WalletGetAddress(pubKey string) (*TONAccountAddress, error
 	return client.wallet.getAddress(pubKey)
 }
 
-// get wallet address method
+// WalletState get wallet state
 func (client *Client) WalletState(address string) (*TONAccountState, error) {
 	if client.wallet == nil {
 		return nil, fmt.Errorf("You must init wallet before. ")
@@ -91,7 +91,7 @@ func (client *Client) WalletState(address string) (*TONAccountState, error) {
 	return client.wallet.getState(address)
 }
 
-// get wallet address method
+// WalletSendGRAMM2Address send GRAM to address
 func (client *Client) WalletSendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress string, amount string) (*TONResult, error) {
 	if client.wallet == nil {
 		return nil, fmt.Errorf("You must init wallet before. ")
@@ -99,7 +99,7 @@ func (client *Client) WalletSendGRAMM2Address(key *TONPrivateKey, password []byt
 	return client.wallet.sendGRAMM2Address(key, password, fromAddress, toAddress, amount)
 }
 
-// get HEX full address
+// UnpackAccountAddress get full address in HEX
 func (client *Client) UnpackAccountAddress(address string) (*TONUnpackedAddress, error) {
 	st := struct {
 		Type           string `json:"@type"`
@@ -124,7 +124,7 @@ func (client *Client) UnpackAccountAddress(address string) (*TONUnpackedAddress,
 	return &addressSt, nil
 }
 
-// get HEX full address
+// PackAccountAddress get short address from full address HEX
 func (client *Client) PackAccountAddress(packedAddr *TONUnpackedAddress, address string) (string, error) {
 	fmt.Println("addr: ", packedAddr.Addr, address)
 	st := struct {
@@ -153,7 +153,7 @@ func (client *Client) PackAccountAddress(packedAddr *TONUnpackedAddress, address
 	return addressSt.TONAccountAddress.AccountAddress, nil
 }
 
-// take account state
+// GetAccountState raw.getAccountState take account state
 func (client *Client) GetAccountState(address string) (state *TONAccountState, err error) {
 	st := struct {
 		Type           string            `json:"@type"`
@@ -180,7 +180,7 @@ func (client *Client) GetAccountState(address string) (state *TONAccountState, e
 	return state, nil
 }
 
-// sends gramm to address and returns transaction`s hash
+// SendGRAMM2Address generic.sendGrams sends GRAM to address and returns transaction`s hash
 func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string) (string, error) {
 	st := struct {
 		Type        string            `json:"@type"`
@@ -223,7 +223,7 @@ func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fro
 	return r.BodyHash, nil
 }
 
-// send message to address
+// SendMessage raw.sendMessage to address
 func (client *Client) SendMessage(destinationAddress string, initialAccountState, data []byte) (res *TONResult, err error) {
 	st := struct {
 		Type                string            `json:"@type"`
@@ -241,7 +241,7 @@ func (client *Client) SendMessage(destinationAddress string, initialAccountState
 	return client.executeAsynchronously(st)
 }
 
-//fetch address`s transactions
+// GetAccountTransactions raw.getTransactions fetch address`s transactions
 func (client *Client) GetAccountTransactions(address string, lt string, hash string) (txs *TONTransactionsResponse, err error) {
 	st := struct {
 		Type              string                `json:"@type"`
@@ -270,7 +270,7 @@ func (client *Client) GetAccountTransactions(address string, lt string, hash str
 	return txs, err
 }
 
-// create privateKey
+// CreatePrivateKey createNewKey: create privateKey
 func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err error) {
 	st := struct {
 		Type             string `json:"@type"`
@@ -295,7 +295,7 @@ func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err
 	return key, err
 }
 
-// delete private key
+// DeletePrivateKey deleteKey: delete private key
 func (client *Client) DeletePrivateKey(key *TONPrivateKey, password []byte) (err error) {
 	k := key.getInputKey(password)
 	st := struct {
@@ -316,7 +316,7 @@ func (client *Client) DeletePrivateKey(key *TONPrivateKey, password []byte) (err
 	return nil
 }
 
-// export private key
+// ExportPrivateKey exportKey: export private key
 func (client *Client) ExportPrivateKey(key *TONPrivateKey, password []byte) (wordList []string, err error) {
 	st := struct {
 		Type     string   `json:"@type"`
@@ -343,7 +343,7 @@ func (client *Client) ExportPrivateKey(key *TONPrivateKey, password []byte) (wor
 	return mm.WordList, nil
 }
 
-// export pem
+// ExportPemKey exportPemKey: export pem
 func (client *Client) ExportPemKey(key *TONPrivateKey, password, pemPassword []byte) (pem string, err error) {
 	st := struct {
 		Type        string   `json:"@type"`
@@ -373,7 +373,7 @@ func (client *Client) ExportPemKey(key *TONPrivateKey, password, pemPassword []b
 	return p.Pem, nil
 }
 
-// export encrypted key
+// ExportEncryptedKey exportEncryptedKey: export encrypted key
 func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, pemPassword []byte) (data string, err error) {
 	st := struct {
 		Type        string   `json:"@type"`
@@ -402,7 +402,7 @@ func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, pemPasswo
 	return mm.Data, nil
 }
 
-//change localPassword
+// ChangeLocalPassword changeLocalPassword: change localPassword
 func (client *Client) ChangeLocalPassword(key *TONPrivateKey, password, newPassword []byte) (*TONPrivateKey, error) {
 	st := struct {
 		Type             string   `json:"@type"`
@@ -425,6 +425,7 @@ func (client *Client) ChangeLocalPassword(key *TONPrivateKey, password, newPassw
 	return key, err
 }
 
+// Destroy client
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
 }
