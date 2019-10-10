@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/mercuryoio/tonlib-go"
-	"github.com/spf13/cobra"
 	"os"
 	"os/signal"
+
+	"github.com/mercuryoio/tonlib-go"
+	"github.com/spf13/cobra"
 )
 
 var tonClient *tonlib.Client
@@ -33,6 +34,7 @@ var rootCmd = &cobra.Command{
 	Long:  ``,
 }
 
+// Execute CLI application
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)
