@@ -32,16 +32,9 @@ func (a TONAccountAddress) GetHEXAddress() string {
 	return fmt.Sprintf("%x", data)
 }
 
-// LocalKey public_key:secret
-type LocalKey struct {
-	PublicKey string `json:"public_key"`
-	Secret    string `json:"secret"`
-}
-
-// InputKey LocalKey with password
 type InputKey struct {
-	LocalPassword string   `json:"local_password"`
-	Key           LocalKey `json:"key"`
+	LocalPassword string        `json:"local_password"`
+	Key           TONPrivateKey `json:"key"`
 }
 
 // InternalTransactionId lt hash
@@ -109,7 +102,7 @@ type TONInitRequest struct {
 // TONMsg messages structure
 type TONMsg struct {
 	Type        string          `json:"@type"`
-	Sourse      string          `json:"sourse"`
+	Source      string          `json:"source"`
 	Destination string          `json:"destination"`
 	Value       decimal.Decimal `json:"value"`
 	Message     string          `json:"message"`
@@ -187,9 +180,15 @@ type TONPrivateKeyResponse struct {
 	TONPrivateKey
 }
 
+type TONSyncState struct {
+	FromSeqno    int `json:"from_seqno"`
+	ToSeqno      int `json:"to_seqno"`
+	CurrentSeqno int `json:"current_seqno"`
+}
+
 func (k TONPrivateKey) getInputKey(password []byte) InputKey {
 	return InputKey{
-		Key: LocalKey{
+		Key: TONPrivateKey{
 			PublicKey: k.PublicKey,
 			Secret:    k.Secret,
 		},

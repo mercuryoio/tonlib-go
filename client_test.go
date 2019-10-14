@@ -1,8 +1,6 @@
 package tonlib
 
-import (
-	"testing"
-)
+import "testing"
 
 const (
 	TEST_PASSWORD        = "test_password"
@@ -117,7 +115,7 @@ func TestClient_ExportPemKey(t *testing.T) {
 	if err != nil {
 		t.Fatal("Ton create key error", err)
 	}
-	if _, err = cln.ExportPemKey(pkey, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD)); err != nil {
+	if pem, err := cln.ExportPemKey(pkey, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD)); err != nil || len(pem) == 0 {
 		t.Fatal("Ton export pem key error", err)
 	}
 }
@@ -255,5 +253,30 @@ func TestClient_SendGRAMM2Address(t *testing.T) {
 	_, err = cln.SendGRAMM2Address(pKey, []byte(TEST_PASSWORD), address.AccountAddress, TEST_ADDRESS, TEST_AMOUNT, "")
 	if err != nil && err.Error() != "Error ton send gramms. Code 500. Message NOT_ENOUGH_FUNDS. " {
 		t.Fatal("Ton send gramms error", err)
+	}
+}
+
+func TestClient_ImportPemKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	key, err := cln.ExportPemKey(pkey, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton export pem key error", err)
+	}
+
+	_, err = cln.ImportPemKey(key, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton import pem key error", err)
 	}
 }

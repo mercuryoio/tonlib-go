@@ -9,7 +9,6 @@ package tonlib
 import "C"
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/dvsekhvalnov/jose2go/base64url"
@@ -270,162 +269,49 @@ func (client *Client) GetAccountTransactions(address string, lt string, hash str
 	return txs, err
 }
 
-// CreatePrivateKey createNewKey: create privateKey
-func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err error) {
-	st := struct {
-		Type             string `json:"@type"`
-		LocalPassword    string `json:"local_password"`
-		MnemonicPassword string `json:"mnemonic_password"`
-		RandomExtraSeed  string `json:"random_extra_seed"`
+//sync node don't use it
+// todo we are waiting method for fetching block information
+func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
+	data := struct {
+		Type      string       `json:"@type"`
+		SyncState TONSyncState `json:"sync_state"`
 	}{
-		Type:             "createNewKey",
-		LocalPassword:    base64.StdEncoding.EncodeToString(password),
-		MnemonicPassword: base64.StdEncoding.EncodeToString([]byte(" " + "test mnemonic")),
+		Type: "sync",
+		SyncState: TONSyncState{
+			FromSeqno:    fromBlock,
+			CurrentSeqno: currentBlock,
+			ToSeqno:      toBlock,
+		},
 	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return key, err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return key, fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	key = new(TONPrivateKey)
-	err = json.Unmarshal(resp.Raw, key)
-	return key, err
-}
-
-// DeletePrivateKey deleteKey: delete private key
-func (client *Client) DeletePrivateKey(key *TONPrivateKey, password []byte) (err error) {
-	k := key.getInputKey(password)
-	st := struct {
-		Type string   `json:"@type"`
-		Key  LocalKey `json:"key"`
-	}{
-		Type: "deleteKey",
-		Key:  k.Key,
-	}
-	resp, err := client.executeAsynchronously(st)
+	req, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
+	cs := C.CString(string(req))
+	defer C.free(unsafe.Pointer(cs))
 
+	C.tonlib_client_json_send(client.client, cs)
+	for {
+		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+
+		for result == nil {
+			fmt.Println("empty response. next attempt")
+			time.Sleep(1 * time.Second)
+			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		}
+
+		var updateData TONResponse
+		res := C.GoString(result)
+		resB := []byte(res)
+		err = json.Unmarshal(resB, &updateData)
+		fmt.Println("fetch data: ", string(resB))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-// ExportPrivateKey exportKey: export private key
-func (client *Client) ExportPrivateKey(key *TONPrivateKey, password []byte) (wordList []string, err error) {
-	st := struct {
-		Type     string   `json:"@type"`
-		InputKey InputKey `json:"input_key"`
-	}{
-		Type:     "exportKey",
-		InputKey: key.getInputKey(password),
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return []string{}, err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return []string{}, fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	mm := struct {
-		WordList []string `json:"word_list"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &mm)
-	if err != nil {
-		return []string{}, err
-	}
-	return mm.WordList, nil
-}
-
-// ExportPemKey exportPemKey: export pem
-func (client *Client) ExportPemKey(key *TONPrivateKey, password, pemPassword []byte) (pem string, err error) {
-	st := struct {
-		Type        string   `json:"@type"`
-		InputKey    InputKey `json:"input_key"`
-		KeyPassword string   `json:"key_password"`
-	}{
-		Type:        "exportPemKey",
-		InputKey:    key.getInputKey(password),
-		KeyPassword: base64.StdEncoding.EncodeToString(pemPassword),
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return "", err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-	return "", err
-
-	p := struct {
-		Pem string `json:"pem"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &p)
-	if err != nil {
-		return "", err
-	}
-	return p.Pem, nil
-}
-
-// ExportEncryptedKey exportEncryptedKey: export encrypted key
-func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, pemPassword []byte) (data string, err error) {
-	st := struct {
-		Type        string   `json:"@type"`
-		InputKey    InputKey `json:"input_key"`
-		KeyPassword string   `json:"key_password"`
-	}{
-		Type:        "exportEncryptedKey",
-		InputKey:    key.getInputKey(password),
-		KeyPassword: base64.StdEncoding.EncodeToString(pemPassword),
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return "", err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	mm := struct {
-		Data string `json:"data"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &mm)
-	if err != nil {
-		return "", err
-	}
-	return mm.Data, nil
-}
-
-// ChangeLocalPassword changeLocalPassword: change localPassword
-func (client *Client) ChangeLocalPassword(key *TONPrivateKey, password, newPassword []byte) (*TONPrivateKey, error) {
-	st := struct {
-		Type             string   `json:"@type"`
-		NewLocalPassword string   `json:"new_local_password"`
-		InputKey         InputKey `json:"input_key"`
-	}{
-		Type:             "changeLocalPassword",
-		NewLocalPassword: base64.StdEncoding.EncodeToString(password),
-		InputKey:         key.getInputKey(password),
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return key, err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return key, fmt.Errorf("Error ton change key passowrd. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-	key = new(TONPrivateKey)
-	err = json.Unmarshal(resp.Raw, key)
-	return key, err
-}
-
-// Destroy client
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
 }
