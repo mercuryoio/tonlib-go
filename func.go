@@ -16,7 +16,7 @@ func combineConfig(config Config) Config {
 	return config
 }
 
-// return inet atom from IP
+// InetAton return inet atom from IP
 func InetAton(ip string) int64 {
 	ip4 := net.ParseIP(ip)
 	ipv4Int := big.NewInt(0)
@@ -24,7 +24,7 @@ func InetAton(ip string) int64 {
 	return ipv4Int.Int64()
 }
 
-// parse JSON config file to
+// ParseConfigFile parse JSON config file to
 func ParseConfigFile(path string) (*TONInitRequest, error) {
 	jsonFile, err := os.Open(path)
 	defer jsonFile.Close()

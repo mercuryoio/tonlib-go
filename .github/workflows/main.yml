@@ -1,4 +1,4 @@
-name: Build on commit or tag
+name: Build
 on:
   push:
     branches:
@@ -15,9 +15,6 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.13
-      
-      - name: Check out source code
-        uses: actions/checkout@master
         
       - name: go get 
         run: go get -u github.com/$(echo $GITHUB_REPOSITORY)
