@@ -426,14 +426,16 @@ func (client *Client) ChangeLocalPassword(key *TONPrivateKey, password, newPassw
 
 //sync node don't use it
 // todo we are waiting method for fetching block information
-func (client *Client) Sync() error {
+func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
 	data := struct {
 		Type      string       `json:"@type"`
 		SyncState TONSyncState `json:"sync_state"`
 	}{
 		Type: "sync",
 		SyncState: TONSyncState{
-			FromSeqno: 0,
+			FromSeqno:    fromBlock,
+			CurrentSeqno: currentBlock,
+			ToSeqno:      toBlock,
 		},
 	}
 	req, err := json.Marshal(data)
