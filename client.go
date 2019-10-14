@@ -433,7 +433,7 @@ func (client *Client) Sync() error {
 	}{
 		Type: "sync",
 		SyncState: TONSyncState{
-			FromSeqno: 10,
+			FromSeqno: 0,
 		},
 	}
 	req, err := json.Marshal(data)
