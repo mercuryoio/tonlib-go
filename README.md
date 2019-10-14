@@ -22,7 +22,7 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] exportPemKey
 - [x] exportEncryptedKey
 - [ ] importKey
-- [ ] importPemKey
+- [x] importPemKey
 - [ ] importEncryptedKey
 - [x] changeLocalPassword
 - [x] unpackAccountAddress

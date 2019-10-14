@@ -20,7 +20,7 @@
     },
 		"blockchain_name": "my-chain",
 		"use_callbacks_for_network": false,
-		"ignore_cache": true
+		"ignore_cache": false
   },
   "keystore_type": {
       "@type": "keyStoreTypeDirectory",
