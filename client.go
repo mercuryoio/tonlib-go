@@ -299,8 +299,8 @@ func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err
 func (client *Client) DeletePrivateKey(key *TONPrivateKey, password []byte) (err error) {
 	k := key.getInputKey(password)
 	st := struct {
-		Type string   `json:"@type"`
-		Key  LocalKey `json:"key"`
+		Type string        `json:"@type"`
+		Key  TONPrivateKey `json:"key"`
 	}{
 		Type: "deleteKey",
 		Key:  k.Key,
@@ -361,7 +361,6 @@ func (client *Client) ExportPemKey(key *TONPrivateKey, password, pemPassword []b
 	if st, ok := resp.Data["@type"]; ok && st == "error" {
 		return "", fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
 	}
-	return "", err
 
 	p := struct {
 		Pem string `json:"pem"`
