@@ -424,6 +424,47 @@ func (client *Client) ChangeLocalPassword(key *TONPrivateKey, password, newPassw
 	return key, err
 }
 
+//sync node don't use it
+// todo we are waiting method for fetching block information
+func (client *Client) Sync() error {
+	data := struct {
+		Type      string       `json:"@type"`
+		SyncState TONSyncState `json:"sync_state"`
+	}{
+		Type: "sync",
+		SyncState: TONSyncState{
+			FromSeqno: 10,
+		},
+	}
+	req, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	cs := C.CString(string(req))
+	defer C.free(unsafe.Pointer(cs))
+
+	C.tonlib_client_json_send(client.client, cs)
+	for {
+		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+
+		for result == nil {
+			fmt.Println("empty response. next attempt")
+			time.Sleep(1 * time.Second)
+			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		}
+
+		var updateData TONResponse
+		res := C.GoString(result)
+		resB := []byte(res)
+		err = json.Unmarshal(resB, &updateData)
+		fmt.Println("fetch data: ", string(resB))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
 }

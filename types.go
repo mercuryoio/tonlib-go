@@ -88,7 +88,7 @@ type TONInitRequest struct {
 
 type TONMsg struct {
 	Type        string          `json:"@type"`
-	Sourse      string          `json:"sourse"`
+	Source      string          `json:"source"`
 	Destination string          `json:"destination"`
 	Value       decimal.Decimal `json:"value"`
 	Message     string          `json:"message"`
@@ -156,6 +156,12 @@ type TONPrivateKey struct {
 type TONPrivateKeyResponse struct {
 	Type string `json:"@type"`
 	TONPrivateKey
+}
+
+type TONSyncState struct {
+	FromSeqno    int `json:"from_seqno"`
+	ToSeqno      int `json:"to_seqno"`
+	CurrentSeqno int `json:"current_seqno"`
 }
 
 func (k TONPrivateKey) getInputKey(password []byte) InputKey {
