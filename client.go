@@ -243,15 +243,15 @@ func (client *Client) SendMessage(destinationAddress string, initialAccountState
 // GetAccountTransactions raw.getTransactions fetch address`s transactions
 func (client *Client) GetAccountTransactions(address string, lt string, hash string) (txs *TONTransactionsResponse, err error) {
 	st := struct {
-		Type              string                `json:"@type"`
-		AccountAddress    TONAccountAddress     `json:"account_address"`
-		FromTransactionId InternalTransactionId `json:"from_transaction_id"`
+		Type              string                 `json:"@type"`
+		AccountAddress    TONAccountAddress      `json:"account_address"`
+		FromTransactionId *InternalTransactionId `json:"from_transaction_id"`
 	}{
 		Type: "raw.getTransactions",
 		AccountAddress: TONAccountAddress{
 			AccountAddress: address,
 		},
-		FromTransactionId: InternalTransactionId{
+		FromTransactionId: &InternalTransactionId{
 			Lt:   lt,
 			Hash: hash,
 		},
@@ -269,8 +269,7 @@ func (client *Client) GetAccountTransactions(address string, lt string, hash str
 	return txs, err
 }
 
-//sync node don't use it
-// todo we are waiting method for fetching block information
+//sync node`s blocks to current
 func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
 	data := struct {
 		Type      string       `json:"@type"`
@@ -307,6 +306,9 @@ func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
 		fmt.Println("fetch data: ", string(resB))
 		if err != nil {
 			return err
+		}
+		if st, ok := updateData["@type"]; ok && st == "ok" {
+			return nil
 		}
 	}
 	return nil
@@ -347,6 +349,15 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		if err == nil {
 			client.updateSendLiteServerQuery(updateReq["id"], updateReq["data"])
 		}
+	}
+	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {
+		// todo change attributes to actual values
+		// now we recommend use ignore_cache: false configuration
+		err = client.Sync(0, 0, 0)
+		if err != nil {
+			return &TONResult{}, err
+		}
+		return client.executeAsynchronously(data)
 	}
 	return &TONResult{Data: updateData, Raw: resB}, err
 }

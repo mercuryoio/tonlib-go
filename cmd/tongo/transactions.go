@@ -47,7 +47,11 @@ func transactions(cmd *cobra.Command, args []string) {
 	}
 	for i := 0; i < len(txs.Transactions); i++ {
 		tx := txs.Transactions[i]
-		fmt.Printf("Got a result: data: %v; type: %v; transaction id: %v; fee: %v; inMsg: %v; outMsg: %v \n", tx.Data, tx.Type, tx.TransactionID, tx.Fee, tx.InMsg, tx.OutMsgs)
+		fmt.Printf("Got a result: data: %v; type: %v; transaction id: %v; fee: %v; inMsg: %v;\n", tx.Data, tx.Type, tx.TransactionID, tx.Fee, tx.InMsg.GetMessage())
+		for j := 0; j < len(tx.OutMsgs); j++ {
+			msg := tx.OutMsgs[j]
+			fmt.Printf("Got a out msg: message: %v; \n", msg.GetMessage())
+		}
 	}
 
 	fmt.Printf("Got a result: transactions count: %v. Errors: %v. \n", len(txs.Transactions), err)

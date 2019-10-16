@@ -23,7 +23,7 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] exportEncryptedKey
 - [ ] importKey
 - [x] importPemKey
-- [ ] importEncryptedKey
+- [x] importEncryptedKey
 - [x] changeLocalPassword
 - [x] unpackAccountAddress
 - [x] packAccountAddress
@@ -36,6 +36,7 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] raw.getAccountState
 - [x] generic.sendGrams
 - [x] getLogStream
+- [x] sync
 ## Examples
 Create new client 
 ```go
