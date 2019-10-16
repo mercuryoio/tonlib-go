@@ -11,7 +11,6 @@ import "C"
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dvsekhvalnov/jose2go/base64url"
 	_ "github.com/mercuryoio/tonlib-go/lib"
 	"math/rand"
 	"strconv"
@@ -201,7 +200,7 @@ func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fro
 		Source: TONAccountAddress{
 			AccountAddress: fromAddress,
 		},
-		Message: []byte(base64url.Encode([]byte(message))),
+		Message: []byte(message),
 	}
 	resp, err := client.executeAsynchronously(st)
 	if err != nil {
