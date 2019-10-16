@@ -280,3 +280,28 @@ func TestClient_ImportPemKey(t *testing.T) {
 		t.Fatal("Ton import pem key error", err)
 	}
 }
+
+func TestClient_ImportEncryptedKey(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pkey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key error", err)
+	}
+	key, err := cln.ExportEncryptedKey(pkey, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton export encrypted key error", err)
+	}
+
+	_, err = cln.ImportEncryptedKey(key, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton import encrypted key error", err)
+	}
+}

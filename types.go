@@ -112,6 +112,15 @@ type TONMsg struct {
 	BodyHash    string          `json:"body_hash"`
 }
 
+// return decoded message string
+func (m TONMsg) GetMessage() string {
+	msg, err := base64url.Decode(m.Message)
+	if err != nil {
+		return ""
+	}
+	return string(msg)
+}
+
 // TONTransaction transaction structure
 type TONTransaction struct {
 	Type                  string           `json:"@type"`
@@ -194,6 +203,10 @@ func (k TONPrivateKey) getInputKey(password []byte) InputKey {
 		},
 		LocalPassword: base64.StdEncoding.EncodeToString(password),
 	}
+}
+
+type TONEncryptedKey struct {
+	Data string `json:"data"`
 }
 
 // TONFileConfig file struct

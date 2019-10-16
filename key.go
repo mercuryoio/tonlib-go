@@ -109,7 +109,8 @@ func (client *Client) ExportPemKey(key *TONPrivateKey, password, pemPassword []b
 }
 
 // ExportEncryptedKey exportEncryptedKey: export encrypted key
-func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, keyPassword []byte) (data string, err error) {
+func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, keyPassword []byte) (expKey *TONEncryptedKey, err error) {
+	expKey = new(TONEncryptedKey)
 	st := struct {
 		Type        string   `json:"@type"`
 		InputKey    InputKey `json:"input_key"`
@@ -121,23 +122,20 @@ func (client *Client) ExportEncryptedKey(key *TONPrivateKey, password, keyPasswo
 	}
 	resp, err := client.executeAsynchronously(st)
 	if err != nil {
-		return "", err
+		return expKey, err
 	}
 	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton export encrypted key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+		return expKey, fmt.Errorf("Error ton export encrypted key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
 	}
 
-	mm := struct {
-		Data string `json:"data"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &mm)
+	err = json.Unmarshal(resp.Raw, expKey)
 	if err != nil {
-		return "", err
+		return expKey, err
 	}
-	return mm.Data, nil
+	return expKey, nil
 }
 
-// ImportKey importKey: import exported key key
+// ImportPemKey importPemKey: import exported pem key
 func (client *Client) ImportPemKey(pem string, pemPassword, localPass []byte) (key *TONPrivateKey, err error) {
 	st := struct {
 		Type          string `json:"@type"`
@@ -169,7 +167,34 @@ func (client *Client) ImportPemKey(pem string, pemPassword, localPass []byte) (k
 	return key, err
 }
 
-// ImportKey importKey: import exported key key
+// ImportEncryptedKey importEncryptedKey: import exported encrypted key
+func (client *Client) ImportEncryptedKey(expKey *TONEncryptedKey, keyPassword, localPass []byte) (key *TONPrivateKey, err error) {
+	st := struct {
+		Type                 string           `json:"@type"`
+		KeyPassword          []byte           `json:"key_password"`
+		LocalPassword        []byte           `json:"local_password"`
+		ExportedEncryptedKey *TONEncryptedKey `json:"exported_encrypted_key"`
+	}{
+		Type:                 "importEncryptedKey",
+		KeyPassword:          keyPassword,
+		LocalPassword:        localPass,
+		ExportedEncryptedKey: expKey,
+	}
+	fmt.Println(expKey.Data)
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return key, err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return key, fmt.Errorf("Error ton import pem key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+
+	key = new(TONPrivateKey)
+	err = json.Unmarshal(resp.Raw, key)
+	return key, err
+}
+
+// ImportKey importKey: import exported key
 // todo id doesn't work at this moment because it needs mnemonic password
 func (client *Client) ImportKey(wordList []string, mnemonicPass, localPass []byte) (data string, err error) {
 	st := struct {
