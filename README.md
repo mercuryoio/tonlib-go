@@ -37,6 +37,7 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] generic.sendGrams
 - [x] getLogStream
 - [x] sync
+- [x] CreateAndSendMessage
 ## Examples
 Create new client 
 ```go
