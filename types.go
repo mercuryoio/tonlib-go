@@ -33,6 +33,7 @@ func (a TONAccountAddress) GetHEXAddress() string {
 }
 
 type InputKey struct {
+	Type          string        `json:"@type"`
 	LocalPassword string        `json:"local_password"`
 	Key           TONPrivateKey `json:"key"`
 }
@@ -202,6 +203,7 @@ func (k TONPrivateKey) getInputKey(password []byte) InputKey {
 			Secret:    k.Secret,
 		},
 		LocalPassword: base64.StdEncoding.EncodeToString(password),
+		Type:          "inputKeyRegular",
 	}
 }
 
