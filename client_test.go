@@ -1,6 +1,11 @@
 package tonlib
 
-import "testing"
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"testing"
+)
 
 const (
 	TEST_PASSWORD        = "test_password"
@@ -303,5 +308,39 @@ func TestClient_ImportEncryptedKey(t *testing.T) {
 	_, err = cln.ImportEncryptedKey(key, []byte(TEST_PASSWORD), []byte(TEST_PASSWORD))
 	if err != nil {
 		t.Fatal("Ton import encrypted key error", err)
+	}
+}
+
+func TestClient_CreateAndSendMessage(t *testing.T) {
+	cnf, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("Config file not found", err)
+	}
+	cln, err := NewClient(cnf, Config{})
+	if err != nil {
+		t.Fatal("Init client error", err)
+	}
+	defer cln.Destroy()
+	pKey, err := cln.CreatePrivateKey([]byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton create key for send grams error", err)
+	}
+	err = cln.InitWallet(pKey, []byte(TEST_PASSWORD))
+	if err != nil {
+		t.Fatal("Ton init wallet for send gramms error", err)
+	}
+	address, err := cln.WalletGetAddress(pKey.PublicKey)
+	if err != nil {
+		t.Fatal("Ton get address for send grams error", err)
+	}
+	bocFile, err := ioutil.ReadFile("./testgiver-query.boc")
+	if err != nil {
+		fmt.Println("boc file dosn't exist", err)
+		os.Exit(0)
+	}
+
+	_, err = cln.CreateAndSendMessage(address.AccountAddress, []byte{}, bocFile)
+	if err != nil {
+		t.Fatal("Ton send gramms error", err)
 	}
 }

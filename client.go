@@ -239,6 +239,24 @@ func (client *Client) SendMessage(destinationAddress string, initialAccountState
 	return client.executeAsynchronously(st)
 }
 
+// CreateAndSendMessage raw.sendMessage to address
+func (client *Client) CreateAndSendMessage(destinationAddress string, initialAccountState, data []byte) (res *TONResult, err error) {
+	st := struct {
+		Type                string            `json:"@type"`
+		Destination         TONAccountAddress `json:"destination"`
+		InitialAccountState []byte            `json:"initial_account_state"`
+		Data                []byte            `json:"data"`
+	}{
+		Type: "raw.createAndSendMessage",
+		Data: data,
+		Destination: TONAccountAddress{
+			AccountAddress: destinationAddress,
+		},
+		InitialAccountState: initialAccountState,
+	}
+	return client.executeAsynchronously(st)
+}
+
 // GetAccountTransactions raw.getTransactions fetch address`s transactions
 func (client *Client) GetAccountTransactions(address string, lt string, hash string) (txs *TONTransactionsResponse, err error) {
 	st := struct {
@@ -310,7 +328,6 @@ func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
 			return nil
 		}
 	}
-	return nil
 }
 
 func (client *Client) Destroy() {
