@@ -21,8 +21,8 @@ var exportPKCmd = &cobra.Command{
 And returns words list of exporting mnemonics between [] and error.
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 4 {
-			return fmt.Errorf("you have to use four args for this commaond \n")
+		if len(args) < 3 {
+			return fmt.Errorf("you have to use minimum three args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
