@@ -240,3 +240,10 @@ func (c TONFileConfig) GetConfig() *TONInitRequest {
 	}
 	return data
 }
+
+type SyncState struct {
+	Type         string `json:"@type"`
+	FromSeqno    int    `json:"from_seqno"`
+	ToSeqno      int    `json:"to_seqno"`
+	CurrentSeqno int    `json:"current_seqno"`
+}

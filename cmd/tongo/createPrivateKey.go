@@ -10,13 +10,14 @@ import (
 var createPKCmd = &cobra.Command{
 	Use:   "createPK",
 	Short: "Create new private key",
-	Long: `Create new private key command. It contains two attributes:
+	Long: `Create new private key command. It contains three attributes:
 - path2configfile. see tonlib.config.json.example
-- password for key
+- localPassword local password for key
+- mnemonicPassword password for mnemonics when you're exporting key. it's not required
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 2 {
-			return fmt.Errorf("you have to use two args for this commaond \n")
+		if len(args) < 2 {
+			return fmt.Errorf("you have to use minimum two args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
@@ -33,6 +34,10 @@ func createPK(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	pKey, err := tonClient.CreatePrivateKey([]byte(args[1]))
+	mnPass := ""
+	if len(args) > 2 {
+		mnPass = args[2]
+	}
+	pKey, err := tonClient.CreatePrivateKey([]byte(args[1]), []byte(mnPass))
 	fmt.Printf("Got a result: publicKey :%v; secret: %v. Errors: %v. \n", pKey.PublicKey, pKey.Secret, err)
 }

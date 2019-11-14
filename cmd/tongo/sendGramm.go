@@ -61,6 +61,6 @@ func sendGramm(cmd *cobra.Command, args []string) {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
-	resp, err := tonClient.SendGRAMM2Address(pKey, []byte(password), addr.AccountAddress, destinationAddr, amount, message)
+	resp, err := tonClient.SendGrams2Address(pKey, []byte(password), addr.AccountAddress, destinationAddr, amount, message)
 	fmt.Printf("Got a result: hash %v. Errors: %v \n", resp, err)
 }
