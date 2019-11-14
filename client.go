@@ -178,8 +178,8 @@ func (client *Client) GetAccountState(address string) (state *TONAccountState, e
 	return state, nil
 }
 
-// SendGRAMM2Address generic.sendGrams sends GRAM to address and returns transaction`s hash
-func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string) (string, error) {
+// SendGrams2Address generic.sendGrams sends GRAM to address and returns transaction`s hash
+func (client *Client) SendGrams2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string) (string, error) {
 	st := struct {
 		Type        string            `json:"@type"`
 		Seqno       int64             `json:"seqno"`
@@ -207,7 +207,55 @@ func (client *Client) SendGRAMM2Address(key *TONPrivateKey, password []byte, fro
 		return "", err
 	}
 	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton send gramms. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+		return "", fmt.Errorf("Error ton send grams. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	}
+
+	r := struct {
+		SentUntil int    `json:"sent_until"`
+		BodyHash  string `json:"body_hash"`
+	}{}
+	err = json.Unmarshal(resp.Raw, &r)
+	if err != nil {
+		return "", err
+	}
+	return r.BodyHash, nil
+}
+
+// CreateQuery4SendGrams2Address generic.createSendGramsQuery sends GRAM to address and returns transaction`s hash
+// timeout must be between 0 and 300
+func (client *Client) CreateQuery4SendGrams2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string, timeout uint, allow_send_to_uninited bool) (string, error) {
+	st := struct {
+		Type                string            `json:"@type"`
+		Seqno               int64             `json:"seqno"`
+		Amount              string            `json:"amount"`
+		PrivateKey          InputKey          `json:"private_key"`
+		Destination         TONAccountAddress `json:"destination"`
+		ValidUntil          uint              `json:"valid_until"`
+		Source              TONAccountAddress `json:"source"`
+		Message             []byte            `json:"message"`
+		Timeout             uint              `json:"timeout"`
+		AllowSendToUninited bool              `json:"allow_send_to_uninited"`
+	}{
+		Type:       "generic.createSendGramsQuery",
+		PrivateKey: key.getInputKey(password),
+		Amount:     amount,
+		Destination: TONAccountAddress{
+			AccountAddress: toAddress,
+		},
+		Seqno: 2,
+		Source: TONAccountAddress{
+			AccountAddress: fromAddress,
+		},
+		Message:             []byte(message),
+		AllowSendToUninited: allow_send_to_uninited,
+		Timeout:             timeout,
+	}
+	resp, err := client.executeAsynchronously(st)
+	if err != nil {
+		return "", err
+	}
+	if st, ok := resp.Data["@type"]; ok && st == "error" {
+		return "", fmt.Errorf("Error ton create query for sending grams. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
 	}
 
 	r := struct {
@@ -316,15 +364,18 @@ func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
 			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 		}
 
-		var updateData TONResponse
+		syncResp := struct {
+			Type      string    `json:"@type"`
+			SyncState SyncState `json:"sync_state"`
+		}{}
 		res := C.GoString(result)
 		resB := []byte(res)
-		err = json.Unmarshal(resB, &updateData)
-		fmt.Println("fetch data: ", string(resB))
+		err = json.Unmarshal(resB, &syncResp)
+		fmt.Println("sync result", string(resB))
 		if err != nil {
 			return err
 		}
-		if st, ok := updateData["@type"]; ok && st == "ok" {
+		if syncResp.Type == "ok" || syncResp.SyncState.Type == "syncStateDone" {
 			return nil
 		}
 	}
@@ -345,6 +396,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 
+	fmt.Println("call", string(req))
 	C.tonlib_client_json_send(client.client, cs)
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
@@ -367,9 +419,16 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		}
 	}
 	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {
-		// todo change attributes to actual values
-		// now we recommend use ignore_cache: false configuration
-		err = client.Sync(0, 0, 0)
+		syncResp := struct {
+			Type      string    `json:"@type"`
+			SyncState SyncState `json:"sync_state"`
+		}{}
+		err = json.Unmarshal(resB, &syncResp)
+		if err != nil {
+			return &TONResult{}, err
+		}
+		fmt.Println("run sync", updateData)
+		err = client.Sync(syncResp.SyncState.FromSeqno, syncResp.SyncState.ToSeqno, syncResp.SyncState.CurrentSeqno)
 		if err != nil {
 			return &TONResult{}, err
 		}

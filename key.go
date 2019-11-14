@@ -7,7 +7,7 @@ import (
 )
 
 // CreatePrivateKey createNewKey: create privateKey
-func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err error) {
+func (client *Client) CreatePrivateKey(localPass, mnemonicPass []byte) (key *TONPrivateKey, err error) {
 	st := struct {
 		Type             string `json:"@type"`
 		LocalPassword    string `json:"local_password"`
@@ -15,8 +15,8 @@ func (client *Client) CreatePrivateKey(password []byte) (key *TONPrivateKey, err
 		RandomExtraSeed  string `json:"random_extra_seed"`
 	}{
 		Type:             "createNewKey",
-		LocalPassword:    base64.StdEncoding.EncodeToString(password),
-		MnemonicPassword: base64.StdEncoding.EncodeToString([]byte(" " + "test mnemonic")),
+		LocalPassword:    base64.StdEncoding.EncodeToString(localPass),
+		MnemonicPassword: base64.StdEncoding.EncodeToString(mnemonicPass),
 	}
 	resp, err := client.executeAsynchronously(st)
 	if err != nil {
@@ -195,8 +195,7 @@ func (client *Client) ImportEncryptedKey(expKey *TONEncryptedKey, keyPassword, l
 }
 
 // ImportKey importKey: import exported key
-// todo id doesn't work at this moment because it needs mnemonic password
-func (client *Client) ImportKey(wordList []string, mnemonicPass, localPass []byte) (data string, err error) {
+func (client *Client) ImportKey(wordList []string, mnemonicPass, localPass []byte) (key *TONPrivateKey, err error) {
 	st := struct {
 		Type             string `json:"@type"`
 		MnemonicPassword []byte `json:"mnemonic_password"`
@@ -216,20 +215,15 @@ func (client *Client) ImportKey(wordList []string, mnemonicPass, localPass []byt
 	}
 	resp, err := client.executeAsynchronously(st)
 	if err != nil {
-		return "", err
+		return key, err
 	}
 	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+		return key, fmt.Errorf("Error ton create private key. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
 	}
 
-	mm := struct {
-		Data string `json:"data"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &mm)
-	if err != nil {
-		return "", err
-	}
-	return mm.Data, nil
+	key = new(TONPrivateKey)
+	err = json.Unmarshal(resp.Raw, key)
+	return key, err
 }
 
 // ChangeLocalPassword changeLocalPassword: change localPassword

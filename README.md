@@ -21,7 +21,7 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] exportKey
 - [x] exportPemKey
 - [x] exportEncryptedKey
-- [ ] importKey
+- [x] importKey
 - [x] importPemKey
 - [x] importEncryptedKey
 - [x] changeLocalPassword
@@ -38,6 +38,17 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] getLogStream
 - [x] sync
 - [x] CreateAndSendMessage
+- [ ] generic.createSendGramsQuery
+- [ ] query.send
+- [ ] query.forge
+- [ ] query.estimateFees
+- [ ] query.getInfo
+- [ ] smc.load
+- [ ] smc.getCode
+- [ ] smc.getData
+- [ ] smc.getState
+- [ ] smc.runGetMethod
+
 ## Examples
 Create new client 
 ```go
