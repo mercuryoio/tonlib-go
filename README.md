@@ -82,6 +82,13 @@ To run sample cli app your have to set LD_LIBRARY_PATH:
 For linux `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path2repository>/lib/linux`
 
 For MacOS `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path2repository>/lib/darwin`
+## Code generation from new *.tl files released by TON team
+If you need to update structures and add new methods based on a fresh release of TON`s client you can do it by using code
+ generation command. In order to perform such operation - run the command bellow and provide path of *.tl file to the running command 
+ as in the example bellow. 
+```sh
+$ go run github.com/mercuryoio/tonlib-go/cmd/tlgenerator /home/ansaev/repos/ton/tl/generate/scheme/tonlib_api.tl
+```
 ## Developers
 [Mercuryo.io](https://mercuryo.io)
 ## Contribute

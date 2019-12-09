@@ -11,3 +11,7 @@
 
 .idea
 ./vendor
+
+# auto generated files
+met.go
+st.go
