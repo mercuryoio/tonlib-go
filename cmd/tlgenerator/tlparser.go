@@ -41,7 +41,6 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 	var entityDesc string
 	var paramDescs map[string]string
 	var params map[string]string
-	var paramsSlice []string
 	var interfaces []InterfaceInfo
 	var enums []EnumInfo
 	var entities []ClassInfo
@@ -134,7 +133,6 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 				line = line[len(paramName)+1:]
 				paramType := line[:strings.Index(line, " ")]
 				params[paramName] = paramType
-				paramsSlice = append(paramsSlice, paramName)
 				line = line[len(paramType)+1:]
 			}
 
@@ -143,8 +141,7 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 			var classProps []ClassProperty
 			classProps = make([]ClassProperty, 0, 0)
 
-			for _, paramName := range paramsSlice {
-				paramType := params[paramName]
+			for paramName, paramType := range params {
 				classProp := ClassProperty{
 					Name:        paramName,
 					Type:        paramType,
@@ -153,7 +150,7 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 				classProps = append(classProps, classProp)
 			}
 
-			classInfoe := ClassInfo{
+			itemInfo := ClassInfo{
 				Name:        entityName,
 				Description: entityDesc,
 				RootName:    rootName,
@@ -161,24 +158,21 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 				IsFunction:  isFunctions,
 			}
 
-			entities = append(entities, classInfoe)
+			entities = append(entities, itemInfo)
 			entityDesc = ""
 			paramDescs = make(map[string]string)
 			params = make(map[string]string)
-			paramsSlice = make([]string, 0, 1)
-			ok := false
-			var enumInfo EnumInfo
-			var i int
-			for i, enumInfo = range enums {
-				if enumInfo.EnumType == replaceKeyWords(classInfoe.RootName)+"Enum" {
-					ok = true
-					break
+
+			// update enum`s items list
+			if !itemInfo.IsFunction{
+				for i, enumInfo := range enums{
+					if enumInfo.EnumType == replaceKeyWords(itemInfo.RootName)+"Enum"{
+						enumInfo.Items = append(enumInfo.Items,
+							replaceKeyWords(strings.ToUpper(itemInfo.Name[0:1])+itemInfo.Name[1:]))
+						enums[i] = enumInfo
+						break
+					}
 				}
-			}
-			if ok && !classInfoe.IsFunction {
-				enumInfo.Items = append(enumInfo.Items,
-					replaceKeyWords(strings.ToUpper(classInfoe.Name[0:1])+classInfoe.Name[1:]))
-				enums[i] = enumInfo
 			}
 		}
 	}
