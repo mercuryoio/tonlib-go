@@ -13,5 +13,5 @@
 ./vendor
 
 # auto generated files
-met.go
-st.go
+methods.go
+structs.go

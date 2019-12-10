@@ -87,7 +87,7 @@ If you need to update structures and add new methods based on a fresh release of
  generation command. In order to perform such operation - run the command bellow and provide path of *.tl file to the running command 
  as in the example bellow. 
 ```sh
-$ go run github.com/mercuryoio/tonlib-go/cmd/tlgenerator /home/ansaev/repos/ton/tl/generate/scheme/tonlib_api.tl
+$ go run github.com/mercuryoio/tonlib-go/cmd/tlgenerator /path/to/repos/ton/tl/generate/scheme/tonlib_api.tl
 ```
 ## Developers
 [Mercuryo.io](https://mercuryo.io)
