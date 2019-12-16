@@ -7,7 +7,7 @@ import (
 
 func checkIsInterface(input string, interfaces *[]InterfaceInfo) bool {
 	for _, interfaceInfo := range *interfaces {
-		if interfaceInfo.Name == input || replaceKeyWords(interfaceInfo.Name) == input {
+		if interfaceInfo.Name == input {
 			return true
 		}
 	}
@@ -17,9 +17,15 @@ func checkIsInterface(input string, interfaces *[]InterfaceInfo) bool {
 
 func convertToArgumentName(input string) string {
 	paramName := govalidator.UnderscoreToCamelCase(input)
-	paramName = replaceKeyWords(paramName)
 	paramName = strings.ToLower(paramName[0:1]) + paramName[1:]
 	paramName = strings.Replace(paramName, "type", "typeParam", 1)
+
+	return paramName
+}
+
+func convertToExternalArgumentName(input string) string {
+	paramName := govalidator.UnderscoreToCamelCase(input)
+	paramName = strings.ToUpper(paramName[0:1]) + paramName[1:]
 
 	return paramName
 }
@@ -62,8 +68,6 @@ func convertDataType(input string) (string, bool) {
 			isPrimitiveType = false
 		}
 	}
-
-	propType = replaceKeyWords(propType)
 
 	return propType, isPrimitiveType
 }

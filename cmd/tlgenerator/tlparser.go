@@ -70,7 +70,7 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 				Description: entityDesc,
 			}
 			interfaces = append(interfaces, interfaceInfo)
-			enums = append(enums, EnumInfo{EnumType: replaceKeyWords(interfaceName) + "Enum"})
+			enums = append(enums, EnumInfo{EnumType: interfaceName + "Enum"})
 
 		} else if strings.HasPrefix(line, "//@description ") { // Entity description
 			line = line[len("//@description "):]
@@ -166,9 +166,9 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 			// update enum`s items list
 			if !itemInfo.IsFunction{
 				for i, enumInfo := range enums{
-					if enumInfo.EnumType == replaceKeyWords(itemInfo.RootName)+"Enum"{
+					if enumInfo.EnumType == itemInfo.RootName+"Enum"{
 						enumInfo.Items = append(enumInfo.Items,
-							replaceKeyWords(strings.ToUpper(itemInfo.Name[0:1])+itemInfo.Name[1:]))
+							strings.ToUpper(itemInfo.Name[0:1])+itemInfo.Name[1:])
 						enums[i] = enumInfo
 						break
 					}
@@ -179,15 +179,3 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 	return nil, &entities, &interfaces, &enums
 }
 
-func replaceKeyWords(input string) string {
-	input = strings.Replace(input, "Api", "API", -1)
-	input = strings.Replace(input, "Url", "URL", -1)
-	input = strings.Replace(input, "Id", "ID", -1)
-	input = strings.Replace(input, "Ttl", "TTL", -1)
-	input = strings.Replace(input, "Html", "HTML", -1)
-	input = strings.Replace(input, "Uri", "URI", -1)
-	input = strings.Replace(input, "Ip", "IP", -1)
-	input = strings.Replace(input, "Udp", "UDP", -1)
-
-	return input
-}

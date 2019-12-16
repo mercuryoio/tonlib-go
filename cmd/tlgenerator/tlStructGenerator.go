@@ -90,7 +90,7 @@ func generateStructsFromTnEntities(
 	}
 
 	for _, interfaceInfo := range *interfaces {
-		interfaceInfo.Name = replaceKeyWords(interfaceInfo.Name)
+		interfaceInfo.Name = interfaceInfo.Name
 		typesCases := ""
 
 		structsContent += fmt.Sprintf("// %s %s \ntype %s interface {\nGet%sEnum() %sEnum\n}\n\n",
@@ -139,7 +139,7 @@ func generateStructsFromTnEntities(
 	for _, itemInfo := range *entities {
 		if !itemInfo.IsFunction {
 			structName := strings.ToUpper(itemInfo.Name[:1]) + itemInfo.Name[1:]
-			structName = replaceKeyWords(structName)
+			structName = structName
 			structNameCamel := strings.ToLower(structName[0:1]) + structName[1:]
 
 			hasInterfaceProps := false
@@ -150,7 +150,7 @@ func generateStructsFromTnEntities(
 
 			for i, prop := range itemInfo.Properties {
 				propName := govalidator.UnderscoreToCamelCase(prop.Name)
-				propName = replaceKeyWords(propName)
+				propName = propName
 
 				dataType, isPrimitive := convertDataType(prop.Type)
 				propsStrItem := ""
@@ -191,7 +191,7 @@ func generateStructsFromTnEntities(
 			assingsStr := ""
 			for i, param := range itemInfo.Properties {
 				propName := govalidator.UnderscoreToCamelCase(param.Name)
-				propName = replaceKeyWords(propName)
+				propName = propName
 				dataType, isPrimitive := convertDataType(param.Type)
 				paramName := convertToArgumentName(param.Name)
 
@@ -258,7 +258,7 @@ func generateStructsFromTnEntities(
 					assignStr, assignInterfacePropsStr)
 			}
 			if checkIsInterface(itemInfo.RootName, interfaces) {
-				rootName := replaceKeyWords(itemInfo.RootName)
+				rootName := itemInfo.RootName
 				structsContent += fmt.Sprintf(`
 					// Get%sEnum return the enum type of this object 
 					func (%s *%s) Get%sEnum() %sEnum {
@@ -274,9 +274,7 @@ func generateStructsFromTnEntities(
 
 		} else {
 			methodName := strings.ToUpper(itemInfo.Name[:1]) + itemInfo.Name[1:]
-			methodName = replaceKeyWords(methodName)
 			returnType := strings.ToUpper(itemInfo.RootName[:1]) + itemInfo.RootName[1:]
-			returnType = replaceKeyWords(returnType)
 			returnTypeCamel := strings.ToLower(returnType[:1]) + returnType[1:]
 			returnIsInterface := checkIsInterface(returnType, interfaces)
 
@@ -288,15 +286,18 @@ func generateStructsFromTnEntities(
 			}
 
 			paramsStr := ""
+			clientCallStructAttrs := ""
 			paramsDesc := ""
 			for i, param := range itemInfo.Properties {
 				paramName := convertToArgumentName(param.Name)
 				dataType, isPrimitive := convertDataType(param.Type)
 				if isPrimitive || checkIsInterface(dataType, interfaces) {
 					paramsStr += paramName + " " + dataType
+					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`", convertToExternalArgumentName(param.Name), dataType, param.Name)
 
 				} else {
 					paramsStr += paramName + " *" + dataType
+					clientCallStructAttrs += fmt.Sprintf("%s *%s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
 				}
 
 				if i < len(itemInfo.Properties)-1 {
@@ -314,7 +315,7 @@ func generateStructsFromTnEntities(
 			for i, param := range itemInfo.Properties {
 				paramName := convertToArgumentName(param.Name)
 
-				paramsStr += fmt.Sprintf("\"%s\":   %s,", param.Name, paramName)
+				paramsStr += fmt.Sprintf(`%s:   %s,`, convertToExternalArgumentName(param.Name), paramName)
 				if i < len(itemInfo.Properties)-1 {
 					paramsStr += "\n"
 				}
@@ -344,10 +345,15 @@ func generateStructsFromTnEntities(
 				}
 
 				methodsContent += fmt.Sprintf(` {
-					result, err := client.SendAndCatch(UpdateData{
-						"@type":       "%s",
-						%s
-					})
+					result, err := client.executeAsynchronously(
+						struct {
+							Type string `+"`json:\"@type\"`" + `
+							%s	
+						}{
+							Type: "%s",
+							%s
+						},
+					)
 	
 					if err != nil {
 						return nil, err
@@ -364,15 +370,20 @@ func generateStructsFromTnEntities(
 					}
 					}
 					
-					`, itemInfo.Name, paramsStr, illStr,
+					`, clientCallStructAttrs, itemInfo.Name, paramsStr, illStr,
 					enumType, casesStr)
 
 			} else {
 				methodsContent += fmt.Sprintf(` {
-					result, err := client.SendAndCatch(UpdateData{
-						"@type":       "%s",
-						%s
-					})
+					result, err := client.executeAsynchronously(
+						struct {
+							Type string `+"`json:\"@type\"`" + `
+							%s	
+						}{
+							Type: "%s",
+							%s
+						},
+					)
 	
 					if err != nil {
 						return nil, err
@@ -388,7 +399,7 @@ func generateStructsFromTnEntities(
 	
 					}
 					
-					`, itemInfo.Name, paramsStr, illStr, returnTypeCamel,
+					`,clientCallStructAttrs, itemInfo.Name, paramsStr, illStr, returnTypeCamel,
 					returnType, returnTypeCamel, ampersign, returnTypeCamel)
 			}
 
