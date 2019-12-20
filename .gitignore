@@ -13,5 +13,4 @@
 ./vendor
 
 # auto generated files
-methods.go
-structs.go
+test.keys/*
