@@ -311,7 +311,7 @@ func generateStructsFromTnEntities(
 			}
 
 			methodName := convertToExternalArgumentName(itemInfo.Name)
-			returnType := strings.ToUpper(itemInfo.RootName[:1]) + itemInfo.RootName[1:]
+			returnType := getStructName(itemInfo.RootName)
 			returnTypeCamel := strings.ToLower(returnType[:1]) + returnType[1:]
 
 

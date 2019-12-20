@@ -32,7 +32,6 @@ func convertFromDots(paramName string) string{
 				paramName += strings.ToUpper(sp[0:1]) + sp[1:]
 			}
 		}
-		fmt.Println("paramName", paramName)
 	}
 	return paramName
 
@@ -75,6 +74,9 @@ func getStructName(input string) string {
 func convertDataType(input string) (string, bool) {
 	propType := ""
 	isPrimitiveType := true
+	orignalInp := input
+	// cleanup from "="
+	input = strings.Trim(input, "=")
 
 	if strings.HasPrefix(input, "vector") {
 		input = "[]" + input[len("vector<"):len(input)-1]
@@ -102,11 +104,11 @@ func convertDataType(input string) (string, bool) {
 
 	} else {
 		if strings.HasPrefix(input, "[][]") {
-			propType = "[][]" + strings.ToUpper(input[len("[][]"):len("[][]")+1]) + input[len("[][]")+1:]
+			propType = "[][]" +  getStructName(input[len("[][]"):])
 		} else if strings.HasPrefix(input, "[]") {
-			propType = "[]" + strings.ToUpper(input[len("[]"):len("[]")+1]) + input[len("[]")+1:]
+			propType = "[]" + getStructName(input[len("[]"):])
 		} else {
-			propType = strings.ToUpper(input[:1]) + input[1:]
+			propType = getStructName(input)
 			isPrimitiveType = false
 		}
 	}
