@@ -61,13 +61,13 @@ type ZeroState struct {
 
 // TONConfigOption config and keystore
 type TONConfigOption struct {
-	Type         string          `json:"@type"`
-	Config       TONConfig       `json:"config"`
-	KeystoreType TONKeystoreType `json:"keystore_type"`
+	Type         string       `json:"@type"`
+	Config       TONConfig    `json:"config"`
+	KeystoreType KeyStoreType `json:"keystore_type"`
 }
 
-// TONKeystoreType directory
-type TONKeystoreType struct {
+// KeyStoreType directory
+type KeyStoreType struct {
 	Type      string `json:"@type"`
 	Directory string `json:"directory"`
 }
@@ -219,7 +219,7 @@ type TONFileConfig struct {
 		UseCallbacksForNetwork bool            `json:"use_callbacks_for_network"`
 		IgnoreCache            bool            `json:"ignore_cache"`
 	} `json:"config"`
-	KeystoreType TONKeystoreType `json:"keystore_type"`
+	KeystoreType KeyStoreType `json:"keystore_type"`
 }
 
 // GetConfig json config

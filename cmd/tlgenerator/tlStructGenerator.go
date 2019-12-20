@@ -8,7 +8,11 @@ import (
 )
 
 var StructNamesExcludedFromGenerator = []string{
-	"keyStoreTypeInMemory", "keyStoreTypeDirectory", "secureBytes", "secureString", "bytes", "vector",
+	"keyStoreTypeInMemory", "keyStoreTypeDirectory", "secureBytes", "secureString", "bytes", "vector", "config",
+}
+
+var SkipMethodNames = []string{
+	"init", "pptions.setConfig", "options.validateConfig", "options.setConfig",
 }
 
 func generateStructsFromTnEntities(
@@ -160,8 +164,7 @@ func generateStructsFromTnEntities(
 		}
 
 		if !itemInfo.IsFunction {
-			structName := strings.ToUpper(itemInfo.Name[:1]) + itemInfo.Name[1:]
-			structName = structName
+			structName := getStructName(itemInfo.Name)
 			structNameCamel := strings.ToLower(structName[0:1]) + structName[1:]
 
 			hasInterfaceProps := false
@@ -295,9 +298,23 @@ func generateStructsFromTnEntities(
 			}
 
 		} else {
-			methodName := strings.ToUpper(itemInfo.Name[:1]) + itemInfo.Name[1:]
+			methodsContent+= "// NOT_FUNC_#2 \n"
+			skip := false
+			for _, name:= range SkipMethodNames {
+				if name == itemInfo.Name{
+					skip = true
+					break
+				}
+			}
+			if skip{
+				continue
+			}
+
+			methodName := convertToExternalArgumentName(itemInfo.Name)
 			returnType := strings.ToUpper(itemInfo.RootName[:1]) + itemInfo.RootName[1:]
 			returnTypeCamel := strings.ToLower(returnType[:1]) + returnType[1:]
+
+
 			returnIsInterface := checkIsInterface(returnType, interfaces)
 
 			asterike := "*"
@@ -315,7 +332,7 @@ func generateStructsFromTnEntities(
 				dataType, isPrimitive := convertDataType(param.Type)
 				if isPrimitive || checkIsInterface(dataType, interfaces) {
 					paramsStr += paramName + " " + dataType
-					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`", convertToExternalArgumentName(param.Name), dataType, param.Name)
+					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
 
 				} else {
 					paramsStr += paramName + " *" + dataType
