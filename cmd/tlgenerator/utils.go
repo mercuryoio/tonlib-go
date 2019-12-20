@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"strings"
 )
@@ -70,4 +71,12 @@ func convertDataType(input string) (string, bool) {
 	}
 
 	return propType, isPrimitiveType
+}
+
+func ChangeType(paramName string, fromType string, toType string) string{
+	if fromType == "SecureBytes" && toType == "string"{
+		return fmt.Sprintf("base64.StdEncoding.EncodeToString(%s)", paramName)
+	}
+	return paramName
+
 }

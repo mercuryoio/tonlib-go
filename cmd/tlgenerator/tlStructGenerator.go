@@ -7,6 +7,10 @@ import (
 	"github.com/asaskevich/govalidator"
 )
 
+var StructNamesExcludedFromGenerator = []string{
+	"keyStoreTypeInMemory", "keyStoreTypeDirectory", "secureBytes", "secureString", "bytes", "vector",
+}
+
 func generateStructsFromTnEntities(
 	packageName string, entities *[]ClassInfo, interfaces *[]InterfaceInfo, enums *[]EnumInfo) (*string, *string) {
 	structsContent := fmt.Sprintf("package %s\n\n", packageName)
@@ -35,6 +39,12 @@ func generateStructsFromTnEntities(
 		"Type string `json:\"@type\"`\n" +
 		"Extra string `json:\"@extra\"`\n" +
 		"}\n\n"
+
+	structsContent += `
+	type SecureBytes  []byte
+	type SecureString string
+	type Bytes        []byte
+	`
 
 	structsContent += `
 	// JSONInt64 alias for int64, in order to deal with json big number problem
@@ -137,6 +147,18 @@ func generateStructsFromTnEntities(
 	}
 
 	for _, itemInfo := range *entities {
+		// skip generation
+		skip := false
+		for _, name := range StructNamesExcludedFromGenerator{
+			if itemInfo.Name == name{
+				skip = true
+				break
+			}
+		}
+		if skip{
+			continue
+		}
+
 		if !itemInfo.IsFunction {
 			structName := strings.ToUpper(itemInfo.Name[:1]) + itemInfo.Name[1:]
 			structName = structName
