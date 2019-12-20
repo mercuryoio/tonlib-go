@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-
 // ClassInfo holds info of a Class in .tl file
 type ClassInfo struct {
 	Name        string          `json:"name"`
@@ -164,9 +163,9 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 			params = make(map[string]string)
 
 			// update enum`s items list
-			if !itemInfo.IsFunction{
-				for i, enumInfo := range enums{
-					if enumInfo.EnumType == itemInfo.RootName+"Enum"{
+			if !itemInfo.IsFunction {
+				for i, enumInfo := range enums {
+					if enumInfo.EnumType == itemInfo.RootName+"Enum" {
 						enumInfo.Items = append(enumInfo.Items,
 							strings.ToUpper(itemInfo.Name[0:1])+itemInfo.Name[1:])
 						enums[i] = enumInfo
@@ -178,4 +177,3 @@ func parseTlFile(tlReader *bufio.Reader) (error, *[]ClassInfo, *[]InterfaceInfo,
 	}
 	return nil, &entities, &interfaces, &enums
 }
-

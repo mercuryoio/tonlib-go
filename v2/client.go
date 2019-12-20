@@ -42,7 +42,6 @@ type KeyStoreType struct {
 	Directory string `json:"directory"`
 }
 
-
 // TONResponse alias for use in TONResult
 type TONResponse map[string]interface{}
 
@@ -60,9 +59,10 @@ type Client struct {
 }
 
 type TonInitRequest struct {
-	Type    string          `json:"@type"`
+	Type    string  `json:"@type"`
 	Options Options `json:"options"`
 }
+
 // NewClient Creates a new instance of TONLib.
 func NewClient(tonCnf *TonInitRequest, config Config) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())

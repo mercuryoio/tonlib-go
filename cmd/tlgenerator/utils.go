@@ -16,17 +16,17 @@ func checkIsInterface(input string, interfaces *[]InterfaceInfo) bool {
 	return false
 }
 
-func convertFromDots(paramName string) string{
+func convertFromDots(paramName string) string {
 	splited := strings.Split(paramName, ".")
-	if len(splited) <2 {
+	if len(splited) < 2 {
 		return paramName
 	}
 
-	for i, sp := range splited{
-		if i == 0{
+	for i, sp := range splited {
+		if i == 0 {
 			paramName = sp
-		}else if len(sp)>0 {
-			if len(sp)==1 {
+		} else if len(sp) > 0 {
+			if len(sp) == 1 {
 				paramName += strings.ToUpper(sp[0:1])
 			} else {
 				paramName += strings.ToUpper(sp[0:1]) + sp[1:]
@@ -42,7 +42,6 @@ func convertToArgumentName(input string) string {
 	paramName = strings.ToLower(paramName[0:1]) + paramName[1:]
 	paramName = strings.Replace(paramName, "type", "typeParam", 1)
 	paramName = convertFromDots(paramName)
-
 
 	return paramName
 }
@@ -69,7 +68,6 @@ func getStructName(input string) string {
 
 	return paramName
 }
-
 
 func convertDataType(input string) (string, bool) {
 	propType := ""
@@ -103,7 +101,7 @@ func convertDataType(input string) (string, bool) {
 
 	} else {
 		if strings.HasPrefix(input, "[][]") {
-			propType = "[][]" +  getStructName(input[len("[][]"):])
+			propType = "[][]" + getStructName(input[len("[][]"):])
 		} else if strings.HasPrefix(input, "[]") {
 			propType = "[]" + getStructName(input[len("[]"):])
 		} else {
@@ -115,8 +113,8 @@ func convertDataType(input string) (string, bool) {
 	return propType, isPrimitiveType
 }
 
-func ChangeType(paramName string, fromType string, toType string) string{
-	if fromType == "SecureBytes" && toType == "string"{
+func ChangeType(paramName string, fromType string, toType string) string {
+	if fromType == "SecureBytes" && toType == "string" {
 		return fmt.Sprintf("base64.StdEncoding.EncodeToString(%s)", paramName)
 	}
 	return paramName

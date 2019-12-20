@@ -160,13 +160,13 @@ func generateStructsFromTnEntities(
 	for _, itemInfo := range *entities {
 		// skip generation
 		skip := false
-		for _, name := range StructNamesExcludedFromGenerator{
-			if itemInfo.Name == name{
+		for _, name := range StructNamesExcludedFromGenerator {
+			if itemInfo.Name == name {
 				skip = true
 				break
 			}
 		}
-		if skip{
+		if skip {
 			continue
 		}
 
@@ -306,20 +306,19 @@ func generateStructsFromTnEntities(
 
 		} else {
 			skip := false
-			for _, name:= range SkipMethodNames {
-				if name == itemInfo.Name{
+			for _, name := range SkipMethodNames {
+				if name == itemInfo.Name {
 					skip = true
 					break
 				}
 			}
-			if skip{
+			if skip {
 				continue
 			}
 
 			methodName := convertToExternalArgumentName(itemInfo.Name)
 			returnType := getStructName(itemInfo.RootName)
 			returnTypeCamel := strings.ToLower(returnType[:1]) + returnType[1:]
-
 
 			returnIsInterface := checkIsInterface(returnType, interfaces)
 
@@ -392,7 +391,7 @@ func generateStructsFromTnEntities(
 				methodsContent += fmt.Sprintf(` {
 					result, err := client.executeAsynchronously(
 						struct {
-							Type string `+"`json:\"@type\"`" + `
+							Type string `+"`json:\"@type\"`"+`
 							%s	
 						}{
 							Type: "%s",
@@ -422,7 +421,7 @@ func generateStructsFromTnEntities(
 				methodsContent += fmt.Sprintf(` {
 					result, err := client.executeAsynchronously(
 						struct {
-							Type string `+"`json:\"@type\"`" + `
+							Type string `+"`json:\"@type\"`"+`
 							%s	
 						}{
 							Type: "%s",
@@ -444,7 +443,7 @@ func generateStructsFromTnEntities(
 	
 					}
 					
-					`,clientCallStructAttrs, itemInfo.Name, paramsStr, illStr, returnTypeCamel,
+					`, clientCallStructAttrs, itemInfo.Name, paramsStr, illStr, returnTypeCamel,
 					returnType, returnTypeCamel, ampersign, returnTypeCamel)
 			}
 

@@ -4,7 +4,6 @@ import (
 	"testing"
 )
 
-
 func TestClient_InitWallet(t *testing.T) {
 	cnf := TonInitRequest{
 		"init",
@@ -12,8 +11,7 @@ func TestClient_InitWallet(t *testing.T) {
 			&KeyStoreType{
 				"keyStoreTypeDirectory",
 				"./test.keys",
-			}, NewConfig("", "", false, true,),),
-
+			}, NewConfig("", "", false, true, ), ),
 	}
 
 	cln, err := NewClient(&cnf, Config{})
@@ -30,4 +28,3 @@ func TestClient_InitWallet(t *testing.T) {
 	}
 	println("pKey", pKey)
 }
-

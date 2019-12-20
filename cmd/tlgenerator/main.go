@@ -17,8 +17,8 @@ var syncWithTlCmd = &cobra.Command{
 	Run:   syncWtithTl,
 }
 
-func  syncWtithTl(cmd *cobra.Command, args []string) {
-	if len(args) != 1{
+func syncWtithTl(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
 		log.Fatal("require only 1 argument - path to tl file")
 		return
 	}
@@ -37,7 +37,7 @@ func  syncWtithTl(cmd *cobra.Command, args []string) {
 
 	// eide file string by strign and parse it
 	err, entities, interfaces, enums := parseTlFile(tlReader)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 		return
 	}
@@ -93,7 +93,7 @@ func main() {
 	}()
 
 	err := syncWithTlCmd.Execute()
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	os.Exit(0)
