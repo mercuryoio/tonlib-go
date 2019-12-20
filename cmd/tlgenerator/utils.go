@@ -74,7 +74,6 @@ func getStructName(input string) string {
 func convertDataType(input string) (string, bool) {
 	propType := ""
 	isPrimitiveType := true
-	orignalInp := input
 	// cleanup from "="
 	input = strings.Trim(input, "=")
 

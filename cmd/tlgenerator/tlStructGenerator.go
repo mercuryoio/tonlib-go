@@ -8,11 +8,11 @@ import (
 )
 
 var StructNamesExcludedFromGenerator = []string{
-	"keyStoreTypeInMemory", "keyStoreTypeDirectory", "secureBytes", "secureString", "bytes", "vector", "config",
+	"keyStoreTypeInMemory", "keyStoreTypeDirectory", "secureBytes", "secureString", "bytes", "vector", "config", "internal.transactionId",
 }
 
 var SkipMethodNames = []string{
-	"init", "pptions.setConfig", "options.validateConfig", "options.setConfig",
+	"init", "pptions.setConfig", "options.validateConfig", "options.setConfig", "sync",
 }
 
 func generateStructsFromTnEntities(
@@ -45,9 +45,13 @@ func generateStructsFromTnEntities(
 		"}\n\n"
 
 	structsContent += `
-	type SecureBytes  []byte
-	type SecureString string
-	type Bytes        []byte
+	type SecureBytes   []byte
+	type SecureString  string
+	type Bytes         []byte
+	type TvmStackEntry interface {}
+	type SmcMethodId   int32 
+	type TvmNumber     string
+	type GenericAccountState string
 	`
 
 	structsContent += `
@@ -298,7 +302,6 @@ func generateStructsFromTnEntities(
 			}
 
 		} else {
-			methodsContent+= "// NOT_FUNC_#2 \n"
 			skip := false
 			for _, name:= range SkipMethodNames {
 				if name == itemInfo.Name{
