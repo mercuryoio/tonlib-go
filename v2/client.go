@@ -73,13 +73,12 @@ func NewClient(tonCnf *TonInitRequest, config Config) (*Client, error) {
 	if err != nil {
 		return &client, err
 	}
-	//if st, ok := resp.Data["@type"]; ok && st == "ok" {
-	//	return &client, nil
-	//}
-	//if st, ok := resp.Data["@type"]; ok && st == "error" {
-	//	return &client, fmt.Errorf("Error ton client init. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	//}
-	fmt.Println("Init ton client result: ", optionsInfo, err)
+	if optionsInfo.tonCommon.Type == "ok" {
+		return &client, nil
+	}
+	if optionsInfo.tonCommon.Type == "error" {
+		return &client, fmt.Errorf("Error ton client init. Message: %s. ", optionsInfo.tonCommon.Extra)
+	}
 	return &client, fmt.Errorf("Error ton client init. ")
 }
 
