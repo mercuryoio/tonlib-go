@@ -111,7 +111,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
 		err = json.Unmarshal(resB, &updateData)
 		if err == nil {
-			_, err = client.Onliteserverqueryresult(updateData["id"].(JSONInt64), updateData["data"].([]byte))
+			_, err = client.Onliteserverqueryresult(updateData["data"].([]byte), updateData["id"].(JSONInt64))
 		}
 	}
 	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {

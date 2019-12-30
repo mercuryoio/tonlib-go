@@ -8,10 +8,11 @@ func TestClient_InitWallet(t *testing.T) {
 	cnf := TonInitRequest{
 		"init",
 		*NewOptions(
+			NewConfig("", "", false, true, ),
 			&KeyStoreType{
 				"keyStoreTypeDirectory",
 				"./test.keys",
-			}, NewConfig("", "", false, true, ), ),
+			}, ),
 	}
 
 	cln, err := NewClient(&cnf, Config{})
