@@ -16,6 +16,8 @@ func TestClient_InitWallet(t *testing.T) {
 				"./test.keys",
 			}, ),
 	}
+	cnf1, err := ParseConfigFile("./tonlib.config.json.example")
+	fmt.Println(cnf1, err)
 
 	cln, err := NewClient(&cnf, Config{})
 	if err != nil {
