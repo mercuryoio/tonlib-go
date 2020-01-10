@@ -17,6 +17,7 @@ import (
 
 const (
 	DEFAULT_TIMEOUT = 4.5
+	DefaultRetries  = 10
 )
 
 type InputKey struct {
@@ -97,9 +98,14 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	C.tonlib_client_json_send(client.client, cs)
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
+	num := 0
 	for result == nil {
+		if num >= DefaultRetries{
+			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+		}
 		time.Sleep(1 * time.Second)
 		result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		num += 1
 	}
 
 	var updateData TONResponse
