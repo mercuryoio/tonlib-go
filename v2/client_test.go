@@ -3,6 +3,7 @@ package v2
 import (
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"testing"
 )
 
@@ -581,4 +582,80 @@ func TestClient_GenericSendgrams(t *testing.T) {
 		t.Fatal("TestClient_GenericSendgrams failed to GenericSendgrams(): ", err)
 	}
 	fmt.Printf("TestClient_GenericSendgrams: sent grams: %#v, err: %v. ", sendResult, err)
+}
+
+func TestClient_RawCreateandsendmessage(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{})
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.Createnewkey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_RawCreateandsendmessage pKey: %#v", pKey))
+
+	// prepare input key
+	inputKey := InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(loc),
+		TONPrivateKey{
+			pKey.PublicKey,
+			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+		},
+	}
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&inputKey,
+	)
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_RawCreateandsendmessage: init wallet ok: %#v, err: %v. \n", ok, err)
+
+	// get wallet address info
+	addrr, err := cln.WalletGetaccountaddress(NewWalletInitialAccountState(pKey.PublicKey))
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage failed to WalletGetaccountaddress(): ", err)
+	}
+	fmt.Printf("TestClient_RawCreateandsendmessage: get account adress addr: %#v, err: %v. ", addrr, err)
+
+	// read test message from file
+	bocFile, err := ioutil.ReadFile("./testgiver-query.boc")
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage: boc file dosn't exist", err)
+	}
+
+	// send msg
+	msgSentOk, err := cln.RawCreateandsendmessage(
+		addrr,
+		[]byte{},
+		bocFile,
+	)
+	if err != nil {
+		t.Fatal("TestClient_RawCreateandsendmessage failed to RawCreateandsendmessage(): ", err)
+	}
+	fmt.Printf("TestClient_RawCreateandsendmessage: create and send msg msgSentOk: %#v, err: %v. ", msgSentOk, err)
 }
