@@ -508,3 +508,77 @@ func TestClient_RawGettransactions(t *testing.T) {
 		t.Fatal("Ton get account txs error", err)
 	}
 }
+
+func TestClient_GenericSendgrams(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_GenericSendgrams failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{})
+	if err != nil {
+		t.Fatal("TestClient_GenericSendgrams Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.Createnewkey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendgrams create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_GenericSendgrams pKey: %#v", pKey))
+
+	// prepare input key
+	inputKey := InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(loc),
+		TONPrivateKey{
+			pKey.PublicKey,
+			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+		},
+	}
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&inputKey,
+	)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendgrams failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_GenericSendgrams: init wallet ok: %#v, err: %v. \n", ok, err)
+
+	// get wallet adress info
+	addrr, err := cln.WalletGetaccountaddress(NewWalletInitialAccountState(pKey.PublicKey))
+	if err != nil {
+		t.Fatal("TestClient_GenericSendgrams failed to WalletGetaccountaddress(): ", err)
+	}
+	fmt.Printf("TestClient_GenericSendgrams: get account adress addr: %#v, err: %v. ", addrr, err)
+
+	// send grams
+	sendResult, err := cln.GenericSendgrams(
+		true,
+		[]byte(""),
+		&inputKey,
+		addrr,
+		NewAccountAddress(TestAddress),
+		TestAmount,
+		5,
+	)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendgrams failed to GenericSendgrams(): ", err)
+	}
+	fmt.Printf("TestClient_GenericSendgrams: sent grams: %#v, err: %v. ", sendResult, err)
+}
