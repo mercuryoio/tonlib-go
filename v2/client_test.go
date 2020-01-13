@@ -10,8 +10,9 @@ const (
 	TestAccountAddress = "EQDfYZhDfNJ0EePoT5ibfI9oG9bWIU6g872oX5h9rL5PHY9a"
 	TestTxLt           = 289040000001
 	TestTxHash         = "V6R8l0hTjpGb/HHHtDwrMk1KxTDLpfz5h7PINr1crp4="
-	TestAmount         = "100000000"
+	TestAmount         = 100000000
 	TestPassword       = "test_password"
+	TestAddress        = "EQDfYZhDfNJ0EePoT5ibfI9oG9bWIU6g872oX5h9rL5PHY9a"
 )
 
 func TestClient_InitWallet(t *testing.T) {
@@ -338,4 +339,134 @@ func TestClient_WalletGetaccountaddress(t *testing.T) {
 	}
 
 	fmt.Printf("TestClient_WalletGetaccountaddress: get account adress addr: %#v, err: %v. ", addrr, err)
+}
+
+func TestClient_WalletGetaccountstate(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_WalletGetaccountstate failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{})
+	if err != nil {
+		t.Fatal("TestClient_WalletGetaccountstate Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.Createnewkey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_WalletGetaccountstate create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_WalletGetaccountstate pKey: %#v", pKey))
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&InputKey{
+			"inputKeyRegular",
+			base64.StdEncoding.EncodeToString(loc),
+			TONPrivateKey{
+				pKey.PublicKey,
+				base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletGetaccountstate failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_WalletGetaccountstate: init wallet ok: %#v, err: %v. ", ok, err)
+
+	// get wallet adress info
+	addrr, err := cln.WalletGetaccountaddress(NewWalletInitialAccountState(pKey.PublicKey))
+	if err != nil {
+		t.Fatal("TestClient_WalletGetaccountstate failed to WalletGetaccountaddress(): ", err)
+	}
+
+	// get wallet account state info
+	state, err := cln.WalletGetaccountstate(addrr)
+	if err != nil {
+		t.Fatal("TestClient_WalletGetaccountstate failed to WalletGetaccountstate(): ", err)
+	}
+
+	fmt.Printf("TestClient_WalletGetaccountstate: get account stater: %#v, err: %v. ", state, err)
+}
+
+func TestClient_WalletSendgrams(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_WalletSendgrams failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{})
+	if err != nil {
+		t.Fatal("TestClient_WalletSendgrams Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.Createnewkey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendgrams create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_WalletSendgrams pKey: %#v", pKey))
+
+	// prepare input key
+	inputKey := InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(loc),
+		TONPrivateKey{
+			pKey.PublicKey,
+			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+		},
+	}
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&inputKey,
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendgrams failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_WalletSendgrams: init wallet ok: %#v, err: %v. \n", ok, err)
+
+	// send grams
+	fmt.Println("starts wallet send gramm")
+	sendResult, err := cln.WalletSendgrams(
+		2,
+		0,
+		TestAmount,
+		[]byte("test send grams"),
+		&inputKey,
+		NewAccountAddress(TestAddress),
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendgrams failed to WalletSendgrams(): ", err)
+	}
+	fmt.Printf("TestClient_WalletSendgrams: send grams: %#v, err: %v. ", sendResult, err)
 }

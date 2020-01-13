@@ -66,12 +66,12 @@ func ParseConfigFile(path string) (*Options, error) {
 	}
 
 	return NewOptions(
+		&conf.Keystore,
 		NewConfig(
 			string(internalConfig),
 			conf.Config.BlockchainName,
 			conf.Config.UseCallbacksForNetwork,
 			conf.Config.IgnoreCache,
 		),
-		&conf.Keystore,
 	), nil
 }
