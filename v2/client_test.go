@@ -150,7 +150,7 @@ func TestClient_Exportkey(t *testing.T) {
 			pKey.PublicKey,
 			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
 		},
-	},)
+	}, )
 	if err != nil {
 		t.Fatal("Ton export key error", err)
 	}
@@ -469,4 +469,42 @@ func TestClient_WalletSendgrams(t *testing.T) {
 		t.Fatal("TestClient_WalletSendgrams failed to WalletSendgrams(): ", err)
 	}
 	fmt.Printf("TestClient_WalletSendgrams: send grams: %#v, err: %v. ", sendResult, err)
+}
+
+func TestClient_RawGettransactions(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_RawGettransactions failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{})
+	if err != nil {
+		t.Fatal("TestClient_RawGettransactions Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	addr := NewAccountAddress(TestAddress)
+
+	// get account state
+	state, err := cln.RawGetaccountstate(addr)
+	if err != nil {
+		t.Fatal("Get state error error", err)
+	}
+
+	_, err = cln.RawGettransactions(
+		addr,
+		state.LastTransactionId,
+	)
+	if err != nil {
+		t.Fatal("Ton get account txs error", err)
+	}
 }
