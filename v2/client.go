@@ -129,7 +129,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 			return &TONResult{}, err
 		}
 		fmt.Println("run sync", updateData)
-		_, err = client.Sync()
+		err = client.Sync(syncResp.SyncState)
 		if err != nil {
 			return &TONResult{}, err
 		}
@@ -156,4 +156,58 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
+}
+
+//sync node`s blocks to current
+func (client *Client) Sync(syncState SyncState) error {
+	data := struct {
+		Type      string       `json:"@type"`
+		SyncState SyncState `json:"sync_state"`
+	}{
+		Type: "sync",
+		SyncState: syncState,
+	}
+	req, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	cs := C.CString(string(req))
+	defer C.free(unsafe.Pointer(cs))
+	C.tonlib_client_json_send(client.client, cs)
+	for {
+		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		for result == nil {
+			fmt.Println("empty response. next attempt")
+			time.Sleep(1 * time.Second)
+			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		}
+		syncResp := struct {
+			Type      string    `json:"@type"`
+			SyncState SyncState `json:"sync_state"`
+		}{}
+		res := C.GoString(result)
+		resB := []byte(res)
+		err = json.Unmarshal(resB, &syncResp)
+		fmt.Println("sync result", string(resB))
+		if err != nil {
+			return err
+		}
+		if syncResp.SyncState.Type == "syncStateDone" {
+			result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+			syncResp = struct {
+				Type      string    `json:"@type"`
+				SyncState SyncState `json:"sync_state"`
+			}{}
+			res := C.GoString(result)
+			resB := []byte(res)
+			err = json.Unmarshal(resB, &syncResp)
+			fmt.Println("sync result", string(resB))
+			if err != nil {
+				return err
+			}
+		}
+		if syncResp.Type == "ok" {
+			return nil
+		}
+	}
 }

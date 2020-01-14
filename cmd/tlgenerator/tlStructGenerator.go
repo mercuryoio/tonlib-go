@@ -8,14 +8,11 @@ import (
 )
 
 var StructNamesExcludedFromGenerator = []string{
-	// "keyStoreTypeInMemory", "keyStoreTypeDirectory",
 	"secureBytes", "secureString", "bytes", "vector",
-	// "config",
-	// "internal.transactionId",
 }
 
 var SkipMethodNames = []string{
-	// "init", "options.validateConfig", "options.setConfig", "sync",
+	"sync",
 }
 
 func generateStructsFromTnEntities(

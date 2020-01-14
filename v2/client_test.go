@@ -500,8 +500,8 @@ func TestClient_RawGettransactions(t *testing.T) {
 	}
 
 	_, err = cln.RawGettransactions(
-		addr,
 		state.LastTransactionId,
+		addr,
 	)
 	if err != nil {
 		t.Fatal("Ton get account txs error", err)
