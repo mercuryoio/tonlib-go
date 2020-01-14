@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -218,6 +219,15 @@ func generateStructsFromTnEntities(
 			paramsStr := ""
 			paramsDesc := ""
 			assingsStr := ""
+
+			// sort params to enshure the same params order in each generation
+			sort.Slice(itemInfo.Properties, func(i, j int) bool {
+				if (itemInfo.Properties[i].Name > itemInfo.Properties[j].Name){
+					return false
+				}
+				return true
+			})
+
 			for i, param := range itemInfo.Properties {
 				propName := govalidator.UnderscoreToCamelCase(param.Name)
 				propName = propName
@@ -313,7 +323,7 @@ func generateStructsFromTnEntities(
 				continue
 			}
 
-			methodName := convertToExternalArgumentName(itemInfo.Name)
+			methodName := convertToExternalMethodName(itemInfo.Name)
 			returnType := getStructName(itemInfo.RootName)
 			returnTypeCamel := strings.ToLower(returnType[:1]) + returnType[1:]
 
@@ -329,6 +339,15 @@ func generateStructsFromTnEntities(
 			paramsStr := ""
 			clientCallStructAttrs := ""
 			paramsDesc := ""
+
+			// sort params to enshure the same params order in each generation
+			sort.Slice(itemInfo.Properties, func(i, j int) bool {
+				if (itemInfo.Properties[i].Name > itemInfo.Properties[j].Name){
+					return false
+				}
+				return true
+			})
+
 			for i, param := range itemInfo.Properties {
 				paramName := convertToArgumentName(param.Name)
 				dataType, isPrimitive := convertDataType(param.Type)

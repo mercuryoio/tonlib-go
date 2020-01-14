@@ -54,6 +54,13 @@ func convertToExternalArgumentName(input string) string {
 	return paramName
 }
 
+func convertToExternalMethodName(input string) string {
+	paramName := strings.ToUpper(input[0:1]) + input[1:]
+	paramName = convertFromDots(paramName)
+
+	return paramName
+}
+
 func convertToInternalAtributeName(input string) string {
 	paramName := govalidator.UnderscoreToCamelCase(input)
 	paramName = strings.ToLower(paramName[0:1]) + paramName[1:]

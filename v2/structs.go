@@ -202,8 +202,8 @@ func NewBoolTrue() *BoolTrue {
 // Error
 type Error struct {
 	tonCommon
-	Code    int32  `json:"code"`    //
 	Message string `json:"message"` //
+	Code    int32  `json:"code"`    //
 }
 
 // MessageType return the string telegram-type of Error
@@ -291,10 +291,10 @@ func NewKeyStoreTypeInMemory() *KeyStoreTypeInMemory {
 // Config
 type Config struct {
 	tonCommon
-	Config                 string `json:"config"`                    //
-	BlockchainName         string `json:"blockchain_name"`           //
 	UseCallbacksForNetwork bool   `json:"use_callbacks_for_network"` //
 	IgnoreCache            bool   `json:"ignore_cache"`              //
+	Config                 string `json:"config"`                    //
+	BlockchainName         string `json:"blockchain_name"`           //
 }
 
 // MessageType return the string telegram-type of Config
@@ -304,17 +304,17 @@ func (config *Config) MessageType() string {
 
 // NewConfig creates a new Config
 //
-// @param config
 // @param blockchainName
-// @param useCallbacksForNetwork
+// @param config
 // @param ignoreCache
-func NewConfig(config string, blockchainName string, useCallbacksForNetwork bool, ignoreCache bool) *Config {
+// @param useCallbacksForNetwork
+func NewConfig(blockchainName string, config string, ignoreCache bool, useCallbacksForNetwork bool) *Config {
 	configTemp := Config{
 		tonCommon:              tonCommon{Type: "config"},
-		Config:                 config,
 		BlockchainName:         blockchainName,
-		UseCallbacksForNetwork: useCallbacksForNetwork,
+		Config:                 config,
 		IgnoreCache:            ignoreCache,
+		UseCallbacksForNetwork: useCallbacksForNetwork,
 	}
 
 	return &configTemp
@@ -323,8 +323,8 @@ func NewConfig(config string, blockchainName string, useCallbacksForNetwork bool
 // Options
 type Options struct {
 	tonCommon
-	Config       *Config       `json:"config"`        //
 	KeystoreType *KeyStoreType `json:"keystore_type"` //
+	Config       *Config       `json:"config"`        //
 }
 
 // MessageType return the string telegram-type of Options
@@ -334,13 +334,13 @@ func (options *Options) MessageType() string {
 
 // NewOptions creates a new Options
 //
-// @param keystoreType
 // @param config
-func NewOptions(keystoreType *KeyStoreType, config *Config) *Options {
+// @param keystoreType
+func NewOptions(config *Config, keystoreType *KeyStoreType) *Options {
 	optionsTemp := Options{
 		tonCommon:    tonCommon{Type: "options"},
-		KeystoreType: keystoreType,
 		Config:       config,
+		KeystoreType: keystoreType,
 	}
 
 	return &optionsTemp
@@ -595,17 +595,17 @@ func (unpackedAccountAddress *UnpackedAccountAddress) MessageType() string {
 
 // NewUnpackedAccountAddress creates a new UnpackedAccountAddress
 //
-// @param workchainId
+// @param addr
 // @param bounceable
 // @param testnet
-// @param addr
-func NewUnpackedAccountAddress(workchainId int32, bounceable bool, testnet bool, addr []byte) *UnpackedAccountAddress {
+// @param workchainId
+func NewUnpackedAccountAddress(addr []byte, bounceable bool, testnet bool, workchainId int32) *UnpackedAccountAddress {
 	unpackedAccountAddressTemp := UnpackedAccountAddress{
 		tonCommon:   tonCommon{Type: "unpackedAccountAddress"},
-		WorkchainId: workchainId,
+		Addr:        addr,
 		Bounceable:  bounceable,
 		Testnet:     testnet,
-		Addr:        addr,
+		WorkchainId: workchainId,
 	}
 
 	return &unpackedAccountAddressTemp
@@ -625,13 +625,13 @@ func (internalTransactionId *InternalTransactionId) MessageType() string {
 
 // NewInternalTransactionId creates a new InternalTransactionId
 //
-// @param lt
 // @param hash
-func NewInternalTransactionId(lt JSONInt64, hash []byte) *InternalTransactionId {
+// @param lt
+func NewInternalTransactionId(hash []byte, lt JSONInt64) *InternalTransactionId {
 	internalTransactionIdTemp := InternalTransactionId{
 		tonCommon: tonCommon{Type: "internal.transactionId"},
-		Lt:        lt,
 		Hash:      hash,
+		Lt:        lt,
 	}
 
 	return &internalTransactionIdTemp
@@ -684,17 +684,17 @@ func (rawAccountState *RawAccountState) MessageType() string {
 // @param balance
 // @param code
 // @param data
-// @param lastTransactionId
 // @param frozenHash
+// @param lastTransactionId
 // @param syncUtime
-func NewRawAccountState(balance JSONInt64, code []byte, data []byte, lastTransactionId *InternalTransactionId, frozenHash []byte, syncUtime int64) *RawAccountState {
+func NewRawAccountState(balance JSONInt64, code []byte, data []byte, frozenHash []byte, lastTransactionId *InternalTransactionId, syncUtime int64) *RawAccountState {
 	rawAccountStateTemp := RawAccountState{
 		tonCommon:         tonCommon{Type: "raw.accountState"},
 		Balance:           balance,
 		Code:              code,
 		Data:              data,
-		LastTransactionId: lastTransactionId,
 		FrozenHash:        frozenHash,
+		LastTransactionId: lastTransactionId,
 		SyncUtime:         syncUtime,
 	}
 
@@ -704,6 +704,7 @@ func NewRawAccountState(balance JSONInt64, code []byte, data []byte, lastTransac
 // RawMessage
 type RawMessage struct {
 	tonCommon
+	CreatedLt   JSONInt64 `json:"created_lt"`  //
 	BodyHash    []byte    `json:"body_hash"`   //
 	Message     []byte    `json:"message"`     //
 	Source      string    `json:"source"`      //
@@ -711,7 +712,6 @@ type RawMessage struct {
 	Value       JSONInt64 `json:"value"`       //
 	FwdFee      JSONInt64 `json:"fwd_fee"`     //
 	IhrFee      JSONInt64 `json:"ihr_fee"`     //
-	CreatedLt   JSONInt64 `json:"created_lt"`  //
 }
 
 // MessageType return the string telegram-type of RawMessage
@@ -722,24 +722,24 @@ func (rawMessage *RawMessage) MessageType() string {
 // NewRawMessage creates a new RawMessage
 //
 // @param bodyHash
-// @param message
-// @param source
+// @param createdLt
 // @param destination
-// @param value
 // @param fwdFee
 // @param ihrFee
-// @param createdLt
-func NewRawMessage(bodyHash []byte, message []byte, source string, destination string, value JSONInt64, fwdFee JSONInt64, ihrFee JSONInt64, createdLt JSONInt64) *RawMessage {
+// @param message
+// @param source
+// @param value
+func NewRawMessage(bodyHash []byte, createdLt JSONInt64, destination string, fwdFee JSONInt64, ihrFee JSONInt64, message []byte, source string, value JSONInt64) *RawMessage {
 	rawMessageTemp := RawMessage{
 		tonCommon:   tonCommon{Type: "raw.message"},
 		BodyHash:    bodyHash,
-		Message:     message,
-		Source:      source,
+		CreatedLt:   createdLt,
 		Destination: destination,
-		Value:       value,
 		FwdFee:      fwdFee,
 		IhrFee:      ihrFee,
-		CreatedLt:   createdLt,
+		Message:     message,
+		Source:      source,
+		Value:       value,
 	}
 
 	return &rawMessageTemp
@@ -748,14 +748,14 @@ func NewRawMessage(bodyHash []byte, message []byte, source string, destination s
 // RawTransaction
 type RawTransaction struct {
 	tonCommon
-	TransactionId *InternalTransactionId `json:"transaction_id"` //
-	Fee           JSONInt64              `json:"fee"`            //
-	StorageFee    JSONInt64              `json:"storage_fee"`    //
-	OtherFee      JSONInt64              `json:"other_fee"`      //
 	InMsg         *RawMessage            `json:"in_msg"`         //
 	OutMsgs       []RawMessage           `json:"out_msgs"`       //
 	Utime         int64                  `json:"utime"`          //
 	Data          []byte                 `json:"data"`           //
+	TransactionId *InternalTransactionId `json:"transaction_id"` //
+	Fee           JSONInt64              `json:"fee"`            //
+	StorageFee    JSONInt64              `json:"storage_fee"`    //
+	OtherFee      JSONInt64              `json:"other_fee"`      //
 }
 
 // MessageType return the string telegram-type of RawTransaction
@@ -765,25 +765,25 @@ func (rawTransaction *RawTransaction) MessageType() string {
 
 // NewRawTransaction creates a new RawTransaction
 //
-// @param transactionId
-// @param fee
-// @param storageFee
-// @param otherFee
-// @param inMsg
-// @param outMsgs
-// @param utime
 // @param data
-func NewRawTransaction(transactionId *InternalTransactionId, fee JSONInt64, storageFee JSONInt64, otherFee JSONInt64, inMsg *RawMessage, outMsgs []RawMessage, utime int64, data []byte) *RawTransaction {
+// @param fee
+// @param inMsg
+// @param otherFee
+// @param outMsgs
+// @param storageFee
+// @param transactionId
+// @param utime
+func NewRawTransaction(data []byte, fee JSONInt64, inMsg *RawMessage, otherFee JSONInt64, outMsgs []RawMessage, storageFee JSONInt64, transactionId *InternalTransactionId, utime int64) *RawTransaction {
 	rawTransactionTemp := RawTransaction{
 		tonCommon:     tonCommon{Type: "raw.transaction"},
-		TransactionId: transactionId,
-		Fee:           fee,
-		StorageFee:    storageFee,
-		OtherFee:      otherFee,
-		InMsg:         inMsg,
-		OutMsgs:       outMsgs,
-		Utime:         utime,
 		Data:          data,
+		Fee:           fee,
+		InMsg:         inMsg,
+		OtherFee:      otherFee,
+		OutMsgs:       outMsgs,
+		StorageFee:    storageFee,
+		TransactionId: transactionId,
+		Utime:         utime,
 	}
 
 	return &rawTransactionTemp
@@ -803,13 +803,13 @@ func (rawTransactions *RawTransactions) MessageType() string {
 
 // NewRawTransactions creates a new RawTransactions
 //
-// @param transactions
 // @param previousTransactionId
-func NewRawTransactions(transactions []RawTransaction, previousTransactionId *InternalTransactionId) *RawTransactions {
+// @param transactions
+func NewRawTransactions(previousTransactionId *InternalTransactionId, transactions []RawTransaction) *RawTransactions {
 	rawTransactionsTemp := RawTransactions{
 		tonCommon:             tonCommon{Type: "raw.transactions"},
-		Transactions:          transactions,
 		PreviousTransactionId: previousTransactionId,
+		Transactions:          transactions,
 	}
 
 	return &rawTransactionsTemp
@@ -841,10 +841,10 @@ func NewTestWalletInitialAccountState(publicKey string) *TestWalletInitialAccoun
 // TestWalletAccountState
 type TestWalletAccountState struct {
 	tonCommon
-	Balance           JSONInt64              `json:"balance"`             //
-	Seqno             int32                  `json:"seqno"`               //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	SyncUtime         int64                  `json:"sync_utime"`          //
+	Balance           JSONInt64              `json:"balance"`             //
+	Seqno             int32                  `json:"seqno"`               //
 }
 
 // MessageType return the string telegram-type of TestWalletAccountState
@@ -855,15 +855,15 @@ func (testWalletAccountState *TestWalletAccountState) MessageType() string {
 // NewTestWalletAccountState creates a new TestWalletAccountState
 //
 // @param balance
-// @param seqno
 // @param lastTransactionId
+// @param seqno
 // @param syncUtime
-func NewTestWalletAccountState(balance JSONInt64, seqno int32, lastTransactionId *InternalTransactionId, syncUtime int64) *TestWalletAccountState {
+func NewTestWalletAccountState(balance JSONInt64, lastTransactionId *InternalTransactionId, seqno int32, syncUtime int64) *TestWalletAccountState {
 	testWalletAccountStateTemp := TestWalletAccountState{
 		tonCommon:         tonCommon{Type: "testWallet.accountState"},
 		Balance:           balance,
-		Seqno:             seqno,
 		LastTransactionId: lastTransactionId,
+		Seqno:             seqno,
 		SyncUtime:         syncUtime,
 	}
 
@@ -910,15 +910,15 @@ func (walletAccountState *WalletAccountState) MessageType() string {
 // NewWalletAccountState creates a new WalletAccountState
 //
 // @param balance
-// @param seqno
 // @param lastTransactionId
+// @param seqno
 // @param syncUtime
-func NewWalletAccountState(balance JSONInt64, seqno int32, lastTransactionId *InternalTransactionId, syncUtime int64) *WalletAccountState {
+func NewWalletAccountState(balance JSONInt64, lastTransactionId *InternalTransactionId, seqno int32, syncUtime int64) *WalletAccountState {
 	walletAccountStateTemp := WalletAccountState{
 		tonCommon:         tonCommon{Type: "wallet.accountState"},
 		Balance:           balance,
-		Seqno:             seqno,
 		LastTransactionId: lastTransactionId,
+		Seqno:             seqno,
 		SyncUtime:         syncUtime,
 	}
 
@@ -969,18 +969,18 @@ func (walletV3AccountState *WalletV3AccountState) MessageType() string {
 // NewWalletV3AccountState creates a new WalletV3AccountState
 //
 // @param balance
-// @param walletId
-// @param seqno
 // @param lastTransactionId
+// @param seqno
 // @param syncUtime
-func NewWalletV3AccountState(balance JSONInt64, walletId int64, seqno int32, lastTransactionId *InternalTransactionId, syncUtime int64) *WalletV3AccountState {
+// @param walletId
+func NewWalletV3AccountState(balance JSONInt64, lastTransactionId *InternalTransactionId, seqno int32, syncUtime int64, walletId int64) *WalletV3AccountState {
 	walletV3AccountStateTemp := WalletV3AccountState{
 		tonCommon:         tonCommon{Type: "wallet.v3.accountState"},
 		Balance:           balance,
-		WalletId:          walletId,
-		Seqno:             seqno,
 		LastTransactionId: lastTransactionId,
+		Seqno:             seqno,
 		SyncUtime:         syncUtime,
+		WalletId:          walletId,
 	}
 
 	return &walletV3AccountStateTemp
@@ -989,10 +989,10 @@ func NewWalletV3AccountState(balance JSONInt64, walletId int64, seqno int32, las
 // TestGiverAccountState
 type TestGiverAccountState struct {
 	tonCommon
+	Balance           JSONInt64              `json:"balance"`             //
 	Seqno             int32                  `json:"seqno"`               //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	SyncUtime         int64                  `json:"sync_utime"`          //
-	Balance           JSONInt64              `json:"balance"`             //
 }
 
 // MessageType return the string telegram-type of TestGiverAccountState
@@ -1002,17 +1002,17 @@ func (testGiverAccountState *TestGiverAccountState) MessageType() string {
 
 // NewTestGiverAccountState creates a new TestGiverAccountState
 //
-// @param seqno
-// @param lastTransactionId
-// @param syncUtime
 // @param balance
-func NewTestGiverAccountState(seqno int32, lastTransactionId *InternalTransactionId, syncUtime int64, balance JSONInt64) *TestGiverAccountState {
+// @param lastTransactionId
+// @param seqno
+// @param syncUtime
+func NewTestGiverAccountState(balance JSONInt64, lastTransactionId *InternalTransactionId, seqno int32, syncUtime int64) *TestGiverAccountState {
 	testGiverAccountStateTemp := TestGiverAccountState{
 		tonCommon:         tonCommon{Type: "testGiver.accountState"},
-		Seqno:             seqno,
-		LastTransactionId: lastTransactionId,
-		SyncUtime:         syncUtime,
 		Balance:           balance,
+		LastTransactionId: lastTransactionId,
+		Seqno:             seqno,
+		SyncUtime:         syncUtime,
 	}
 
 	return &testGiverAccountStateTemp
@@ -1021,10 +1021,10 @@ func NewTestGiverAccountState(seqno int32, lastTransactionId *InternalTransactio
 // UninitedAccountState
 type UninitedAccountState struct {
 	tonCommon
-	FrozenHash        []byte                 `json:"frozen_hash"`         //
 	SyncUtime         int64                  `json:"sync_utime"`          //
 	Balance           JSONInt64              `json:"balance"`             //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	FrozenHash        []byte                 `json:"frozen_hash"`         //
 }
 
 // MessageType return the string telegram-type of UninitedAccountState
@@ -1034,17 +1034,17 @@ func (uninitedAccountState *UninitedAccountState) MessageType() string {
 
 // NewUninitedAccountState creates a new UninitedAccountState
 //
-// @param frozenHash
-// @param syncUtime
 // @param balance
+// @param frozenHash
 // @param lastTransactionId
-func NewUninitedAccountState(frozenHash []byte, syncUtime int64, balance JSONInt64, lastTransactionId *InternalTransactionId) *UninitedAccountState {
+// @param syncUtime
+func NewUninitedAccountState(balance JSONInt64, frozenHash []byte, lastTransactionId *InternalTransactionId, syncUtime int64) *UninitedAccountState {
 	uninitedAccountStateTemp := UninitedAccountState{
 		tonCommon:         tonCommon{Type: "uninited.accountState"},
-		FrozenHash:        frozenHash,
-		SyncUtime:         syncUtime,
 		Balance:           balance,
+		FrozenHash:        frozenHash,
 		LastTransactionId: lastTransactionId,
+		SyncUtime:         syncUtime,
 	}
 
 	return &uninitedAccountStateTemp
@@ -1202,13 +1202,13 @@ func (sendGramsResult *SendGramsResult) MessageType() string {
 
 // NewSendGramsResult creates a new SendGramsResult
 //
-// @param sentUntil
 // @param bodyHash
-func NewSendGramsResult(sentUntil int64, bodyHash []byte) *SendGramsResult {
+// @param sentUntil
+func NewSendGramsResult(bodyHash []byte, sentUntil int64) *SendGramsResult {
 	sendGramsResultTemp := SendGramsResult{
 		tonCommon: tonCommon{Type: "sendGramsResult"},
-		SentUntil: sentUntil,
 		BodyHash:  bodyHash,
+		SentUntil: sentUntil,
 	}
 
 	return &sendGramsResultTemp
@@ -1237,9 +1237,9 @@ func NewSyncStateDone() *SyncStateDone {
 // SyncStateInProgress
 type SyncStateInProgress struct {
 	tonCommon
-	FromSeqno    int32 `json:"from_seqno"`    //
 	ToSeqno      int32 `json:"to_seqno"`      //
 	CurrentSeqno int32 `json:"current_seqno"` //
+	FromSeqno    int32 `json:"from_seqno"`    //
 }
 
 // MessageType return the string telegram-type of SyncStateInProgress
@@ -1249,15 +1249,15 @@ func (syncStateInProgress *SyncStateInProgress) MessageType() string {
 
 // NewSyncStateInProgress creates a new SyncStateInProgress
 //
+// @param currentSeqno
 // @param fromSeqno
 // @param toSeqno
-// @param currentSeqno
-func NewSyncStateInProgress(fromSeqno int32, toSeqno int32, currentSeqno int32) *SyncStateInProgress {
+func NewSyncStateInProgress(currentSeqno int32, fromSeqno int32, toSeqno int32) *SyncStateInProgress {
 	syncStateInProgressTemp := SyncStateInProgress{
 		tonCommon:    tonCommon{Type: "syncStateInProgress"},
+		CurrentSeqno: currentSeqno,
 		FromSeqno:    fromSeqno,
 		ToSeqno:      toSeqno,
-		CurrentSeqno: currentSeqno,
 	}
 
 	return &syncStateInProgressTemp
@@ -1279,17 +1279,17 @@ func (fees *Fees) MessageType() string {
 
 // NewFees creates a new Fees
 //
+// @param fwdFee
+// @param gasFee
 // @param inFwdFee
 // @param storageFee
-// @param gasFee
-// @param fwdFee
-func NewFees(inFwdFee int64, storageFee int64, gasFee int64, fwdFee int64) *Fees {
+func NewFees(fwdFee int64, gasFee int64, inFwdFee int64, storageFee int64) *Fees {
 	feesTemp := Fees{
 		tonCommon:  tonCommon{Type: "fees"},
+		FwdFee:     fwdFee,
+		GasFee:     gasFee,
 		InFwdFee:   inFwdFee,
 		StorageFee: storageFee,
-		GasFee:     gasFee,
-		FwdFee:     fwdFee,
 	}
 
 	return &feesTemp
@@ -1309,13 +1309,13 @@ func (queryFees *QueryFees) MessageType() string {
 
 // NewQueryFees creates a new QueryFees
 //
-// @param sourceFees
 // @param destinationFees
-func NewQueryFees(sourceFees *Fees, destinationFees *Fees) *QueryFees {
+// @param sourceFees
+func NewQueryFees(destinationFees *Fees, sourceFees *Fees) *QueryFees {
 	queryFeesTemp := QueryFees{
 		tonCommon:       tonCommon{Type: "query.fees"},
-		SourceFees:      sourceFees,
 		DestinationFees: destinationFees,
+		SourceFees:      sourceFees,
 	}
 
 	return &queryFeesTemp
@@ -1336,15 +1336,15 @@ func (queryInfo *QueryInfo) MessageType() string {
 
 // NewQueryInfo creates a new QueryInfo
 //
+// @param bodyHash
 // @param id
 // @param validUntil
-// @param bodyHash
-func NewQueryInfo(id int64, validUntil int64, bodyHash []byte) *QueryInfo {
+func NewQueryInfo(bodyHash []byte, id int64, validUntil int64) *QueryInfo {
 	queryInfoTemp := QueryInfo{
 		tonCommon:  tonCommon{Type: "query.info"},
+		BodyHash:   bodyHash,
 		Id:         id,
 		ValidUntil: validUntil,
-		BodyHash:   bodyHash,
 	}
 
 	return &queryInfoTemp
@@ -1684,15 +1684,15 @@ func (smcRunResult *SmcRunResult) MessageType() string {
 
 // NewSmcRunResult creates a new SmcRunResult
 //
+// @param exitCode
 // @param gasUsed
 // @param stack
-// @param exitCode
-func NewSmcRunResult(gasUsed int64, stack []TvmStackEntry, exitCode int32) *SmcRunResult {
+func NewSmcRunResult(exitCode int32, gasUsed int64, stack []TvmStackEntry) *SmcRunResult {
 	smcRunResultTemp := SmcRunResult{
 		tonCommon: tonCommon{Type: "smc.runResult"},
+		ExitCode:  exitCode,
 		GasUsed:   gasUsed,
 		Stack:     stack,
-		ExitCode:  exitCode,
 	}
 
 	return &smcRunResultTemp
@@ -1701,8 +1701,8 @@ func NewSmcRunResult(gasUsed int64, stack []TvmStackEntry, exitCode int32) *SmcR
 // UpdateSendLiteServerQuery
 type UpdateSendLiteServerQuery struct {
 	tonCommon
-	Data []byte    `json:"data"` //
 	Id   JSONInt64 `json:"id"`   //
+	Data []byte    `json:"data"` //
 }
 
 // MessageType return the string telegram-type of UpdateSendLiteServerQuery
@@ -1775,8 +1775,8 @@ func (logStreamDefault *LogStreamDefault) GetLogStreamEnum() LogStreamEnum {
 // LogStreamFile The log is written to a file
 type LogStreamFile struct {
 	tonCommon
-	Path        string `json:"path"`          // Path to the file to where the internal tonlib log will be written
 	MaxFileSize int64  `json:"max_file_size"` // Maximum size of the file to where the internal tonlib log is written before the file will be auto-rotated
+	Path        string `json:"path"`          // Path to the file to where the internal tonlib log will be written
 }
 
 // MessageType return the string telegram-type of LogStreamFile
@@ -1786,13 +1786,13 @@ func (logStreamFile *LogStreamFile) MessageType() string {
 
 // NewLogStreamFile creates a new LogStreamFile
 //
-// @param path Path to the file to where the internal tonlib log will be written
 // @param maxFileSize Maximum size of the file to where the internal tonlib log is written before the file will be auto-rotated
-func NewLogStreamFile(path string, maxFileSize int64) *LogStreamFile {
+// @param path Path to the file to where the internal tonlib log will be written
+func NewLogStreamFile(maxFileSize int64, path string) *LogStreamFile {
 	logStreamFileTemp := LogStreamFile{
 		tonCommon:   tonCommon{Type: "logStreamFile"},
-		Path:        path,
 		MaxFileSize: maxFileSize,
+		Path:        path,
 	}
 
 	return &logStreamFileTemp
@@ -1900,9 +1900,9 @@ func NewData(bytes *SecureBytes) *Data {
 // LiteServerInfo
 type LiteServerInfo struct {
 	tonCommon
+	Now          int64     `json:"now"`          //
 	Version      int32     `json:"version"`      //
 	Capabilities JSONInt64 `json:"capabilities"` //
-	Now          int64     `json:"now"`          //
 }
 
 // MessageType return the string telegram-type of LiteServerInfo
@@ -1912,15 +1912,15 @@ func (liteServerInfo *LiteServerInfo) MessageType() string {
 
 // NewLiteServerInfo creates a new LiteServerInfo
 //
-// @param version
 // @param capabilities
 // @param now
-func NewLiteServerInfo(version int32, capabilities JSONInt64, now int64) *LiteServerInfo {
+// @param version
+func NewLiteServerInfo(capabilities JSONInt64, now int64, version int32) *LiteServerInfo {
 	liteServerInfoTemp := LiteServerInfo{
 		tonCommon:    tonCommon{Type: "liteServer.info"},
-		Version:      version,
 		Capabilities: capabilities,
 		Now:          now,
+		Version:      version,
 	}
 
 	return &liteServerInfoTemp

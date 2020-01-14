@@ -56,9 +56,9 @@ func (client *Client) Close() (*Ok, error) {
 
 }
 
-// OptionsSetconfig
+// OptionsSetConfig
 // @param config
-func (client *Client) OptionsSetconfig(config *Config) (*OptionsConfigInfo, error) {
+func (client *Client) OptionsSetConfig(config *Config) (*OptionsConfigInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string  `json:"@type"`
@@ -83,9 +83,9 @@ func (client *Client) OptionsSetconfig(config *Config) (*OptionsConfigInfo, erro
 
 }
 
-// OptionsValidateconfig
+// OptionsValidateConfig
 // @param config
-func (client *Client) OptionsValidateconfig(config *Config) (*OptionsConfigInfo, error) {
+func (client *Client) OptionsValidateConfig(config *Config) (*OptionsConfigInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string  `json:"@type"`
@@ -110,11 +110,11 @@ func (client *Client) OptionsValidateconfig(config *Config) (*OptionsConfigInfo,
 
 }
 
-// Createnewkey
+// CreateNewKey
 // @param localPassword
 // @param mnemonicPassword
 // @param randomExtraSeed
-func (client *Client) Createnewkey(localPassword *SecureBytes, mnemonicPassword *SecureBytes, randomExtraSeed *SecureBytes) (*Key, error) {
+func (client *Client) CreateNewKey(localPassword *SecureBytes, mnemonicPassword *SecureBytes, randomExtraSeed *SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type             string       `json:"@type"`
@@ -143,9 +143,9 @@ func (client *Client) Createnewkey(localPassword *SecureBytes, mnemonicPassword 
 
 }
 
-// Deletekey
+// DeleteKey
 // @param key
-func (client *Client) Deletekey(key *Key) (*Ok, error) {
+func (client *Client) DeleteKey(key *Key) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -170,8 +170,8 @@ func (client *Client) Deletekey(key *Key) (*Ok, error) {
 
 }
 
-// Deleteallkeys
-func (client *Client) Deleteallkeys() (*Ok, error) {
+// DeleteAllKeys
+func (client *Client) DeleteAllKeys() (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -194,9 +194,9 @@ func (client *Client) Deleteallkeys() (*Ok, error) {
 
 }
 
-// Exportkey
+// ExportKey
 // @param inputKey
-func (client *Client) Exportkey(inputKey *InputKey) (*ExportedKey, error) {
+func (client *Client) ExportKey(inputKey *InputKey) (*ExportedKey, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type     string    `json:"@type"`
@@ -221,10 +221,10 @@ func (client *Client) Exportkey(inputKey *InputKey) (*ExportedKey, error) {
 
 }
 
-// Exportpemkey
+// ExportPemKey
 // @param inputKey
 // @param keyPassword
-func (client *Client) Exportpemkey(inputKey *InputKey, keyPassword *SecureBytes) (*ExportedPemKey, error) {
+func (client *Client) ExportPemKey(inputKey *InputKey, keyPassword *SecureBytes) (*ExportedPemKey, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string       `json:"@type"`
@@ -251,10 +251,10 @@ func (client *Client) Exportpemkey(inputKey *InputKey, keyPassword *SecureBytes)
 
 }
 
-// Exportencryptedkey
+// ExportEncryptedKey
 // @param inputKey
 // @param keyPassword
-func (client *Client) Exportencryptedkey(inputKey *InputKey, keyPassword *SecureBytes) (*ExportedEncryptedKey, error) {
+func (client *Client) ExportEncryptedKey(inputKey *InputKey, keyPassword *SecureBytes) (*ExportedEncryptedKey, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string       `json:"@type"`
@@ -281,22 +281,22 @@ func (client *Client) Exportencryptedkey(inputKey *InputKey, keyPassword *Secure
 
 }
 
-// Importkey
+// ImportKey
+// @param exportedKey
 // @param localPassword
 // @param mnemonicPassword
-// @param exportedKey
-func (client *Client) Importkey(localPassword *SecureBytes, mnemonicPassword *SecureBytes, exportedKey *ExportedKey) (*Key, error) {
+func (client *Client) ImportKey(exportedKey *ExportedKey, localPassword *SecureBytes, mnemonicPassword *SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type             string       `json:"@type"`
+			ExportedKey      *ExportedKey `json:"exported_key"`
 			LocalPassword    *SecureBytes `json:"local_password"`
 			MnemonicPassword *SecureBytes `json:"mnemonic_password"`
-			ExportedKey      *ExportedKey `json:"exported_key"`
 		}{
 			Type:             "importKey",
+			ExportedKey:      exportedKey,
 			LocalPassword:    localPassword,
 			MnemonicPassword: mnemonicPassword,
-			ExportedKey:      exportedKey,
 		},
 	)
 
@@ -314,22 +314,22 @@ func (client *Client) Importkey(localPassword *SecureBytes, mnemonicPassword *Se
 
 }
 
-// Importpemkey
-// @param localPassword
-// @param keyPassword
+// ImportPemKey
 // @param exportedKey
-func (client *Client) Importpemkey(localPassword *SecureBytes, keyPassword *SecureBytes, exportedKey *ExportedPemKey) (*Key, error) {
+// @param keyPassword
+// @param localPassword
+func (client *Client) ImportPemKey(exportedKey *ExportedPemKey, keyPassword *SecureBytes, localPassword *SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type          string          `json:"@type"`
-			LocalPassword *SecureBytes    `json:"local_password"`
-			KeyPassword   *SecureBytes    `json:"key_password"`
 			ExportedKey   *ExportedPemKey `json:"exported_key"`
+			KeyPassword   *SecureBytes    `json:"key_password"`
+			LocalPassword *SecureBytes    `json:"local_password"`
 		}{
 			Type:          "importPemKey",
-			LocalPassword: localPassword,
-			KeyPassword:   keyPassword,
 			ExportedKey:   exportedKey,
+			KeyPassword:   keyPassword,
+			LocalPassword: localPassword,
 		},
 	)
 
@@ -347,22 +347,22 @@ func (client *Client) Importpemkey(localPassword *SecureBytes, keyPassword *Secu
 
 }
 
-// Importencryptedkey
-// @param localPassword
-// @param keyPassword
+// ImportEncryptedKey
 // @param exportedEncryptedKey
-func (client *Client) Importencryptedkey(localPassword *SecureBytes, keyPassword *SecureBytes, exportedEncryptedKey *ExportedEncryptedKey) (*Key, error) {
+// @param keyPassword
+// @param localPassword
+func (client *Client) ImportEncryptedKey(exportedEncryptedKey *ExportedEncryptedKey, keyPassword *SecureBytes, localPassword *SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                 string                `json:"@type"`
-			LocalPassword        *SecureBytes          `json:"local_password"`
-			KeyPassword          *SecureBytes          `json:"key_password"`
 			ExportedEncryptedKey *ExportedEncryptedKey `json:"exported_encrypted_key"`
+			KeyPassword          *SecureBytes          `json:"key_password"`
+			LocalPassword        *SecureBytes          `json:"local_password"`
 		}{
 			Type:                 "importEncryptedKey",
-			LocalPassword:        localPassword,
-			KeyPassword:          keyPassword,
 			ExportedEncryptedKey: exportedEncryptedKey,
+			KeyPassword:          keyPassword,
+			LocalPassword:        localPassword,
 		},
 	)
 
@@ -380,10 +380,10 @@ func (client *Client) Importencryptedkey(localPassword *SecureBytes, keyPassword
 
 }
 
-// Changelocalpassword
+// ChangeLocalPassword
 // @param inputKey
 // @param newLocalPassword
-func (client *Client) Changelocalpassword(inputKey *InputKey, newLocalPassword *SecureBytes) (*Key, error) {
+func (client *Client) ChangeLocalPassword(inputKey *InputKey, newLocalPassword *SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type             string       `json:"@type"`
@@ -471,21 +471,21 @@ func (client *Client) Decrypt(encryptedData *SecureBytes, secret *SecureBytes) (
 }
 
 // Kdf
-// @param salt
 // @param iterations
 // @param password
-func (client *Client) Kdf(salt *SecureBytes, iterations int32, password *SecureBytes) (*Data, error) {
+// @param salt
+func (client *Client) Kdf(iterations int32, password *SecureBytes, salt *SecureBytes) (*Data, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type       string       `json:"@type"`
-			Salt       *SecureBytes `json:"salt"`
 			Iterations int32        `json:"iterations"`
 			Password   *SecureBytes `json:"password"`
+			Salt       *SecureBytes `json:"salt"`
 		}{
 			Type:       "kdf",
-			Salt:       salt,
 			Iterations: iterations,
 			Password:   password,
+			Salt:       salt,
 		},
 	)
 
@@ -503,9 +503,9 @@ func (client *Client) Kdf(salt *SecureBytes, iterations int32, password *SecureB
 
 }
 
-// Unpackaccountaddress
+// UnpackAccountAddress
 // @param accountAddress
-func (client *Client) Unpackaccountaddress(accountAddress string) (*UnpackedAccountAddress, error) {
+func (client *Client) UnpackAccountAddress(accountAddress string) (*UnpackedAccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string `json:"@type"`
@@ -530,9 +530,9 @@ func (client *Client) Unpackaccountaddress(accountAddress string) (*UnpackedAcco
 
 }
 
-// Packaccountaddress
+// PackAccountAddress
 // @param accountAddress
-func (client *Client) Packaccountaddress(accountAddress *UnpackedAccountAddress) (*AccountAddress, error) {
+func (client *Client) PackAccountAddress(accountAddress *UnpackedAccountAddress) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string                  `json:"@type"`
@@ -557,9 +557,9 @@ func (client *Client) Packaccountaddress(accountAddress *UnpackedAccountAddress)
 
 }
 
-// Getbip39hints
+// GetBip39Hints
 // @param prefix
-func (client *Client) Getbip39hints(prefix string) (*Bip39Hints, error) {
+func (client *Client) GetBip39Hints(prefix string) (*Bip39Hints, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string `json:"@type"`
@@ -584,9 +584,9 @@ func (client *Client) Getbip39hints(prefix string) (*Bip39Hints, error) {
 
 }
 
-// RawGetaccountaddress
+// RawGetAccountAddress
 // @param inititalAccountState
-func (client *Client) RawGetaccountaddress(inititalAccountState *RawInitialAccountState) (*AccountAddress, error) {
+func (client *Client) RawGetAccountAddress(inititalAccountState *RawInitialAccountState) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                 string                  `json:"@type"`
@@ -611,9 +611,9 @@ func (client *Client) RawGetaccountaddress(inititalAccountState *RawInitialAccou
 
 }
 
-// RawGetaccountstate
+// RawGetAccountState
 // @param accountAddress
-func (client *Client) RawGetaccountstate(accountAddress *AccountAddress) (*RawAccountState, error) {
+func (client *Client) RawGetAccountState(accountAddress *AccountAddress) (*RawAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string          `json:"@type"`
@@ -638,19 +638,19 @@ func (client *Client) RawGetaccountstate(accountAddress *AccountAddress) (*RawAc
 
 }
 
-// RawGettransactions
-// @param fromTransactionId
+// RawGetTransactions
 // @param accountAddress
-func (client *Client) RawGettransactions(fromTransactionId *InternalTransactionId, accountAddress *AccountAddress) (*RawTransactions, error) {
+// @param fromTransactionId
+func (client *Client) RawGetTransactions(accountAddress *AccountAddress, fromTransactionId *InternalTransactionId) (*RawTransactions, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type              string                 `json:"@type"`
-			FromTransactionId *InternalTransactionId `json:"from_transaction_id"`
 			AccountAddress    *AccountAddress        `json:"account_address"`
+			FromTransactionId *InternalTransactionId `json:"from_transaction_id"`
 		}{
 			Type:              "raw.getTransactions",
-			FromTransactionId: fromTransactionId,
 			AccountAddress:    accountAddress,
+			FromTransactionId: fromTransactionId,
 		},
 	)
 
@@ -668,9 +668,9 @@ func (client *Client) RawGettransactions(fromTransactionId *InternalTransactionI
 
 }
 
-// RawSendmessage
+// RawSendMessage
 // @param body
-func (client *Client) RawSendmessage(body []byte) (*Ok, error) {
+func (client *Client) RawSendMessage(body []byte) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -695,22 +695,22 @@ func (client *Client) RawSendmessage(body []byte) (*Ok, error) {
 
 }
 
-// RawCreateandsendmessage
+// RawCreateAndSendMessage
+// @param data
 // @param destination
 // @param initialAccountState
-// @param data
-func (client *Client) RawCreateandsendmessage(destination *AccountAddress, initialAccountState []byte, data []byte) (*Ok, error) {
+func (client *Client) RawCreateAndSendMessage(data []byte, destination *AccountAddress, initialAccountState []byte) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string          `json:"@type"`
+			Data                []byte          `json:"data"`
 			Destination         *AccountAddress `json:"destination"`
 			InitialAccountState []byte          `json:"initial_account_state"`
-			Data                []byte          `json:"data"`
 		}{
 			Type:                "raw.createAndSendMessage",
+			Data:                data,
 			Destination:         destination,
 			InitialAccountState: initialAccountState,
-			Data:                data,
 		},
 	)
 
@@ -728,12 +728,12 @@ func (client *Client) RawCreateandsendmessage(destination *AccountAddress, initi
 
 }
 
-// RawCreatequery
+// RawCreateQuery
 // @param body
 // @param destination
 // @param initCode
 // @param initData
-func (client *Client) RawCreatequery(body []byte, destination *AccountAddress, initCode []byte, initData []byte) (*QueryInfo, error) {
+func (client *Client) RawCreateQuery(body []byte, destination *AccountAddress, initCode []byte, initData []byte) (*QueryInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string          `json:"@type"`
@@ -764,9 +764,9 @@ func (client *Client) RawCreatequery(body []byte, destination *AccountAddress, i
 
 }
 
-// TestwalletInit
+// TestWalletInit
 // @param privateKey
-func (client *Client) TestwalletInit(privateKey *InputKey) (*Ok, error) {
+func (client *Client) TestWalletInit(privateKey *InputKey) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type       string    `json:"@type"`
@@ -791,9 +791,9 @@ func (client *Client) TestwalletInit(privateKey *InputKey) (*Ok, error) {
 
 }
 
-// TestwalletGetaccountaddress
+// TestWalletGetAccountAddress
 // @param inititalAccountState
-func (client *Client) TestwalletGetaccountaddress(inititalAccountState *TestWalletInitialAccountState) (*AccountAddress, error) {
+func (client *Client) TestWalletGetAccountAddress(inititalAccountState *TestWalletInitialAccountState) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                 string                         `json:"@type"`
@@ -818,9 +818,9 @@ func (client *Client) TestwalletGetaccountaddress(inititalAccountState *TestWall
 
 }
 
-// TestwalletGetaccountstate
+// TestWalletGetAccountState
 // @param accountAddress
-func (client *Client) TestwalletGetaccountstate(accountAddress *AccountAddress) (*TestWalletAccountState, error) {
+func (client *Client) TestWalletGetAccountState(accountAddress *AccountAddress) (*TestWalletAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string          `json:"@type"`
@@ -845,28 +845,28 @@ func (client *Client) TestwalletGetaccountstate(accountAddress *AccountAddress) 
 
 }
 
-// TestwalletSendgrams
-// @param destination
-// @param seqno
+// TestWalletSendGrams
 // @param amount
+// @param destination
 // @param message
 // @param privateKey
-func (client *Client) TestwalletSendgrams(destination *AccountAddress, seqno int32, amount JSONInt64, message []byte, privateKey *InputKey) (*SendGramsResult, error) {
+// @param seqno
+func (client *Client) TestWalletSendGrams(amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, seqno int32) (*SendGramsResult, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string          `json:"@type"`
-			Destination *AccountAddress `json:"destination"`
-			Seqno       int32           `json:"seqno"`
 			Amount      JSONInt64       `json:"amount"`
+			Destination *AccountAddress `json:"destination"`
 			Message     []byte          `json:"message"`
 			PrivateKey  *InputKey       `json:"private_key"`
+			Seqno       int32           `json:"seqno"`
 		}{
 			Type:        "testWallet.sendGrams",
-			Destination: destination,
-			Seqno:       seqno,
 			Amount:      amount,
+			Destination: destination,
 			Message:     message,
 			PrivateKey:  privateKey,
+			Seqno:       seqno,
 		},
 	)
 
@@ -911,9 +911,9 @@ func (client *Client) WalletInit(privateKey *InputKey) (*Ok, error) {
 
 }
 
-// WalletGetaccountaddress
+// WalletGetAccountAddress
 // @param inititalAccountState
-func (client *Client) WalletGetaccountaddress(inititalAccountState *WalletInitialAccountState) (*AccountAddress, error) {
+func (client *Client) WalletGetAccountAddress(inititalAccountState *WalletInitialAccountState) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                 string                     `json:"@type"`
@@ -938,9 +938,9 @@ func (client *Client) WalletGetaccountaddress(inititalAccountState *WalletInitia
 
 }
 
-// WalletGetaccountstate
+// WalletGetAccountState
 // @param accountAddress
-func (client *Client) WalletGetaccountstate(accountAddress *AccountAddress) (*WalletAccountState, error) {
+func (client *Client) WalletGetAccountState(accountAddress *AccountAddress) (*WalletAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string          `json:"@type"`
@@ -965,31 +965,31 @@ func (client *Client) WalletGetaccountstate(accountAddress *AccountAddress) (*Wa
 
 }
 
-// WalletSendgrams
-// @param seqno
-// @param validUntil
+// WalletSendGrams
 // @param amount
+// @param destination
 // @param message
 // @param privateKey
-// @param destination
-func (client *Client) WalletSendgrams(seqno int32, validUntil int64, amount JSONInt64, message []byte, privateKey *InputKey, destination *AccountAddress) (*SendGramsResult, error) {
+// @param seqno
+// @param validUntil
+func (client *Client) WalletSendGrams(amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, seqno int32, validUntil int64) (*SendGramsResult, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string          `json:"@type"`
-			Seqno       int32           `json:"seqno"`
-			ValidUntil  int64           `json:"valid_until"`
 			Amount      JSONInt64       `json:"amount"`
+			Destination *AccountAddress `json:"destination"`
 			Message     []byte          `json:"message"`
 			PrivateKey  *InputKey       `json:"private_key"`
-			Destination *AccountAddress `json:"destination"`
+			Seqno       int32           `json:"seqno"`
+			ValidUntil  int64           `json:"valid_until"`
 		}{
 			Type:        "wallet.sendGrams",
-			Seqno:       seqno,
-			ValidUntil:  validUntil,
 			Amount:      amount,
+			Destination: destination,
 			Message:     message,
 			PrivateKey:  privateKey,
-			Destination: destination,
+			Seqno:       seqno,
+			ValidUntil:  validUntil,
 		},
 	)
 
@@ -1007,9 +1007,9 @@ func (client *Client) WalletSendgrams(seqno int32, validUntil int64, amount JSON
 
 }
 
-// WalletV3Getaccountaddress
+// WalletV3GetAccountAddress
 // @param inititalAccountState
-func (client *Client) WalletV3Getaccountaddress(inititalAccountState *WalletV3InitialAccountState) (*AccountAddress, error) {
+func (client *Client) WalletV3GetAccountAddress(inititalAccountState *WalletV3InitialAccountState) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                 string                       `json:"@type"`
@@ -1034,8 +1034,8 @@ func (client *Client) WalletV3Getaccountaddress(inititalAccountState *WalletV3In
 
 }
 
-// TestgiverGetaccountstate
-func (client *Client) TestgiverGetaccountstate() (*TestGiverAccountState, error) {
+// TestGiverGetAccountState
+func (client *Client) TestGiverGetAccountState() (*TestGiverAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1058,8 +1058,8 @@ func (client *Client) TestgiverGetaccountstate() (*TestGiverAccountState, error)
 
 }
 
-// TestgiverGetaccountaddress
-func (client *Client) TestgiverGetaccountaddress() (*AccountAddress, error) {
+// TestGiverGetAccountAddress
+func (client *Client) TestGiverGetAccountAddress() (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1082,24 +1082,24 @@ func (client *Client) TestgiverGetaccountaddress() (*AccountAddress, error) {
 
 }
 
-// TestgiverSendgrams
+// TestGiverSendGrams
 // @param amount
-// @param message
 // @param destination
+// @param message
 // @param seqno
-func (client *Client) TestgiverSendgrams(amount JSONInt64, message []byte, destination *AccountAddress, seqno int32) (*SendGramsResult, error) {
+func (client *Client) TestGiverSendGrams(amount JSONInt64, destination *AccountAddress, message []byte, seqno int32) (*SendGramsResult, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string          `json:"@type"`
 			Amount      JSONInt64       `json:"amount"`
-			Message     []byte          `json:"message"`
 			Destination *AccountAddress `json:"destination"`
+			Message     []byte          `json:"message"`
 			Seqno       int32           `json:"seqno"`
 		}{
 			Type:        "testGiver.sendGrams",
 			Amount:      amount,
-			Message:     message,
 			Destination: destination,
+			Message:     message,
 			Seqno:       seqno,
 		},
 	)
@@ -1118,9 +1118,9 @@ func (client *Client) TestgiverSendgrams(amount JSONInt64, message []byte, desti
 
 }
 
-// GenericGetaccountstate
+// GenericGetAccountState
 // @param accountAddress
-func (client *Client) GenericGetaccountstate(accountAddress *AccountAddress) (*GenericAccountState, error) {
+func (client *Client) GenericGetAccountState(accountAddress *AccountAddress) (*GenericAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string          `json:"@type"`
@@ -1145,33 +1145,33 @@ func (client *Client) GenericGetaccountstate(accountAddress *AccountAddress) (*G
 
 }
 
-// GenericSendgrams
+// GenericSendGrams
 // @param allowSendToUninited
+// @param amount
+// @param destination
 // @param message
 // @param privateKey
 // @param source
-// @param destination
-// @param amount
 // @param timeout
-func (client *Client) GenericSendgrams(allowSendToUninited bool, message []byte, privateKey *InputKey, source *AccountAddress, destination *AccountAddress, amount JSONInt64, timeout int32) (*SendGramsResult, error) {
+func (client *Client) GenericSendGrams(allowSendToUninited bool, amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, source *AccountAddress, timeout int32) (*SendGramsResult, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string          `json:"@type"`
 			AllowSendToUninited bool            `json:"allow_send_to_uninited"`
+			Amount              JSONInt64       `json:"amount"`
+			Destination         *AccountAddress `json:"destination"`
 			Message             []byte          `json:"message"`
 			PrivateKey          *InputKey       `json:"private_key"`
 			Source              *AccountAddress `json:"source"`
-			Destination         *AccountAddress `json:"destination"`
-			Amount              JSONInt64       `json:"amount"`
 			Timeout             int32           `json:"timeout"`
 		}{
 			Type:                "generic.sendGrams",
 			AllowSendToUninited: allowSendToUninited,
+			Amount:              amount,
+			Destination:         destination,
 			Message:             message,
 			PrivateKey:          privateKey,
 			Source:              source,
-			Destination:         destination,
-			Amount:              amount,
 			Timeout:             timeout,
 		},
 	)
@@ -1190,34 +1190,34 @@ func (client *Client) GenericSendgrams(allowSendToUninited bool, message []byte,
 
 }
 
-// GenericCreatesendgramsquery
-// @param timeout
+// GenericCreateSendGramsQuery
 // @param allowSendToUninited
+// @param amount
+// @param destination
 // @param message
 // @param privateKey
 // @param source
-// @param destination
-// @param amount
-func (client *Client) GenericCreatesendgramsquery(timeout int32, allowSendToUninited bool, message []byte, privateKey *InputKey, source *AccountAddress, destination *AccountAddress, amount JSONInt64) (*QueryInfo, error) {
+// @param timeout
+func (client *Client) GenericCreateSendGramsQuery(allowSendToUninited bool, amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, source *AccountAddress, timeout int32) (*QueryInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string          `json:"@type"`
-			Timeout             int32           `json:"timeout"`
 			AllowSendToUninited bool            `json:"allow_send_to_uninited"`
+			Amount              JSONInt64       `json:"amount"`
+			Destination         *AccountAddress `json:"destination"`
 			Message             []byte          `json:"message"`
 			PrivateKey          *InputKey       `json:"private_key"`
 			Source              *AccountAddress `json:"source"`
-			Destination         *AccountAddress `json:"destination"`
-			Amount              JSONInt64       `json:"amount"`
+			Timeout             int32           `json:"timeout"`
 		}{
 			Type:                "generic.createSendGramsQuery",
-			Timeout:             timeout,
 			AllowSendToUninited: allowSendToUninited,
+			Amount:              amount,
+			Destination:         destination,
 			Message:             message,
 			PrivateKey:          privateKey,
 			Source:              source,
-			Destination:         destination,
-			Amount:              amount,
+			Timeout:             timeout,
 		},
 	)
 
@@ -1289,10 +1289,10 @@ func (client *Client) QueryForget(id int64) (*Ok, error) {
 
 }
 
-// QueryEstimatefees
+// QueryEstimateFees
 // @param id
 // @param ignoreChksig
-func (client *Client) QueryEstimatefees(id int64, ignoreChksig bool) (*QueryFees, error) {
+func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type         string `json:"@type"`
@@ -1319,9 +1319,9 @@ func (client *Client) QueryEstimatefees(id int64, ignoreChksig bool) (*QueryFees
 
 }
 
-// QueryGetinfo
+// QueryGetInfo
 // @param id
-func (client *Client) QueryGetinfo(id int64) (*QueryInfo, error) {
+func (client *Client) QueryGetInfo(id int64) (*QueryInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1373,9 +1373,9 @@ func (client *Client) SmcLoad(accountAddress *AccountAddress) (*SmcInfo, error) 
 
 }
 
-// SmcGetcode
+// SmcGetCode
 // @param id
-func (client *Client) SmcGetcode(id int64) (*TvmCell, error) {
+func (client *Client) SmcGetCode(id int64) (*TvmCell, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1400,9 +1400,9 @@ func (client *Client) SmcGetcode(id int64) (*TvmCell, error) {
 
 }
 
-// SmcGetdata
+// SmcGetData
 // @param id
-func (client *Client) SmcGetdata(id int64) (*TvmCell, error) {
+func (client *Client) SmcGetData(id int64) (*TvmCell, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1427,9 +1427,9 @@ func (client *Client) SmcGetdata(id int64) (*TvmCell, error) {
 
 }
 
-// SmcGetstate
+// SmcGetState
 // @param id
-func (client *Client) SmcGetstate(id int64) (*TvmCell, error) {
+func (client *Client) SmcGetState(id int64) (*TvmCell, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1454,22 +1454,22 @@ func (client *Client) SmcGetstate(id int64) (*TvmCell, error) {
 
 }
 
-// SmcRungetmethod
+// SmcRunGetMethod
+// @param id
 // @param method
 // @param stack
-// @param id
-func (client *Client) SmcRungetmethod(method *SmcMethodId, stack []TvmStackEntry, id int64) (*SmcRunResult, error) {
+func (client *Client) SmcRunGetMethod(id int64, method *SmcMethodId, stack []TvmStackEntry) (*SmcRunResult, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string          `json:"@type"`
+			Id     int64           `json:"id"`
 			Method *SmcMethodId    `json:"method"`
 			Stack  []TvmStackEntry `json:"stack"`
-			Id     int64           `json:"id"`
 		}{
 			Type:   "smc.runGetMethod",
+			Id:     id,
 			Method: method,
 			Stack:  stack,
-			Id:     id,
 		},
 	)
 
@@ -1487,19 +1487,19 @@ func (client *Client) SmcRungetmethod(method *SmcMethodId, stack []TvmStackEntry
 
 }
 
-// Onliteserverqueryresult
-// @param id
+// OnLiteServerQueryResult
 // @param bytes
-func (client *Client) Onliteserverqueryresult(id JSONInt64, bytes []byte) (*Ok, error) {
+// @param id
+func (client *Client) OnLiteServerQueryResult(bytes []byte, id JSONInt64) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type  string    `json:"@type"`
-			Id    JSONInt64 `json:"id"`
 			Bytes []byte    `json:"bytes"`
+			Id    JSONInt64 `json:"id"`
 		}{
 			Type:  "onLiteServerQueryResult",
-			Id:    id,
 			Bytes: bytes,
+			Id:    id,
 		},
 	)
 
@@ -1517,19 +1517,19 @@ func (client *Client) Onliteserverqueryresult(id JSONInt64, bytes []byte) (*Ok, 
 
 }
 
-// Onliteserverqueryerror
-// @param id
+// OnLiteServerQueryError
 // @param error
-func (client *Client) Onliteserverqueryerror(id JSONInt64, error *Error) (*Ok, error) {
+// @param id
+func (client *Client) OnLiteServerQueryError(error *Error, id JSONInt64) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type  string    `json:"@type"`
-			Id    JSONInt64 `json:"id"`
 			Error *Error    `json:"error"`
+			Id    JSONInt64 `json:"id"`
 		}{
 			Type:  "onLiteServerQueryError",
-			Id:    id,
 			Error: error,
+			Id:    id,
 		},
 	)
 
@@ -1547,9 +1547,9 @@ func (client *Client) Onliteserverqueryerror(id JSONInt64, error *Error) (*Ok, e
 
 }
 
-// Runtests
+// RunTests
 // @param dir
-func (client *Client) Runtests(dir string) (*Ok, error) {
+func (client *Client) RunTests(dir string) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1574,8 +1574,8 @@ func (client *Client) Runtests(dir string) (*Ok, error) {
 
 }
 
-// LiteserverGetinfo
-func (client *Client) LiteserverGetinfo() (*LiteServerInfo, error) {
+// LiteServerGetInfo
+func (client *Client) LiteServerGetInfo() (*LiteServerInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1598,9 +1598,9 @@ func (client *Client) LiteserverGetinfo() (*LiteServerInfo, error) {
 
 }
 
-// Setlogstream Sets new log stream for internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
+// SetLogStream Sets new log stream for internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param logStream New log stream
-func (client *Client) Setlogstream(logStream LogStream) (*Ok, error) {
+func (client *Client) SetLogStream(logStream LogStream) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type      string    `json:"@type"`
@@ -1625,8 +1625,8 @@ func (client *Client) Setlogstream(logStream LogStream) (*Ok, error) {
 
 }
 
-// Getlogstream Returns information about currently used log stream for internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
-func (client *Client) Getlogstream() (LogStream, error) {
+// GetLogStream Returns information about currently used log stream for internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
+func (client *Client) GetLogStream() (LogStream, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1665,9 +1665,9 @@ func (client *Client) Getlogstream() (LogStream, error) {
 	}
 }
 
-// Setlogverbositylevel Sets the verbosity level of the internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
+// SetLogVerbosityLevel Sets the verbosity level of the internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param newVerbosityLevel New value of the verbosity level for logging. Value 0 corresponds to fatal errors, value 1 corresponds to errors, value 2 corresponds to warnings and debug warnings, value 3 corresponds to informational, value 4 corresponds to debug, value 5 corresponds to verbose debug, value greater than 5 and up to 1023 can be used to enable even more logging
-func (client *Client) Setlogverbositylevel(newVerbosityLevel int32) (*Ok, error) {
+func (client *Client) SetLogVerbosityLevel(newVerbosityLevel int32) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type              string `json:"@type"`
@@ -1692,8 +1692,8 @@ func (client *Client) Setlogverbositylevel(newVerbosityLevel int32) (*Ok, error)
 
 }
 
-// Getlogverbositylevel Returns current verbosity level of the internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
-func (client *Client) Getlogverbositylevel() (*LogVerbosityLevel, error) {
+// GetLogVerbosityLevel Returns current verbosity level of the internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
+func (client *Client) GetLogVerbosityLevel() (*LogVerbosityLevel, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1716,8 +1716,8 @@ func (client *Client) Getlogverbositylevel() (*LogVerbosityLevel, error) {
 
 }
 
-// Getlogtags Returns list of available tonlib internal log tags, for example, ["actor", "binlog", "connections", "notifications", "proxy"]. This is an offline method. Can be called before authorization. Can be called synchronously
-func (client *Client) Getlogtags() (*LogTags, error) {
+// GetLogTags Returns list of available tonlib internal log tags, for example, ["actor", "binlog", "connections", "notifications", "proxy"]. This is an offline method. Can be called before authorization. Can be called synchronously
+func (client *Client) GetLogTags() (*LogTags, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1740,10 +1740,10 @@ func (client *Client) Getlogtags() (*LogTags, error) {
 
 }
 
-// Setlogtagverbositylevel Sets the verbosity level for a specified tonlib internal log tag. This is an offline method. Can be called before authorization. Can be called synchronously
+// SetLogTagVerbosityLevel Sets the verbosity level for a specified tonlib internal log tag. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param newVerbosityLevel New verbosity level; 1-1024
 // @param tag Logging tag to change verbosity level
-func (client *Client) Setlogtagverbositylevel(newVerbosityLevel int32, tag string) (*Ok, error) {
+func (client *Client) SetLogTagVerbosityLevel(newVerbosityLevel int32, tag string) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type              string `json:"@type"`
@@ -1770,9 +1770,9 @@ func (client *Client) Setlogtagverbositylevel(newVerbosityLevel int32, tag strin
 
 }
 
-// Getlogtagverbositylevel Returns current verbosity level for a specified tonlib internal log tag. This is an offline method. Can be called before authorization. Can be called synchronously
+// GetLogTagVerbosityLevel Returns current verbosity level for a specified tonlib internal log tag. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param tag Logging tag to change verbosity level
-func (client *Client) Getlogtagverbositylevel(tag string) (*LogVerbosityLevel, error) {
+func (client *Client) GetLogTagVerbosityLevel(tag string) (*LogVerbosityLevel, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
@@ -1797,10 +1797,10 @@ func (client *Client) Getlogtagverbositylevel(tag string) (*LogVerbosityLevel, e
 
 }
 
-// Addlogmessage Adds a message to tonlib internal log. This is an offline method. Can be called before authorization. Can be called synchronously
+// AddLogMessage Adds a message to tonlib internal log. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param text Text of a message to log
 // @param verbosityLevel Minimum verbosity level needed for the message to be logged, 0-1023
-func (client *Client) Addlogmessage(text string, verbosityLevel int32) (*Ok, error) {
+func (client *Client) AddLogMessage(text string, verbosityLevel int32) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string `json:"@type"`
