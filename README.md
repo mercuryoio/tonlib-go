@@ -16,10 +16,10 @@ $ go get -u github.com/mercuryoio/tonlib-go
 import "github.com/mercuryoio/tonlib-go"
 ```
 ## Supported methods
-- [x] createNewKey
-- [x] deleteKey
-- [x] exportKey
-- [x] exportPemKey
+- [+] createNewKey
+- [+] deleteKey
+- [+] exportKey
+- [+] exportPemKey
 - [x] exportEncryptedKey
 - [x] importKey
 - [x] importPemKey
@@ -27,17 +27,17 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] changeLocalPassword
 - [x] unpackAccountAddress
 - [x] packAccountAddress
-- [x] wallet.init
-- [x] wallet.getAccountAddress
-- [x] wallet.getAccountState
-- [x] wallet.sendGrams
+- [+] wallet.init
+- [+] wallet.getAccountAddress
+- [-] wallet.getAccountState
+- [-] wallet.sendGrams
 - [x] raw.sendMessage
-- [x] raw.getTransactions
-- [x] raw.getAccountState
-- [x] generic.sendGrams
+- [+] raw.getTransactions
+- [+] raw.getAccountState
+- [+] generic.sendGrams
 - [x] getLogStream
-- [x] sync
-- [x] CreateAndSendMessage
+- [+] sync
+- [+] CreateAndSendMessage
 - [ ] generic.createSendGramsQuery
 - [ ] query.send
 - [ ] query.forge
