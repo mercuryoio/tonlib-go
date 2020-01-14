@@ -58,8 +58,8 @@ func TestClient_CreateNewKey(t *testing.T) {
 	defer cln.Destroy()
 
 	// prepare data
-	loc := SecureBytes("dsfsdfdsf")
-	mem := SecureBytes("1w1w1w1w1")
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
 	seed := SecureBytes("")
 
 	// create new key
@@ -91,8 +91,8 @@ func TestClient_Deletekey(t *testing.T) {
 	defer cln.Destroy()
 
 	// prepare data
-	loc := SecureBytes("dsfsdfdsf")
-	mem := SecureBytes("1w1w1w1w1")
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
 	seed := SecureBytes("")
 
 	// create new key
@@ -131,9 +131,8 @@ func TestClient_Exportkey(t *testing.T) {
 	defer cln.Destroy()
 
 	// prepare data
-	locPassword := "odododoee22221"
-	loc := SecureBytes(locPassword)
-	mem := SecureBytes("sdlkdslk11")
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
 	seed := SecureBytes("")
 
 	// create new key
@@ -179,9 +178,8 @@ func TestClient_Exportpemkey(t *testing.T) {
 	defer cln.Destroy()
 
 	// prepare data
-	locPassword := "wefasfsafw"
-	loc := SecureBytes(locPassword)
-	mem := SecureBytes("sdlkdslk11")
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
 	seed := SecureBytes("")
 
 	// create new key
