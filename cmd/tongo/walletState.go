@@ -38,17 +38,14 @@ func walletState(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	pKey := &tonlib.TONPrivateKey{PublicKey: args[1], Secret: args[2]}
+	pKey := tonlib.TONPrivateKey{PublicKey: args[1], Secret: args[2]}
 	password := args[3]
 
 	// prepare input key
 	inputKey := tonlib.InputKey{
 		Type: "inputKeyRegular",
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
-		Key: tonlib.TONPrivateKey{
-			PublicKey: pKey.PublicKey,
-			Secret:    base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
-		},
+		Key: pKey,
 	}
 	// init wallet
 	_, err = tonClient.WalletInit(&inputKey)

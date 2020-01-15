@@ -45,15 +45,12 @@ func exportPK(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	pKey := &tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
+	pKey := tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
 
 	result, err := tonClient.ExportPemKey(&tonlib.InputKey{
 		"inputKeyRegular",
 		base64.StdEncoding.EncodeToString(locPass),
-		tonlib.TONPrivateKey{
-			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
-		},
+		pKey,
 	}, &locPass)
 
 	fmt.Printf("Got a result: %#v. Errors: %v. \n", result, err)

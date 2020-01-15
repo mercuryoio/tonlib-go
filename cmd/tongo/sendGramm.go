@@ -57,16 +57,13 @@ func sendGramm(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	pKey := &tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
+	pKey := tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
 
 	// prepare input key
 	inputKey := tonlib.InputKey{
 		Type: "inputKeyRegular",
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
-		Key: tonlib.TONPrivateKey{
-			PublicKey: pKey.PublicKey,
-			Secret:    base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
-		},
+		Key: pKey,
 	}
 	_, err = tonClient.WalletInit(&inputKey)
 	if err != nil {
