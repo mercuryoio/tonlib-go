@@ -17,15 +17,22 @@ func init() {
 }
 
 func initClient(configPath string) error {
-	cnf, err := tonlib.ParseConfigFile(configPath)
+	options, err := tonlib.ParseConfigFile(configPath)
 	if err != nil {
 		return err
 	}
-	tonClient, err = tonlib.NewClient(cnf, tonlib.Config{})
-	if err != nil {
-		fmt.Errorf("Init client error: %v. ", err)
+
+	// make req
+	req := tonlib.TonInitRequest{
+		"init",
+		*options,
 	}
-	return nil
+
+	tonClient, err = tonlib.NewClient(&req, tonlib.Config{})
+	if err != nil {
+		err = fmt.Errorf("Init client error: %v. ", err)
+	}
+	return err
 }
 
 var rootCmd = &cobra.Command{

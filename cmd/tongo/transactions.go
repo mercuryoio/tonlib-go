@@ -3,8 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
+	"strconv"
 )
 
 var transactionsCmd = &cobra.Command{
@@ -32,25 +35,29 @@ var transactionsCmd = &cobra.Command{
 func transactions(cmd *cobra.Command, args []string) {
 	confPath := args[0]
 	address := args[1]
-	lt := args[2]
+	// parse lt
+	lt, err := strconv.ParseInt(args[2], 10, 64)
+	if err != nil{
+		log.Fatalf("Failed to parse lt as integer number: `%s`. %s", args[2], err)
+	}
 	hash := args[3]
-	err := initClient(confPath)
+	err = initClient(confPath)
 	if err != nil {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
 
-	txs, err := tonClient.GetAccountTransactions(address, lt, hash)
+	txs, err := tonClient.RawGetTransactions(tonlib.NewAccountAddress(address), tonlib.NewInternalTransactionId([]byte(hash), tonlib.JSONInt64(lt)))
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
 	for i := 0; i < len(txs.Transactions); i++ {
 		tx := txs.Transactions[i]
-		fmt.Printf("Got a result: data: %v; type: %v; transaction id: %v; fee: %v; inMsg: %v;\n", tx.Data, tx.Type, tx.TransactionID, tx.Fee, tx.InMsg.GetMessage())
+		fmt.Printf("Got a result: data: %v; type: %v; transaction id: %v; fee: %v; inMsg: %v;\n", tx.Data, tx.Type, tx.TransactionId, tx.Fee, tx.InMsg)
 		for j := 0; j < len(tx.OutMsgs); j++ {
 			msg := tx.OutMsgs[j]
-			fmt.Printf("Got a out msg: message: %v; \n", msg.GetMessage())
+			fmt.Printf("Got a out msg: message: %v; \n", msg.Message)
 		}
 	}
 

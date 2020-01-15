@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/mercuryoio/tonlib-go"
@@ -36,15 +37,27 @@ func walletAddress(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
+	password := args[3]
 
 	pKey := &tonlib.TONPrivateKey{PublicKey: args[1], Secret: args[2]}
-	err = tonClient.InitWallet(pKey, []byte(args[3]))
+
+	// prepare input key
+	inputKey := tonlib.InputKey{
+		Type: "inputKeyRegular",
+		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
+		Key: tonlib.TONPrivateKey{
+			PublicKey: pKey.PublicKey,
+			Secret:    base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
+		},
+	}
+	// init wallet
+	_, err = tonClient.WalletInit(&inputKey)
 	if err != nil {
 		fmt.Println("init wallet error: ", err)
 		os.Exit(0)
 	}
 
-	addr, err := tonClient.WalletGetAddress(pKey.PublicKey)
+	addr, err := tonClient.WalletGetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey))
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
@@ -55,7 +68,7 @@ func walletAddress(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 	addrUP.Bounceable = false
-	address, err := tonClient.PackAccountAddress(addrUP, addr.AccountAddress)
+	address, err := tonClient.PackAccountAddress(addrUP)
 	if err != nil {
 		fmt.Println("pack wallet address error: ", err)
 		os.Exit(0)

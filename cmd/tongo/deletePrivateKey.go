@@ -15,15 +15,14 @@ var deletePKCmd = &cobra.Command{
 - path2configfile. see tonlib.config.json.example
 - public key
 - secret
-- password
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 4 {
+		if len(args) != 3 {
 			return fmt.Errorf("you have to use four args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
-			errors.New("please choose config path")
+			return errors.New("please choose config path")
 		}
 		return nil
 	},
@@ -34,13 +33,13 @@ func deletePK(cmd *cobra.Command, args []string) {
 	confPath := args[0]
 	publicKey := args[1]
 	secret := args[2]
-	password := args[3]
+	secretBytes := tonlib.SecureBytes(secret)
 	err := initClient(confPath)
 	if err != nil {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	pKey := &tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
-	err = tonClient.DeletePrivateKey(pKey, []byte(password))
-	fmt.Printf("Got a result: rrors: %v. \n", err)
+	pKey := tonlib.NewKey(publicKey, &secretBytes)
+	ok, err := tonClient.DeleteKey(pKey)
+	fmt.Printf("Got a result: %#v,  error: %v. \n", ok, err)
 }

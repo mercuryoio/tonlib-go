@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
+	"strconv"
 )
 
 var sendGrammCmd = &cobra.Command{
@@ -39,28 +42,54 @@ func sendGramm(cmd *cobra.Command, args []string) {
 	secret := args[2]
 	password := args[3]
 	destinationAddr := args[4]
-	amount := args[5]
+	// parse amount
+	amount, err := strconv.ParseInt(args[5], 10, 64)
+	if err != nil {
+		log.Fatalf("failed to parse amount argument: %s as int. err: %s. ", args[5], err)
+	}
+
 	message := ""
 	if len(args) > 6 {
 		message = args[6]
 	}
-	err := initClient(confPath)
+	err = initClient(confPath)
 	if err != nil {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
 	pKey := &tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
-	err = tonClient.InitWallet(pKey, []byte(args[3]))
+
+	// prepare input key
+	inputKey := tonlib.InputKey{
+		Type: "inputKeyRegular",
+		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
+		Key: tonlib.TONPrivateKey{
+			PublicKey: pKey.PublicKey,
+			Secret:    base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
+		},
+	}
+	_, err = tonClient.WalletInit(&inputKey)
 	if err != nil {
 		fmt.Println("init wallet error: ", err)
 		os.Exit(0)
 	}
 
-	addr, err := tonClient.WalletGetAddress(pKey.PublicKey)
+	// get wallet adress info
+	addr, err := tonClient.WalletGetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey))
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
-	resp, err := tonClient.SendGrams2Address(pKey, []byte(password), addr.AccountAddress, destinationAddr, amount, message)
-	fmt.Printf("Got a result: hash %v. Errors: %v \n", resp, err)
+
+	// send grams
+	sendResult, err := tonClient.GenericSendGrams(
+		true,
+		tonlib.JSONInt64(amount),
+		tonlib.NewAccountAddress(destinationAddr),
+		[]byte(message),
+		&inputKey,
+		addr,
+		5,
+	)
+	fmt.Printf("Got a result: hash %v. Errors: %v \n", sendResult, err)
 }

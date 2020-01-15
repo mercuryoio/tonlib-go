@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
@@ -50,6 +51,6 @@ func sendFile(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	res, err := tonClient.SendMessage(args[1], bocInitialStateFile, bocFile)
+	res, err := tonClient.RawCreateAndSendMessage(bocFile, tonlib.NewAccountAddress(args[1]), bocInitialStateFile)
 	fmt.Printf("Got a result: %v. Errors: %v", res, err)
 }
