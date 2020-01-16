@@ -27,17 +27,17 @@ import "github.com/mercuryoio/tonlib-go"
 - [x] changeLocalPassword
 - [x] unpackAccountAddress
 - [x] packAccountAddress
-- [+] wallet.init
-- [+] wallet.getAccountAddress
+- [x] wallet.init
+- [x] wallet.getAccountAddress
 - [-] wallet.getAccountState
 - [-] wallet.sendGrams
 - [x] raw.sendMessage
-- [+] raw.getTransactions
-- [+] raw.getAccountState
-- [+] generic.sendGrams
+- [x] raw.getTransactions
+- [x] raw.getAccountState
+- [x] generic.sendGrams
 - [x] getLogStream
-- [+] sync
-- [+] CreateAndSendMessage
+- [x] sync
+- [x] CreateAndSendMessage
 - [ ] generic.createSendGramsQuery
 - [ ] query.send
 - [ ] query.forge
