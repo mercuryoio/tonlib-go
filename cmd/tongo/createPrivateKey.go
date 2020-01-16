@@ -51,5 +51,5 @@ func createPK(cmd *cobra.Command, args []string) {
 	if err != nil{
 		log.Fatal("failed to create new key with error: ", err)
 	}
-	fmt.Printf("Got a result: publicKey :%v; secret: %s. Errors: %v. \n", pKey.PublicKey, string(*pKey.Secret), err)
+	fmt.Printf("Got a result: publicKey :%v; secret: %s. Errors: %v. \n", pKey.PublicKey, pKey.Secret, err)
 }

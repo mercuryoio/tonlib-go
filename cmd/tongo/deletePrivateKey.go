@@ -33,13 +33,12 @@ func deletePK(cmd *cobra.Command, args []string) {
 	confPath := args[0]
 	publicKey := args[1]
 	secret := args[2]
-	secretBytes := tonlib.SecureBytes(secret)
 	err := initClient(confPath)
 	if err != nil {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	pKey := tonlib.NewKey(publicKey, &secretBytes)
+	pKey := tonlib.NewKey(publicKey, secret)
 	ok, err := tonClient.DeleteKey(pKey)
 	fmt.Printf("Got a result: %#v,  error: %v. \n", ok, err)
 }

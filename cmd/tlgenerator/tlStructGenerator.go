@@ -9,7 +9,7 @@ import (
 )
 
 var StructNamesExcludedFromGenerator = []string{
-	"secureBytes", "secureString", "bytes", "vector",
+	"secureBytes", "secureString", "bytes", "vector", "key",
 }
 
 var SkipMethodNames = []string{
@@ -178,6 +178,14 @@ func generateStructsFromTnEntities(
 			assignStr := fmt.Sprintf("%s.tonCommon = tempObj.tonCommon\n", structNameCamel)
 			assignInterfacePropsStr := ""
 
+			// sort params to enshure the same params order in each generation
+			sort.Slice(itemInfo.Properties, func(i, j int) bool {
+				if (itemInfo.Properties[i].Name > itemInfo.Properties[j].Name){
+					return false
+				}
+				return true
+			})
+
 			for i, prop := range itemInfo.Properties {
 				propName := govalidator.UnderscoreToCamelCase(prop.Name)
 				propName = propName
@@ -219,14 +227,6 @@ func generateStructsFromTnEntities(
 			paramsStr := ""
 			paramsDesc := ""
 			assingsStr := ""
-
-			// sort params to enshure the same params order in each generation
-			sort.Slice(itemInfo.Properties, func(i, j int) bool {
-				if (itemInfo.Properties[i].Name > itemInfo.Properties[j].Name){
-					return false
-				}
-				return true
-			})
 
 			for i, param := range itemInfo.Properties {
 				propName := govalidator.UnderscoreToCamelCase(param.Name)

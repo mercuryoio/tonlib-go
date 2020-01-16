@@ -291,10 +291,10 @@ func NewKeyStoreTypeInMemory() *KeyStoreTypeInMemory {
 // Config
 type Config struct {
 	tonCommon
-	Config                 string `json:"config"`                    //
 	BlockchainName         string `json:"blockchain_name"`           //
-	UseCallbacksForNetwork bool   `json:"use_callbacks_for_network"` //
+	Config                 string `json:"config"`                    //
 	IgnoreCache            bool   `json:"ignore_cache"`              //
+	UseCallbacksForNetwork bool   `json:"use_callbacks_for_network"` //
 }
 
 // MessageType return the string telegram-type of Config
@@ -390,32 +390,6 @@ func NewOptionsInfo(configInfo *OptionsConfigInfo) *OptionsInfo {
 	}
 
 	return &optionsInfoTemp
-}
-
-// Key
-type Key struct {
-	tonCommon
-	PublicKey string       `json:"public_key"` //
-	Secret    *SecureBytes `json:"secret"`     //
-}
-
-// MessageType return the string telegram-type of Key
-func (key *Key) MessageType() string {
-	return "key"
-}
-
-// NewKey creates a new Key
-//
-// @param publicKey
-// @param secret
-func NewKey(publicKey string, secret *SecureBytes) *Key {
-	keyTemp := Key{
-		tonCommon: tonCommon{Type: "key"},
-		PublicKey: publicKey,
-		Secret:    secret,
-	}
-
-	return &keyTemp
 }
 
 // InputKeyRegular
@@ -582,9 +556,9 @@ func NewAccountAddress(accountAddress string) *AccountAddress {
 // UnpackedAccountAddress
 type UnpackedAccountAddress struct {
 	tonCommon
+	Addr        []byte `json:"addr"`         //
 	Bounceable  bool   `json:"bounceable"`   //
 	Testnet     bool   `json:"testnet"`      //
-	Addr        []byte `json:"addr"`         //
 	WorkchainId int32  `json:"workchain_id"` //
 }
 
@@ -614,8 +588,8 @@ func NewUnpackedAccountAddress(addr []byte, bounceable bool, testnet bool, workc
 // InternalTransactionId
 type InternalTransactionId struct {
 	tonCommon
-	Lt   JSONInt64 `json:"lt"`   //
 	Hash []byte    `json:"hash"` //
+	Lt   JSONInt64 `json:"lt"`   //
 }
 
 // MessageType return the string telegram-type of InternalTransactionId
@@ -666,12 +640,12 @@ func NewRawInitialAccountState(code []byte, data []byte) *RawInitialAccountState
 // RawAccountState
 type RawAccountState struct {
 	tonCommon
-	Data              []byte                 `json:"data"`                //
-	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
-	FrozenHash        []byte                 `json:"frozen_hash"`         //
-	SyncUtime         int64                  `json:"sync_utime"`          //
 	Balance           JSONInt64              `json:"balance"`             //
 	Code              []byte                 `json:"code"`                //
+	Data              []byte                 `json:"data"`                //
+	FrozenHash        []byte                 `json:"frozen_hash"`         //
+	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	SyncUtime         int64                  `json:"sync_utime"`          //
 }
 
 // MessageType return the string telegram-type of RawAccountState
@@ -704,14 +678,14 @@ func NewRawAccountState(balance JSONInt64, code []byte, data []byte, frozenHash 
 // RawMessage
 type RawMessage struct {
 	tonCommon
-	Message     []byte    `json:"message"`     //
-	Source      string    `json:"source"`      //
+	BodyHash    []byte    `json:"body_hash"`   //
+	CreatedLt   JSONInt64 `json:"created_lt"`  //
 	Destination string    `json:"destination"` //
-	Value       JSONInt64 `json:"value"`       //
 	FwdFee      JSONInt64 `json:"fwd_fee"`     //
 	IhrFee      JSONInt64 `json:"ihr_fee"`     //
-	CreatedLt   JSONInt64 `json:"created_lt"`  //
-	BodyHash    []byte    `json:"body_hash"`   //
+	Message     []byte    `json:"message"`     //
+	Source      string    `json:"source"`      //
+	Value       JSONInt64 `json:"value"`       //
 }
 
 // MessageType return the string telegram-type of RawMessage
@@ -748,14 +722,14 @@ func NewRawMessage(bodyHash []byte, createdLt JSONInt64, destination string, fwd
 // RawTransaction
 type RawTransaction struct {
 	tonCommon
-	Utime         int64                  `json:"utime"`          //
 	Data          []byte                 `json:"data"`           //
-	TransactionId *InternalTransactionId `json:"transaction_id"` //
 	Fee           JSONInt64              `json:"fee"`            //
-	StorageFee    JSONInt64              `json:"storage_fee"`    //
-	OtherFee      JSONInt64              `json:"other_fee"`      //
 	InMsg         *RawMessage            `json:"in_msg"`         //
+	OtherFee      JSONInt64              `json:"other_fee"`      //
 	OutMsgs       []RawMessage           `json:"out_msgs"`       //
+	StorageFee    JSONInt64              `json:"storage_fee"`    //
+	TransactionId *InternalTransactionId `json:"transaction_id"` //
+	Utime         int64                  `json:"utime"`          //
 }
 
 // MessageType return the string telegram-type of RawTransaction
@@ -792,8 +766,8 @@ func NewRawTransaction(data []byte, fee JSONInt64, inMsg *RawMessage, otherFee J
 // RawTransactions
 type RawTransactions struct {
 	tonCommon
-	Transactions          []RawTransaction       `json:"transactions"`            //
 	PreviousTransactionId *InternalTransactionId `json:"previous_transaction_id"` //
+	Transactions          []RawTransaction       `json:"transactions"`            //
 }
 
 // MessageType return the string telegram-type of RawTransactions
@@ -841,10 +815,10 @@ func NewTestWalletInitialAccountState(publicKey string) *TestWalletInitialAccoun
 // TestWalletAccountState
 type TestWalletAccountState struct {
 	tonCommon
-	Seqno             int32                  `json:"seqno"`               //
-	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
-	SyncUtime         int64                  `json:"sync_utime"`          //
 	Balance           JSONInt64              `json:"balance"`             //
+	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	Seqno             int32                  `json:"seqno"`               //
+	SyncUtime         int64                  `json:"sync_utime"`          //
 }
 
 // MessageType return the string telegram-type of TestWalletAccountState
@@ -896,10 +870,10 @@ func NewWalletInitialAccountState(publicKey string) *WalletInitialAccountState {
 // WalletAccountState
 type WalletAccountState struct {
 	tonCommon
-	SyncUtime         int64                  `json:"sync_utime"`          //
 	Balance           JSONInt64              `json:"balance"`             //
-	Seqno             int32                  `json:"seqno"`               //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	Seqno             int32                  `json:"seqno"`               //
+	SyncUtime         int64                  `json:"sync_utime"`          //
 }
 
 // MessageType return the string telegram-type of WalletAccountState
@@ -954,11 +928,11 @@ func NewWalletV3InitialAccountState(publicKey string, walletId int64) *WalletV3I
 // WalletV3AccountState
 type WalletV3AccountState struct {
 	tonCommon
-	WalletId          int64                  `json:"wallet_id"`           //
-	Seqno             int32                  `json:"seqno"`               //
-	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
-	SyncUtime         int64                  `json:"sync_utime"`          //
 	Balance           JSONInt64              `json:"balance"`             //
+	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	Seqno             int32                  `json:"seqno"`               //
+	SyncUtime         int64                  `json:"sync_utime"`          //
+	WalletId          int64                  `json:"wallet_id"`           //
 }
 
 // MessageType return the string telegram-type of WalletV3AccountState
@@ -989,10 +963,10 @@ func NewWalletV3AccountState(balance JSONInt64, lastTransactionId *InternalTrans
 // TestGiverAccountState
 type TestGiverAccountState struct {
 	tonCommon
-	Seqno             int32                  `json:"seqno"`               //
-	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
-	SyncUtime         int64                  `json:"sync_utime"`          //
 	Balance           JSONInt64              `json:"balance"`             //
+	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	Seqno             int32                  `json:"seqno"`               //
+	SyncUtime         int64                  `json:"sync_utime"`          //
 }
 
 // MessageType return the string telegram-type of TestGiverAccountState
@@ -1022,8 +996,8 @@ func NewTestGiverAccountState(balance JSONInt64, lastTransactionId *InternalTran
 type UninitedAccountState struct {
 	tonCommon
 	Balance           JSONInt64              `json:"balance"`             //
-	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	FrozenHash        []byte                 `json:"frozen_hash"`         //
+	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	SyncUtime         int64                  `json:"sync_utime"`          //
 }
 
@@ -1191,8 +1165,8 @@ func NewGenericAccountStateUninited(accountState *UninitedAccountState) *Generic
 // SendGramsResult
 type SendGramsResult struct {
 	tonCommon
-	SentUntil int64  `json:"sent_until"` //
 	BodyHash  []byte `json:"body_hash"`  //
+	SentUntil int64  `json:"sent_until"` //
 }
 
 // MessageType return the string telegram-type of SendGramsResult
@@ -1237,9 +1211,9 @@ func NewSyncStateDone() *SyncStateDone {
 // SyncStateInProgress
 type SyncStateInProgress struct {
 	tonCommon
-	ToSeqno      int32 `json:"to_seqno"`      //
 	CurrentSeqno int32 `json:"current_seqno"` //
 	FromSeqno    int32 `json:"from_seqno"`    //
+	ToSeqno      int32 `json:"to_seqno"`      //
 }
 
 // MessageType return the string telegram-type of SyncStateInProgress
@@ -1266,10 +1240,10 @@ func NewSyncStateInProgress(currentSeqno int32, fromSeqno int32, toSeqno int32) 
 // Fees
 type Fees struct {
 	tonCommon
-	StorageFee int64 `json:"storage_fee"` //
-	GasFee     int64 `json:"gas_fee"`     //
 	FwdFee     int64 `json:"fwd_fee"`     //
+	GasFee     int64 `json:"gas_fee"`     //
 	InFwdFee   int64 `json:"in_fwd_fee"`  //
+	StorageFee int64 `json:"storage_fee"` //
 }
 
 // MessageType return the string telegram-type of Fees
@@ -1298,8 +1272,8 @@ func NewFees(fwdFee int64, gasFee int64, inFwdFee int64, storageFee int64) *Fees
 // QueryFees
 type QueryFees struct {
 	tonCommon
-	SourceFees      *Fees `json:"source_fees"`      //
 	DestinationFees *Fees `json:"destination_fees"` //
+	SourceFees      *Fees `json:"source_fees"`      //
 }
 
 // MessageType return the string telegram-type of QueryFees
@@ -1324,9 +1298,9 @@ func NewQueryFees(destinationFees *Fees, sourceFees *Fees) *QueryFees {
 // QueryInfo
 type QueryInfo struct {
 	tonCommon
+	BodyHash   []byte `json:"body_hash"`   //
 	Id         int64  `json:"id"`          //
 	ValidUntil int64  `json:"valid_until"` //
-	BodyHash   []byte `json:"body_hash"`   //
 }
 
 // MessageType return the string telegram-type of QueryInfo
@@ -1701,8 +1675,8 @@ func NewSmcRunResult(exitCode int32, gasUsed int64, stack []TvmStackEntry) *SmcR
 // UpdateSendLiteServerQuery
 type UpdateSendLiteServerQuery struct {
 	tonCommon
-	Id   JSONInt64 `json:"id"`   //
 	Data []byte    `json:"data"` //
+	Id   JSONInt64 `json:"id"`   //
 }
 
 // MessageType return the string telegram-type of UpdateSendLiteServerQuery
@@ -1775,8 +1749,8 @@ func (logStreamDefault *LogStreamDefault) GetLogStreamEnum() LogStreamEnum {
 // LogStreamFile The log is written to a file
 type LogStreamFile struct {
 	tonCommon
-	Path        string `json:"path"`          // Path to the file to where the internal tonlib log will be written
 	MaxFileSize int64  `json:"max_file_size"` // Maximum size of the file to where the internal tonlib log is written before the file will be auto-rotated
+	Path        string `json:"path"`          // Path to the file to where the internal tonlib log will be written
 }
 
 // MessageType return the string telegram-type of LogStreamFile
@@ -1900,9 +1874,9 @@ func NewData(bytes *SecureBytes) *Data {
 // LiteServerInfo
 type LiteServerInfo struct {
 	tonCommon
+	Capabilities JSONInt64 `json:"capabilities"` //
 	Now          int64     `json:"now"`          //
 	Version      int32     `json:"version"`      //
-	Capabilities JSONInt64 `json:"capabilities"` //
 }
 
 // MessageType return the string telegram-type of LiteServerInfo

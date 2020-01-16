@@ -100,7 +100,7 @@ func TestClient_DeleteKey(t *testing.T) {
 	if err != nil {
 		t.Fatal("Ton create key for init wallet error", err)
 	}
-	fmt.Println(fmt.Sprintf("pKey: %#v", pKey))
+	fmt.Println(fmt.Sprintf("pKey: %s, secret: %s.", pKey.PublicKey, string(pKey.Secret)))
 
 	// delete new key
 	ok, err := cln.DeleteKey(pKey)
@@ -148,7 +148,7 @@ func TestClient_ExportKey(t *testing.T) {
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			pKey.Secret,
 		},
 	}, )
 	if err != nil {
@@ -195,7 +195,7 @@ func TestClient_ExportPemKey(t *testing.T) {
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			pKey.Secret,
 		},
 	}, &loc)
 	if err != nil {
@@ -271,7 +271,7 @@ func TestClient_WalletInit(t *testing.T) {
 			base64.StdEncoding.EncodeToString(loc),
 			TONPrivateKey{
 				pKey.PublicKey,
-				base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+				pKey.Secret,
 			},
 		},
 	)
@@ -321,7 +321,7 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 			base64.StdEncoding.EncodeToString(loc),
 			TONPrivateKey{
 				pKey.PublicKey,
-				base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+				pKey.Secret,
 			},
 		},
 	)
@@ -380,7 +380,7 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 			base64.StdEncoding.EncodeToString(loc),
 			TONPrivateKey{
 				pKey.PublicKey,
-				base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+				pKey.Secret,
 			},
 		},
 	)
@@ -443,7 +443,7 @@ func TestClient_WalletSendGrams(t *testing.T) {
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			pKey.Secret,
 		},
 	}
 
@@ -548,7 +548,7 @@ func TestClient_GenericSendGrams(t *testing.T) {
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			pKey.Secret,
 		},
 	}
 
@@ -622,7 +622,7 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			pKey.Secret,
 		},
 	}
 

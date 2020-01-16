@@ -211,3 +211,30 @@ func (client *Client) Sync(syncState SyncState) error {
 		}
 	}
 }
+
+// key struct cause it strings values no bytes
+// Key
+type Key struct {
+	tonCommon
+	PublicKey string       `json:"public_key"` //
+	Secret    string `json:"secret"`     //
+}
+
+// MessageType return the string telegram-type of Key
+func (key *Key) MessageType() string {
+	return "key"
+}
+
+// NewKey creates a new Key
+//
+// @param publicKey
+// @param secret
+func NewKey(publicKey string, secret string) *Key {
+	keyTemp := Key{
+		tonCommon: tonCommon{Type: "key"},
+		PublicKey: publicKey,
+		Secret:    secret,
+	}
+
+	return &keyTemp
+}
