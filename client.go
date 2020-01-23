@@ -189,7 +189,7 @@ func (client *Client) Sync(syncState SyncState) error {
 		resB := []byte(res)
 		err = json.Unmarshal(resB, &syncResp)
 		respString := string(resB)
-		fmt.Println("sync result", respString)
+		fmt.Println("sync result #1: ", respString)
 		if err != nil {
 			return err
 		}
@@ -205,7 +205,7 @@ func (client *Client) Sync(syncState SyncState) error {
 			res := C.GoString(result)
 			resB := []byte(res)
 			err = json.Unmarshal(resB, &syncResp)
-			fmt.Println("sync result", string(resB))
+			fmt.Println("sync result #2: ", string(resB))
 			if err != nil {
 				return err
 			}
