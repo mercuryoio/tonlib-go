@@ -129,9 +129,18 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 			return &TONResult{}, err
 		}
 		fmt.Println("run sync", updateData)
-		err = client.Sync(syncResp.SyncState)
+		res, err = client.Sync(syncResp.SyncState)
 		if err != nil {
 			return &TONResult{}, err
+		}
+		if res != "" {
+			// parse and return reponse that has been catched while sync
+			resB := []byte(res)
+			err = json.Unmarshal(resB, &updateData)
+			if err != nil {
+				return &TONResult{}, err
+			}
+			return &TONResult{Data: updateData, Raw: resB}, err
 		}
 		return client.executeAsynchronously(data)
 	}
@@ -159,7 +168,7 @@ func (client *Client) Destroy() {
 }
 
 //sync node`s blocks to current
-func (client *Client) Sync(syncState SyncState) error {
+func (client *Client) Sync(syncState SyncState) (string, error){
 	data := struct {
 		Type      string       `json:"@type"`
 		SyncState SyncState `json:"sync_state"`
@@ -169,7 +178,7 @@ func (client *Client) Sync(syncState SyncState) error {
 	}
 	req, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return "", err
 	}
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
@@ -188,13 +197,12 @@ func (client *Client) Sync(syncState SyncState) error {
 		res := C.GoString(result)
 		resB := []byte(res)
 		err = json.Unmarshal(resB, &syncResp)
-		respString := string(resB)
-		fmt.Println("sync result #1: ", respString)
+		fmt.Println("sync result #1: ", res)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if syncResp.Type == "error"{
-			return fmt.Errorf("Got an error response from ton: `%s` ", respString )
+			return "", fmt.Errorf("Got an error response from ton: `%s` ", res)
 		}
 		if syncResp.SyncState.Type == "syncStateDone" {
 			result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
@@ -207,12 +215,18 @@ func (client *Client) Sync(syncState SyncState) error {
 			err = json.Unmarshal(resB, &syncResp)
 			fmt.Println("sync result #2: ", string(resB))
 			if err != nil {
-				return err
+				return "", err
 			}
 		}
 		if syncResp.Type == "ok" {
-			return nil
+			return "", nil
 		}
+		if syncResp.Type == "updateSyncState"{
+			// continue updating
+			continue
+		}
+		// response on previously not sync request
+		return res, nil
 	}
 }
 
