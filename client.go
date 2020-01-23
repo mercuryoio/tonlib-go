@@ -188,9 +188,13 @@ func (client *Client) Sync(syncState SyncState) error {
 		res := C.GoString(result)
 		resB := []byte(res)
 		err = json.Unmarshal(resB, &syncResp)
-		fmt.Println("sync result", string(resB))
+		respString := string(resB)
+		fmt.Println("sync result", respString)
 		if err != nil {
 			return err
+		}
+		if syncResp.Type == "error"{
+			return fmt.Errorf("Got an error response from ton: `%s` ", respString )
 		}
 		if syncResp.SyncState.Type == "syncStateDone" {
 			result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
