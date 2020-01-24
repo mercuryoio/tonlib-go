@@ -1162,32 +1162,6 @@ func NewGenericAccountStateUninited(accountState *UninitedAccountState) *Generic
 	return &genericAccountStateUninitedTemp
 }
 
-// SendGramsResult
-type SendGramsResult struct {
-	tonCommon
-	BodyHash  []byte `json:"body_hash"`  //
-	SentUntil int64  `json:"sent_until"` //
-}
-
-// MessageType return the string telegram-type of SendGramsResult
-func (sendGramsResult *SendGramsResult) MessageType() string {
-	return "sendGramsResult"
-}
-
-// NewSendGramsResult creates a new SendGramsResult
-//
-// @param bodyHash
-// @param sentUntil
-func NewSendGramsResult(bodyHash []byte, sentUntil int64) *SendGramsResult {
-	sendGramsResultTemp := SendGramsResult{
-		tonCommon: tonCommon{Type: "sendGramsResult"},
-		BodyHash:  bodyHash,
-		SentUntil: sentUntil,
-	}
-
-	return &sendGramsResultTemp
-}
-
 // SyncStateDone
 type SyncStateDone struct {
 	tonCommon

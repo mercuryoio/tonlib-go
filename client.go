@@ -256,3 +256,30 @@ func NewKey(publicKey string, secret string) *Key {
 
 	return &keyTemp
 }
+
+// not bytes but string -exception
+// SendGramsResult
+type SendGramsResult struct {
+	tonCommon
+	BodyHash  string `json:"body_hash"`  //
+	SentUntil int64  `json:"sent_until"` //
+}
+
+// MessageType return the string telegram-type of SendGramsResult
+func (sendGramsResult *SendGramsResult) MessageType() string {
+	return "sendGramsResult"
+}
+
+// NewSendGramsResult creates a new SendGramsResult
+//
+// @param bodyHash
+// @param sentUntil
+func NewSendGramsResult(bodyHash string, sentUntil int64) *SendGramsResult {
+	sendGramsResultTemp := SendGramsResult{
+		tonCommon: tonCommon{Type: "sendGramsResult"},
+		BodyHash:  bodyHash,
+		SentUntil: sentUntil,
+	}
+
+	return &sendGramsResultTemp
+}
