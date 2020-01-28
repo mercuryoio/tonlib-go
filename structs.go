@@ -675,50 +675,6 @@ func NewRawAccountState(balance JSONInt64, code []byte, data []byte, frozenHash 
 	return &rawAccountStateTemp
 }
 
-// RawMessage
-type RawMessage struct {
-	tonCommon
-	BodyHash    []byte    `json:"body_hash"`   //
-	CreatedLt   JSONInt64 `json:"created_lt"`  //
-	Destination string    `json:"destination"` //
-	FwdFee      JSONInt64 `json:"fwd_fee"`     //
-	IhrFee      JSONInt64 `json:"ihr_fee"`     //
-	Message     []byte    `json:"message"`     //
-	Source      string    `json:"source"`      //
-	Value       JSONInt64 `json:"value"`       //
-}
-
-// MessageType return the string telegram-type of RawMessage
-func (rawMessage *RawMessage) MessageType() string {
-	return "raw.message"
-}
-
-// NewRawMessage creates a new RawMessage
-//
-// @param bodyHash
-// @param createdLt
-// @param destination
-// @param fwdFee
-// @param ihrFee
-// @param message
-// @param source
-// @param value
-func NewRawMessage(bodyHash []byte, createdLt JSONInt64, destination string, fwdFee JSONInt64, ihrFee JSONInt64, message []byte, source string, value JSONInt64) *RawMessage {
-	rawMessageTemp := RawMessage{
-		tonCommon:   tonCommon{Type: "raw.message"},
-		BodyHash:    bodyHash,
-		CreatedLt:   createdLt,
-		Destination: destination,
-		FwdFee:      fwdFee,
-		IhrFee:      ihrFee,
-		Message:     message,
-		Source:      source,
-		Value:       value,
-	}
-
-	return &rawMessageTemp
-}
-
 // RawTransaction
 type RawTransaction struct {
 	tonCommon

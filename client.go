@@ -283,3 +283,47 @@ func NewSendGramsResult(bodyHash string, sentUntil int64) *SendGramsResult {
 
 	return &sendGramsResultTemp
 }
+
+// RawMessage
+type RawMessage struct {
+	tonCommon
+	BodyHash    string    `json:"body_hash"`   //
+	CreatedLt   JSONInt64 `json:"created_lt"`  //
+	Destination string    `json:"destination"` //
+	FwdFee      JSONInt64 `json:"fwd_fee"`     //
+	IhrFee      JSONInt64 `json:"ihr_fee"`     //
+	Message     string    `json:"message"`     //
+	Source      string    `json:"source"`      //
+	Value       JSONInt64 `json:"value"`       //
+}
+
+// MessageType return the string telegram-type of RawMessage
+func (rawMessage *RawMessage) MessageType() string {
+	return "raw.message"
+}
+
+// NewRawMessage creates a new RawMessage
+//
+// @param bodyHash
+// @param createdLt
+// @param destination
+// @param fwdFee
+// @param ihrFee
+// @param message
+// @param source
+// @param value
+func NewRawMessage(bodyHash string, createdLt JSONInt64, destination string, fwdFee JSONInt64, ihrFee JSONInt64, message string, source string, value JSONInt64) *RawMessage {
+	rawMessageTemp := RawMessage{
+		tonCommon:   tonCommon{Type: "raw.message"},
+		BodyHash:    bodyHash,
+		CreatedLt:   createdLt,
+		Destination: destination,
+		FwdFee:      fwdFee,
+		IhrFee:      ihrFee,
+		Message:     message,
+		Source:      source,
+		Value:       value,
+	}
+
+	return &rawMessageTemp
+}

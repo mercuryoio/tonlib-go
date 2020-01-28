@@ -9,7 +9,7 @@ import (
 )
 
 var StructNamesExcludedFromGenerator = []string{
-	"secureBytes", "secureString", "bytes", "vector", "key", "sendGramsResult",
+	"secureBytes", "secureString", "bytes", "vector", "key", "sendGramsResult", "raw.message",
 }
 
 var SkipMethodNames = []string{
