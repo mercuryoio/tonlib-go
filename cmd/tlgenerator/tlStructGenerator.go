@@ -9,7 +9,7 @@ import (
 )
 
 var StructNamesExcludedFromGenerator = []string{
-	"secureBytes", "secureString", "bytes", "vector", "key", "sendGramsResult", "raw.message",
+	"secureBytes", "secureString", "bytes", "vector", "key",
 }
 
 var SkipMethodNames = []string{
@@ -155,6 +155,7 @@ func generateStructsFromTnEntities(
 			typesCases)
 	}
 
+	// gen entity`s structs
 	for _, itemInfo := range *entities {
 		// skip generation
 		skip := false
@@ -190,7 +191,7 @@ func generateStructsFromTnEntities(
 				propName := govalidator.UnderscoreToCamelCase(prop.Name)
 				propName = propName
 
-				dataType, isPrimitive := convertDataType(prop.Type)
+				dataType, isPrimitive := convertDataType(prop.Type, true)
 				propsStrItem := ""
 				if isPrimitive || checkIsInterface(dataType, interfaces) {
 					propsStrItem += fmt.Sprintf("%s %s `json:\"%s\"` // %s", propName, dataType, prop.Name, prop.Description)
@@ -231,7 +232,7 @@ func generateStructsFromTnEntities(
 			for i, param := range itemInfo.Properties {
 				propName := govalidator.UnderscoreToCamelCase(param.Name)
 				propName = propName
-				dataType, isPrimitive := convertDataType(param.Type)
+				dataType, isPrimitive := convertDataType(param.Type, true)
 				paramName := convertToArgumentName(param.Name)
 
 				if isPrimitive || checkIsInterface(dataType, interfaces) {
@@ -350,7 +351,7 @@ func generateStructsFromTnEntities(
 
 			for i, param := range itemInfo.Properties {
 				paramName := convertToArgumentName(param.Name)
-				dataType, isPrimitive := convertDataType(param.Type)
+				dataType, isPrimitive := convertDataType(param.Type, false)
 				if isPrimitive || checkIsInterface(dataType, interfaces) {
 					paramsStr += paramName + " " + dataType
 					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)

@@ -76,7 +76,7 @@ func getStructName(input string) string {
 	return paramName
 }
 
-func convertDataType(input string) (string, bool) {
+func convertDataType(input string, changeBytesToString bool) (string, bool) {
 	propType := ""
 	isPrimitiveType := true
 	// cleanup from "="
@@ -104,7 +104,11 @@ func convertDataType(input string) (string, bool) {
 		propType = strings.Replace(input, "int53", "int64", 1)
 
 	} else if strings.Contains(input, "bytes") {
-		propType = strings.Replace(input, "bytes", "[]byte", 1)
+		if changeBytesToString{
+			propType = strings.Replace(input, "bytes", "string", 1)
+		} else {
+			propType = strings.Replace(input, "bytes", "[]byte", 1)
+		}
 
 	} else {
 		if strings.HasPrefix(input, "[][]") {

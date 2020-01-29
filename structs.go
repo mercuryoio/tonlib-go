@@ -556,7 +556,7 @@ func NewAccountAddress(accountAddress string) *AccountAddress {
 // UnpackedAccountAddress
 type UnpackedAccountAddress struct {
 	tonCommon
-	Addr        []byte `json:"addr"`         //
+	Addr        string `json:"addr"`         //
 	Bounceable  bool   `json:"bounceable"`   //
 	Testnet     bool   `json:"testnet"`      //
 	WorkchainId int32  `json:"workchain_id"` //
@@ -573,7 +573,7 @@ func (unpackedAccountAddress *UnpackedAccountAddress) MessageType() string {
 // @param bounceable
 // @param testnet
 // @param workchainId
-func NewUnpackedAccountAddress(addr []byte, bounceable bool, testnet bool, workchainId int32) *UnpackedAccountAddress {
+func NewUnpackedAccountAddress(addr string, bounceable bool, testnet bool, workchainId int32) *UnpackedAccountAddress {
 	unpackedAccountAddressTemp := UnpackedAccountAddress{
 		tonCommon:   tonCommon{Type: "unpackedAccountAddress"},
 		Addr:        addr,
@@ -588,7 +588,7 @@ func NewUnpackedAccountAddress(addr []byte, bounceable bool, testnet bool, workc
 // InternalTransactionId
 type InternalTransactionId struct {
 	tonCommon
-	Hash []byte    `json:"hash"` //
+	Hash string    `json:"hash"` //
 	Lt   JSONInt64 `json:"lt"`   //
 }
 
@@ -601,7 +601,7 @@ func (internalTransactionId *InternalTransactionId) MessageType() string {
 //
 // @param hash
 // @param lt
-func NewInternalTransactionId(hash []byte, lt JSONInt64) *InternalTransactionId {
+func NewInternalTransactionId(hash string, lt JSONInt64) *InternalTransactionId {
 	internalTransactionIdTemp := InternalTransactionId{
 		tonCommon: tonCommon{Type: "internal.transactionId"},
 		Hash:      hash,
@@ -614,8 +614,8 @@ func NewInternalTransactionId(hash []byte, lt JSONInt64) *InternalTransactionId 
 // RawInitialAccountState
 type RawInitialAccountState struct {
 	tonCommon
-	Code []byte `json:"code"` //
-	Data []byte `json:"data"` //
+	Code string `json:"code"` //
+	Data string `json:"data"` //
 }
 
 // MessageType return the string telegram-type of RawInitialAccountState
@@ -627,7 +627,7 @@ func (rawInitialAccountState *RawInitialAccountState) MessageType() string {
 //
 // @param code
 // @param data
-func NewRawInitialAccountState(code []byte, data []byte) *RawInitialAccountState {
+func NewRawInitialAccountState(code string, data string) *RawInitialAccountState {
 	rawInitialAccountStateTemp := RawInitialAccountState{
 		tonCommon: tonCommon{Type: "raw.initialAccountState"},
 		Code:      code,
@@ -641,9 +641,9 @@ func NewRawInitialAccountState(code []byte, data []byte) *RawInitialAccountState
 type RawAccountState struct {
 	tonCommon
 	Balance           JSONInt64              `json:"balance"`             //
-	Code              []byte                 `json:"code"`                //
-	Data              []byte                 `json:"data"`                //
-	FrozenHash        []byte                 `json:"frozen_hash"`         //
+	Code              string                 `json:"code"`                //
+	Data              string                 `json:"data"`                //
+	FrozenHash        string                 `json:"frozen_hash"`         //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	SyncUtime         int64                  `json:"sync_utime"`          //
 }
@@ -661,7 +661,7 @@ func (rawAccountState *RawAccountState) MessageType() string {
 // @param frozenHash
 // @param lastTransactionId
 // @param syncUtime
-func NewRawAccountState(balance JSONInt64, code []byte, data []byte, frozenHash []byte, lastTransactionId *InternalTransactionId, syncUtime int64) *RawAccountState {
+func NewRawAccountState(balance JSONInt64, code string, data string, frozenHash string, lastTransactionId *InternalTransactionId, syncUtime int64) *RawAccountState {
 	rawAccountStateTemp := RawAccountState{
 		tonCommon:         tonCommon{Type: "raw.accountState"},
 		Balance:           balance,
@@ -675,10 +675,54 @@ func NewRawAccountState(balance JSONInt64, code []byte, data []byte, frozenHash 
 	return &rawAccountStateTemp
 }
 
+// RawMessage
+type RawMessage struct {
+	tonCommon
+	BodyHash    string    `json:"body_hash"`   //
+	CreatedLt   JSONInt64 `json:"created_lt"`  //
+	Destination string    `json:"destination"` //
+	FwdFee      JSONInt64 `json:"fwd_fee"`     //
+	IhrFee      JSONInt64 `json:"ihr_fee"`     //
+	Message     string    `json:"message"`     //
+	Source      string    `json:"source"`      //
+	Value       JSONInt64 `json:"value"`       //
+}
+
+// MessageType return the string telegram-type of RawMessage
+func (rawMessage *RawMessage) MessageType() string {
+	return "raw.message"
+}
+
+// NewRawMessage creates a new RawMessage
+//
+// @param bodyHash
+// @param createdLt
+// @param destination
+// @param fwdFee
+// @param ihrFee
+// @param message
+// @param source
+// @param value
+func NewRawMessage(bodyHash string, createdLt JSONInt64, destination string, fwdFee JSONInt64, ihrFee JSONInt64, message string, source string, value JSONInt64) *RawMessage {
+	rawMessageTemp := RawMessage{
+		tonCommon:   tonCommon{Type: "raw.message"},
+		BodyHash:    bodyHash,
+		CreatedLt:   createdLt,
+		Destination: destination,
+		FwdFee:      fwdFee,
+		IhrFee:      ihrFee,
+		Message:     message,
+		Source:      source,
+		Value:       value,
+	}
+
+	return &rawMessageTemp
+}
+
 // RawTransaction
 type RawTransaction struct {
 	tonCommon
-	Data          []byte                 `json:"data"`           //
+	Data          string                 `json:"data"`           //
 	Fee           JSONInt64              `json:"fee"`            //
 	InMsg         *RawMessage            `json:"in_msg"`         //
 	OtherFee      JSONInt64              `json:"other_fee"`      //
@@ -703,7 +747,7 @@ func (rawTransaction *RawTransaction) MessageType() string {
 // @param storageFee
 // @param transactionId
 // @param utime
-func NewRawTransaction(data []byte, fee JSONInt64, inMsg *RawMessage, otherFee JSONInt64, outMsgs []RawMessage, storageFee JSONInt64, transactionId *InternalTransactionId, utime int64) *RawTransaction {
+func NewRawTransaction(data string, fee JSONInt64, inMsg *RawMessage, otherFee JSONInt64, outMsgs []RawMessage, storageFee JSONInt64, transactionId *InternalTransactionId, utime int64) *RawTransaction {
 	rawTransactionTemp := RawTransaction{
 		tonCommon:     tonCommon{Type: "raw.transaction"},
 		Data:          data,
@@ -952,7 +996,7 @@ func NewTestGiverAccountState(balance JSONInt64, lastTransactionId *InternalTran
 type UninitedAccountState struct {
 	tonCommon
 	Balance           JSONInt64              `json:"balance"`             //
-	FrozenHash        []byte                 `json:"frozen_hash"`         //
+	FrozenHash        string                 `json:"frozen_hash"`         //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	SyncUtime         int64                  `json:"sync_utime"`          //
 }
@@ -968,7 +1012,7 @@ func (uninitedAccountState *UninitedAccountState) MessageType() string {
 // @param frozenHash
 // @param lastTransactionId
 // @param syncUtime
-func NewUninitedAccountState(balance JSONInt64, frozenHash []byte, lastTransactionId *InternalTransactionId, syncUtime int64) *UninitedAccountState {
+func NewUninitedAccountState(balance JSONInt64, frozenHash string, lastTransactionId *InternalTransactionId, syncUtime int64) *UninitedAccountState {
 	uninitedAccountStateTemp := UninitedAccountState{
 		tonCommon:         tonCommon{Type: "uninited.accountState"},
 		Balance:           balance,
@@ -1118,6 +1162,32 @@ func NewGenericAccountStateUninited(accountState *UninitedAccountState) *Generic
 	return &genericAccountStateUninitedTemp
 }
 
+// SendGramsResult
+type SendGramsResult struct {
+	tonCommon
+	BodyHash  string `json:"body_hash"`  //
+	SentUntil int64  `json:"sent_until"` //
+}
+
+// MessageType return the string telegram-type of SendGramsResult
+func (sendGramsResult *SendGramsResult) MessageType() string {
+	return "sendGramsResult"
+}
+
+// NewSendGramsResult creates a new SendGramsResult
+//
+// @param bodyHash
+// @param sentUntil
+func NewSendGramsResult(bodyHash string, sentUntil int64) *SendGramsResult {
+	sendGramsResultTemp := SendGramsResult{
+		tonCommon: tonCommon{Type: "sendGramsResult"},
+		BodyHash:  bodyHash,
+		SentUntil: sentUntil,
+	}
+
+	return &sendGramsResultTemp
+}
+
 // SyncStateDone
 type SyncStateDone struct {
 	tonCommon
@@ -1228,7 +1298,7 @@ func NewQueryFees(destinationFees *Fees, sourceFees *Fees) *QueryFees {
 // QueryInfo
 type QueryInfo struct {
 	tonCommon
-	BodyHash   []byte `json:"body_hash"`   //
+	BodyHash   string `json:"body_hash"`   //
 	Id         int64  `json:"id"`          //
 	ValidUntil int64  `json:"valid_until"` //
 }
@@ -1243,7 +1313,7 @@ func (queryInfo *QueryInfo) MessageType() string {
 // @param bodyHash
 // @param id
 // @param validUntil
-func NewQueryInfo(bodyHash []byte, id int64, validUntil int64) *QueryInfo {
+func NewQueryInfo(bodyHash string, id int64, validUntil int64) *QueryInfo {
 	queryInfoTemp := QueryInfo{
 		tonCommon:  tonCommon{Type: "query.info"},
 		BodyHash:   bodyHash,
@@ -1257,7 +1327,7 @@ func NewQueryInfo(bodyHash []byte, id int64, validUntil int64) *QueryInfo {
 // TvmSlice
 type TvmSlice struct {
 	tonCommon
-	Bytes []byte `json:"bytes"` //
+	Bytes string `json:"bytes"` //
 }
 
 // MessageType return the string telegram-type of TvmSlice
@@ -1268,7 +1338,7 @@ func (tvmSlice *TvmSlice) MessageType() string {
 // NewTvmSlice creates a new TvmSlice
 //
 // @param bytes
-func NewTvmSlice(bytes []byte) *TvmSlice {
+func NewTvmSlice(bytes string) *TvmSlice {
 	tvmSliceTemp := TvmSlice{
 		tonCommon: tonCommon{Type: "tvm.slice"},
 		Bytes:     bytes,
@@ -1280,7 +1350,7 @@ func NewTvmSlice(bytes []byte) *TvmSlice {
 // TvmCell
 type TvmCell struct {
 	tonCommon
-	Bytes []byte `json:"bytes"` //
+	Bytes string `json:"bytes"` //
 }
 
 // MessageType return the string telegram-type of TvmCell
@@ -1291,7 +1361,7 @@ func (tvmCell *TvmCell) MessageType() string {
 // NewTvmCell creates a new TvmCell
 //
 // @param bytes
-func NewTvmCell(bytes []byte) *TvmCell {
+func NewTvmCell(bytes string) *TvmCell {
 	tvmCellTemp := TvmCell{
 		tonCommon: tonCommon{Type: "tvm.cell"},
 		Bytes:     bytes,
@@ -1605,7 +1675,7 @@ func NewSmcRunResult(exitCode int32, gasUsed int64, stack []TvmStackEntry) *SmcR
 // UpdateSendLiteServerQuery
 type UpdateSendLiteServerQuery struct {
 	tonCommon
-	Data []byte    `json:"data"` //
+	Data string    `json:"data"` //
 	Id   JSONInt64 `json:"id"`   //
 }
 
@@ -1618,7 +1688,7 @@ func (updateSendLiteServerQuery *UpdateSendLiteServerQuery) MessageType() string
 //
 // @param data
 // @param id
-func NewUpdateSendLiteServerQuery(data []byte, id JSONInt64) *UpdateSendLiteServerQuery {
+func NewUpdateSendLiteServerQuery(data string, id JSONInt64) *UpdateSendLiteServerQuery {
 	updateSendLiteServerQueryTemp := UpdateSendLiteServerQuery{
 		tonCommon: tonCommon{Type: "updateSendLiteServerQuery"},
 		Data:      data,
