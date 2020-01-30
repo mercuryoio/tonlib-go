@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 )
 
@@ -38,6 +40,16 @@ func createPK(cmd *cobra.Command, args []string) {
 	if len(args) > 2 {
 		mnPass = args[2]
 	}
-	pKey, err := tonClient.CreatePrivateKey([]byte(args[1]), []byte(mnPass))
-	fmt.Printf("Got a result: publicKey :%v; secret: %v. Errors: %v. \n", pKey.PublicKey, pKey.Secret, err)
+
+	// prepare data
+	loc := tonlib.SecureBytes(args[1])
+	mem := tonlib.SecureBytes(mnPass)
+	seed := tonlib.SecureBytes("")
+
+	// create ne wkey
+	pKey, err := tonClient.CreateNewKey(&loc, &mem, &seed,)
+	if err != nil{
+		log.Fatal("failed to create new key with error: ", err)
+	}
+	fmt.Printf("Got a result: publicKey :%v; secret: %s. Errors: %v. \n", pKey.PublicKey, pKey.Secret, err)
 }

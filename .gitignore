@@ -11,3 +11,6 @@
 
 .idea
 ./vendor
+
+# auto generated files
+test.keys/*

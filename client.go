@@ -7,382 +7,80 @@ package tonlib
 //#include <stdlib.h>
 //#include <./lib/tonlib_client_json.h>
 import "C"
-
 import (
 	"encoding/json"
 	"fmt"
-	_ "github.com/mercuryoio/tonlib-go/lib"
 	"math/rand"
-	"strconv"
 	"time"
 	"unsafe"
 )
+
+const (
+	DEFAULT_TIMEOUT = 4.5
+	DefaultRetries  = 10
+)
+
+type InputKey struct {
+	Type          string        `json:"@type"`
+	LocalPassword string        `json:"local_password"`
+	Key           TONPrivateKey `json:"key"`
+}
+type TONPrivateKey struct {
+	PublicKey string `json:"public_key"`
+	Secret    string `json:"secret"`
+}
+
+type SyncState struct {
+	Type         string `json:"@type"`
+	FromSeqno    int    `json:"from_seqno"`
+	ToSeqno      int    `json:"to_seqno"`
+	CurrentSeqno int    `json:"current_seqno"`
+}
+
+// KeyStoreType directory
+type KeyStoreType struct {
+	Type      string `json:"@type"`
+	Directory string `json:"directory"`
+}
+
+// TONResponse alias for use in TONResult
+type TONResponse map[string]interface{}
+
+// TONResult is used to unmarshal received json strings into
+type TONResult struct {
+	Data TONResponse
+	Raw  []byte
+}
 
 // Client is the Telegram TdLib client
 type Client struct {
 	client unsafe.Pointer
 	config Config
-	wallet *TonWallet
+	// wallet *TonWallet
 }
 
-// Config holds tonlibParameters
-type Config struct {
-	Timeout float32
+type TonInitRequest struct {
+	Type    string  `json:"@type"`
+	Options Options `json:"options"`
 }
 
 // NewClient Creates a new instance of TONLib.
-func NewClient(tonCnf *TONInitRequest, config Config) (*Client, error) {
+func NewClient(tonCnf *TonInitRequest, config Config) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: combineConfig(config)}
-	resp, err := client.executeAsynchronously(tonCnf)
+	client := Client{client: C.tonlib_client_json_create(), config: config}
+	optionsInfo, err := client.Init(&tonCnf.Options)
+	//resp, err := client.executeAsynchronously(tonCnf)
 	if err != nil {
 		return &client, err
 	}
-	if st, ok := resp.Data["@type"]; ok && st == "ok" {
+	if optionsInfo.tonCommon.Type == "ok" {
 		return &client, nil
 	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return &client, fmt.Errorf("Error ton client init. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
+	if optionsInfo.tonCommon.Type == "error" {
+		return &client, fmt.Errorf("Error ton client init. Message: %s. ", optionsInfo.tonCommon.Extra)
 	}
-	fmt.Println("Init ton client result: ", string(resp.Raw), err)
 	return &client, fmt.Errorf("Error ton client init. ")
-}
-
-// InitWallet wallet.init and set it as default wallet for client
-func (client *Client) InitWallet(key *TONPrivateKey, password []byte) (err error) {
-	st := struct {
-		Type       string   `json:"@type"`
-		PrivateKey InputKey `json:"private_key"`
-	}{
-		Type:       "wallet.init",
-		PrivateKey: key.getInputKey(password),
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return fmt.Errorf("Error ton client init. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "ok" {
-		client.wallet = new(TonWallet)
-		client.wallet.client = client
-		return nil
-	}
-	return fmt.Errorf("Error ton TonWallet init. ")
-}
-
-// WalletGetAddress get wallet address method
-func (client *Client) WalletGetAddress(pubKey string) (*TONAccountAddress, error) {
-	if client.wallet == nil {
-		return nil, fmt.Errorf("You must init wallet before. ")
-	}
-	return client.wallet.getAddress(pubKey)
-}
-
-// WalletState get wallet state
-func (client *Client) WalletState(address string) (*TONAccountState, error) {
-	if client.wallet == nil {
-		return nil, fmt.Errorf("You must init wallet before. ")
-	}
-	return client.wallet.getState(address)
-}
-
-// WalletSendGRAMM2Address send GRAM to address
-func (client *Client) WalletSendGRAMM2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress string, amount string) (*TONResult, error) {
-	if client.wallet == nil {
-		return nil, fmt.Errorf("You must init wallet before. ")
-	}
-	return client.wallet.sendGRAMM2Address(key, password, fromAddress, toAddress, amount)
-}
-
-// UnpackAccountAddress get full address in HEX
-func (client *Client) UnpackAccountAddress(address string) (*TONUnpackedAddress, error) {
-	st := struct {
-		Type           string `json:"@type"`
-		AccountAddress string `json:"account_address"`
-	}{
-		Type:           "unpackAccountAddress",
-		AccountAddress: address,
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return nil, err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return nil, fmt.Errorf("Error ton client init. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	addressSt := TONUnpackedAddress{}
-	err = json.Unmarshal(resp.Raw, &addressSt)
-	if err != nil {
-		return nil, err
-	}
-	return &addressSt, nil
-}
-
-// PackAccountAddress get short address from full address HEX
-func (client *Client) PackAccountAddress(packedAddr *TONUnpackedAddress, address string) (string, error) {
-	fmt.Println("addr: ", packedAddr.Addr, address)
-	st := struct {
-		Type           string             `json:"@type"`
-		AccountAddress TONUnpackedAddress `json:"account_address"`
-	}{
-		Type:           "packAccountAddress",
-		AccountAddress: *packedAddr,
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return "", err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton client init. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	addressSt := struct {
-		TONAccountAddress
-		Type string `json:"@type"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &addressSt)
-	if err != nil {
-		return "", err
-	}
-	return addressSt.TONAccountAddress.AccountAddress, nil
-}
-
-// GetAccountState raw.getAccountState take account state
-func (client *Client) GetAccountState(address string) (state *TONAccountState, err error) {
-	st := struct {
-		Type           string            `json:"@type"`
-		AccountAddress TONAccountAddress `json:"account_address"`
-	}{
-		Type: "raw.getAccountState",
-		AccountAddress: TONAccountAddress{
-			AccountAddress: address,
-		},
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return state, err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return state, fmt.Errorf("Error ton get account sate. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	state = new(TONAccountState)
-	err = json.Unmarshal(resp.Raw, state)
-	if err != nil {
-		return state, err
-	}
-	return state, nil
-}
-
-// SendGrams2Address generic.sendGrams sends GRAM to address and returns transaction`s hash
-func (client *Client) SendGrams2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string) (string, error) {
-	st := struct {
-		Type        string            `json:"@type"`
-		Seqno       int64             `json:"seqno"`
-		Amount      string            `json:"amount"`
-		PrivateKey  InputKey          `json:"private_key"`
-		Destination TONAccountAddress `json:"destination"`
-		ValidUntil  uint              `json:"valid_until"`
-		Source      TONAccountAddress `json:"source"`
-		Message     []byte            `json:"message"`
-	}{
-		Type:       "generic.sendGrams",
-		PrivateKey: key.getInputKey(password),
-		Amount:     amount,
-		Destination: TONAccountAddress{
-			AccountAddress: toAddress,
-		},
-		Seqno: 2,
-		Source: TONAccountAddress{
-			AccountAddress: fromAddress,
-		},
-		Message: []byte(message),
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return "", err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton send grams. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	r := struct {
-		SentUntil int    `json:"sent_until"`
-		BodyHash  string `json:"body_hash"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &r)
-	if err != nil {
-		return "", err
-	}
-	return r.BodyHash, nil
-}
-
-// CreateQuery4SendGrams2Address generic.createSendGramsQuery sends GRAM to address and returns transaction`s hash
-// timeout must be between 0 and 300
-func (client *Client) CreateQuery4SendGrams2Address(key *TONPrivateKey, password []byte, fromAddress, toAddress, amount, message string, timeout uint, allow_send_to_uninited bool) (string, error) {
-	st := struct {
-		Type                string            `json:"@type"`
-		Seqno               int64             `json:"seqno"`
-		Amount              string            `json:"amount"`
-		PrivateKey          InputKey          `json:"private_key"`
-		Destination         TONAccountAddress `json:"destination"`
-		ValidUntil          uint              `json:"valid_until"`
-		Source              TONAccountAddress `json:"source"`
-		Message             []byte            `json:"message"`
-		Timeout             uint              `json:"timeout"`
-		AllowSendToUninited bool              `json:"allow_send_to_uninited"`
-	}{
-		Type:       "generic.createSendGramsQuery",
-		PrivateKey: key.getInputKey(password),
-		Amount:     amount,
-		Destination: TONAccountAddress{
-			AccountAddress: toAddress,
-		},
-		Seqno: 2,
-		Source: TONAccountAddress{
-			AccountAddress: fromAddress,
-		},
-		Message:             []byte(message),
-		AllowSendToUninited: allow_send_to_uninited,
-		Timeout:             timeout,
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return "", err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return "", fmt.Errorf("Error ton create query for sending grams. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	r := struct {
-		SentUntil int    `json:"sent_until"`
-		BodyHash  string `json:"body_hash"`
-	}{}
-	err = json.Unmarshal(resp.Raw, &r)
-	if err != nil {
-		return "", err
-	}
-	return r.BodyHash, nil
-}
-
-// SendMessage raw.sendMessage to address
-func (client *Client) SendMessage(destinationAddress string, initialAccountState, data []byte) (res *TONResult, err error) {
-	st := struct {
-		Type                string            `json:"@type"`
-		Destination         TONAccountAddress `json:"destination"`
-		InitialAccountState []byte            `json:"initial_account_state"`
-		Data                []byte            `json:"data"`
-	}{
-		Type: "raw.sendMessage",
-		Data: data,
-		Destination: TONAccountAddress{
-			AccountAddress: destinationAddress,
-		},
-		InitialAccountState: initialAccountState,
-	}
-	return client.executeAsynchronously(st)
-}
-
-// CreateAndSendMessage raw.sendMessage to address
-func (client *Client) CreateAndSendMessage(destinationAddress string, initialAccountState, data []byte) (res *TONResult, err error) {
-	st := struct {
-		Type                string            `json:"@type"`
-		Destination         TONAccountAddress `json:"destination"`
-		InitialAccountState []byte            `json:"initial_account_state"`
-		Data                []byte            `json:"data"`
-	}{
-		Type: "raw.createAndSendMessage",
-		Data: data,
-		Destination: TONAccountAddress{
-			AccountAddress: destinationAddress,
-		},
-		InitialAccountState: initialAccountState,
-	}
-	return client.executeAsynchronously(st)
-}
-
-// GetAccountTransactions raw.getTransactions fetch address`s transactions
-func (client *Client) GetAccountTransactions(address string, lt string, hash string) (txs *TONTransactionsResponse, err error) {
-	st := struct {
-		Type              string                 `json:"@type"`
-		AccountAddress    TONAccountAddress      `json:"account_address"`
-		FromTransactionId *InternalTransactionId `json:"from_transaction_id"`
-	}{
-		Type: "raw.getTransactions",
-		AccountAddress: TONAccountAddress{
-			AccountAddress: address,
-		},
-		FromTransactionId: &InternalTransactionId{
-			Lt:   lt,
-			Hash: hash,
-		},
-	}
-	resp, err := client.executeAsynchronously(st)
-	if err != nil {
-		return txs, err
-	}
-	if st, ok := resp.Data["@type"]; ok && st == "error" {
-		return txs, fmt.Errorf("Error ton get account transactions. Code %v. Message %s. ", resp.Data["code"], resp.Data["message"])
-	}
-
-	txs = new(TONTransactionsResponse)
-	err = json.Unmarshal(resp.Raw, txs)
-	return txs, err
-}
-
-//sync node`s blocks to current
-func (client *Client) Sync(fromBlock, toBlock, currentBlock int) error {
-	data := struct {
-		Type      string       `json:"@type"`
-		SyncState TONSyncState `json:"sync_state"`
-	}{
-		Type: "sync",
-		SyncState: TONSyncState{
-			FromSeqno:    fromBlock,
-			CurrentSeqno: currentBlock,
-			ToSeqno:      toBlock,
-		},
-	}
-	req, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
-
-	C.tonlib_client_json_send(client.client, cs)
-	for {
-		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
-
-		for result == nil {
-			fmt.Println("empty response. next attempt")
-			time.Sleep(1 * time.Second)
-			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
-		}
-
-		syncResp := struct {
-			Type      string    `json:"@type"`
-			SyncState SyncState `json:"sync_state"`
-		}{}
-		res := C.GoString(result)
-		resB := []byte(res)
-		err = json.Unmarshal(resB, &syncResp)
-		fmt.Println("sync result", string(resB))
-		if err != nil {
-			return err
-		}
-		if syncResp.Type == "ok" || syncResp.SyncState.Type == "syncStateDone" {
-			return nil
-		}
-	}
-}
-
-func (client *Client) Destroy() {
-	C.tonlib_client_json_destroy(client.client)
 }
 
 /**
@@ -400,9 +98,14 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	C.tonlib_client_json_send(client.client, cs)
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
+	num := 0
 	for result == nil {
+		if num >= DefaultRetries{
+			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+		}
 		time.Sleep(1 * time.Second)
 		result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		num += 1
 	}
 
 	var updateData TONResponse
@@ -412,10 +115,8 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	fmt.Println("fetch data: ", string(resB))
 	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
 		err = json.Unmarshal(resB, &updateData)
-		updateReq := map[string]string{}
-		err = json.Unmarshal(resB, &updateReq)
 		if err == nil {
-			client.updateSendLiteServerQuery(updateReq["id"], updateReq["data"])
+			_, err = client.OnLiteServerQueryResult(updateData["data"].([]byte), updateData["id"].(JSONInt64),)
 		}
 	}
 	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {
@@ -428,9 +129,18 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 			return &TONResult{}, err
 		}
 		fmt.Println("run sync", updateData)
-		err = client.Sync(syncResp.SyncState.FromSeqno, syncResp.SyncState.ToSeqno, syncResp.SyncState.CurrentSeqno)
+		res, err = client.Sync(syncResp.SyncState)
 		if err != nil {
 			return &TONResult{}, err
+		}
+		if res != "" {
+			// parse and return reponse that has been catched while sync
+			resB := []byte(res)
+			err = json.Unmarshal(resB, &updateData)
+			if err != nil {
+				return &TONResult{}, err
+			}
+			return &TONResult{Data: updateData, Raw: resB}, err
 		}
 		return client.executeAsynchronously(data)
 	}
@@ -453,54 +163,96 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	return &TONResult{Data: updateData, Raw: resB}, err
 }
 
+func (client *Client) Destroy() {
+	C.tonlib_client_json_destroy(client.client)
+}
+
+//sync node`s blocks to current
+func (client *Client) Sync(syncState SyncState) (string, error){
+	data := struct {
+		Type      string       `json:"@type"`
+		SyncState SyncState `json:"sync_state"`
+	}{
+		Type: "sync",
+		SyncState: syncState,
+	}
+	req, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	cs := C.CString(string(req))
+	defer C.free(unsafe.Pointer(cs))
+	C.tonlib_client_json_send(client.client, cs)
+	for {
+		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		for result == nil {
+			fmt.Println("empty response. next attempt")
+			time.Sleep(1 * time.Second)
+			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		}
+		syncResp := struct {
+			Type      string    `json:"@type"`
+			SyncState SyncState `json:"sync_state"`
+		}{}
+		res := C.GoString(result)
+		resB := []byte(res)
+		err = json.Unmarshal(resB, &syncResp)
+		fmt.Println("sync result #1: ", res)
+		if err != nil {
+			return "", err
+		}
+		if syncResp.Type == "error"{
+			return "", fmt.Errorf("Got an error response from ton: `%s` ", res)
+		}
+		if syncResp.SyncState.Type == "syncStateDone" {
+			result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+			syncResp = struct {
+				Type      string    `json:"@type"`
+				SyncState SyncState `json:"sync_state"`
+			}{}
+			res := C.GoString(result)
+			resB := []byte(res)
+			err = json.Unmarshal(resB, &syncResp)
+			fmt.Println("sync result #2: ", string(resB))
+			if err != nil {
+				return "", err
+			}
+		}
+		if syncResp.Type == "ok" {
+			return "", nil
+		}
+		if syncResp.Type == "updateSyncState"{
+			// continue updating
+			continue
+		}
+		// response on previously not sync request
+		return res, nil
+	}
+}
+
+// key struct cause it strings values no bytes
+// Key
+type Key struct {
+	tonCommon
+	PublicKey string       `json:"public_key"` //
+	Secret    string `json:"secret"`     //
+}
+
+// MessageType return the string telegram-type of Key
+func (key *Key) MessageType() string {
+	return "key"
+}
+
+// NewKey creates a new Key
 //
-func (client *Client) updateSendLiteServerError(id, data string) (res *TONResult, err error) {
-	queryID, err := strconv.Atoi(id)
-	if err != nil {
-		return
+// @param publicKey
+// @param secret
+func NewKey(publicKey string, secret string) *Key {
+	keyTemp := Key{
+		tonCommon: tonCommon{Type: "key"},
+		PublicKey: publicKey,
+		Secret:    secret,
 	}
-	st := struct {
-		Type  string `json:"@type"`
-		Id    int32  `json:"id"`
-		Bytes []byte `json:"bytes"`
-	}{
-		Type:  "onLiteServerQueryError",
-		Bytes: []byte(data),
-		Id:    int32(queryID),
-	}
-	return client.executeAsynchronously(st)
-}
 
-func (client *Client) getLogStream(id, data string) (res *TONResult, err error) {
-	queryID, err := strconv.Atoi(id)
-	if err != nil {
-		return
-	}
-	st := struct {
-		Type  string `json:"@type"`
-		Id    int32  `json:"id"`
-		Bytes []byte `json:"bytes"`
-	}{
-		Type:  "getLogStream",
-		Bytes: []byte(data),
-		Id:    int32(queryID),
-	}
-	return client.executeAsynchronously(st)
-}
-
-func (client *Client) updateSendLiteServerQuery(id, data string) (res *TONResult, err error) {
-	queryID, err := strconv.Atoi(id)
-	if err != nil {
-		return
-	}
-	st := struct {
-		Type  string `json:"@type"`
-		Id    int32  `json:"id"`
-		Bytes []byte `json:"bytes"`
-	}{
-		Type:  "onLiteServerQueryResult",
-		Bytes: []byte(data),
-		Id:    int32(queryID),
-	}
-	return client.executeAsynchronously(st)
+	return &keyTemp
 }

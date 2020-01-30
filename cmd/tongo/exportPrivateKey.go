@@ -1,12 +1,12 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
 	"os"
-	"strings"
 )
 
 var exportPKCmd = &cobra.Command{
@@ -39,11 +39,19 @@ func exportPK(cmd *cobra.Command, args []string) {
 	secret := args[2]
 	password := args[3]
 	err := initClient(confPath)
+	locPass := tonlib.SecureBytes(password)
+
 	if err != nil {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-	pKey := &tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
-	wordList, err := tonClient.ExportPrivateKey(pKey, []byte(password))
-	fmt.Printf("Got a result: words list: [%v]. Errors: %v. \n", strings.Join(wordList, ", "), err)
+	pKey := tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
+
+	result, err := tonClient.ExportPemKey(&tonlib.InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(locPass),
+		pKey,
+	}, &locPass)
+
+	fmt.Printf("Got a result: %#v. Errors: %v. \n", result, err)
 }
