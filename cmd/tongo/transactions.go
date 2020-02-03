@@ -47,7 +47,7 @@ func transactions(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	txs, err := tonClient.RawGetTransactions(tonlib.NewAccountAddress(address), tonlib.NewInternalTransactionId([]byte(hash), tonlib.JSONInt64(lt)))
+	txs, err := tonClient.RawGetTransactions(tonlib.NewAccountAddress(address), tonlib.NewInternalTransactionId(hash, tonlib.JSONInt64(lt)))
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
