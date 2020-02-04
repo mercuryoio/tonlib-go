@@ -229,7 +229,42 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 		return res, nil
 	}
 }
+// QueryEstimateFees
+// sometimes it`s respond with "@type: ok" instead of "query.fees"
+// @param id
+// @param ignoreChksig
+func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
+	callData := struct {
+		Type         string `json:"@type"`
+		Id           int64  `json:"id"`
+		IgnoreChksig bool   `json:"ignore_chksig"`
+	}{
+		Type:         "query.estimateFees",
+		Id:           id,
+		IgnoreChksig: ignoreChksig,
+	}
 
+	var queryFees QueryFees
+
+	for i:=0; i<10; i++ {
+		result, err := client.executeAsynchronously(callData)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if result.Data["@type"].(string) == "error" {
+			return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+		}
+
+		if result.Data["@type"].(string) == "query.fees" {
+			err = json.Unmarshal(result.Raw, &queryFees)
+			return &queryFees, err
+		}
+		time.Sleep(time.Second*5)
+	}
+	return &queryFees, fmt.Errorf("Failed to get expected response")
+}
 // key struct cause it strings values no bytes
 // Key
 type Key struct {
