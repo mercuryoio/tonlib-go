@@ -261,7 +261,6 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 			err = json.Unmarshal(result.Raw, &queryFees)
 			return &queryFees, err
 		}
-		time.Sleep(time.Second*5)
 	}
 	return &queryFees, fmt.Errorf("Failed to get expected response")
 }
