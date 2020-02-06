@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -244,25 +245,66 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 		IgnoreChksig: ignoreChksig,
 	}
 
+	type Exit struct {
+		Exit   bool
+		sync.Mutex
+	}
+
 	var queryFees QueryFees
 
-	for i:=0; i<10; i++ {
-		result, err := client.executeAsynchronously(callData)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if result.Data["@type"].(string) == "error" {
-			return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-		}
-
-		if result.Data["@type"].(string) == "query.fees" {
-			err = json.Unmarshal(result.Raw, &queryFees)
-			return &queryFees, err
-		}
+	type Resp struct{
+		Fee *QueryFees
+		Error error
 	}
-	return &queryFees, fmt.Errorf("Failed to get expected response")
+
+	resultChan := make(chan Resp, 1)
+	timeout := DEFAULT_TIMEOUT
+	ticker :=time.NewTimer(time.Duration(timeout)*time.Second)
+	exit := &Exit{false, sync.Mutex{}}
+
+	go func() {
+		for true {
+			result, err := client.executeAsynchronously(callData)
+			// if timeout reached - close chan and exit
+			exit.Lock()
+			if exit.Exit{
+				exit.Unlock()
+				close(resultChan)
+				return
+			}
+			exit.Unlock()
+
+			if err != nil {
+				resultChan <- Resp{nil, err}
+				return
+			}
+
+			if result.Data["@type"].(string) == "error" {
+				resultChan <- Resp{nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])}
+				return
+			}
+
+			if result.Data["@type"].(string) == "query.fees" {
+				err = json.Unmarshal(result.Raw, &queryFees)
+				resultChan <- Resp{&queryFees, err}
+				return
+			}
+		}
+	}()
+
+	select {
+	case _ = <- ticker.C:
+		// notify gorutine that performing requests to TON
+		exit.Lock()
+		exit.Exit = true
+		exit.Unlock()
+
+		ticker.Stop()
+		return nil, fmt.Errorf("timeout")
+	case result := <- resultChan:
+		ticker.Stop()
+		return result.Fee, result.Error
+	}
 }
 // key struct cause it strings values no bytes
 // Key
