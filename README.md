@@ -66,7 +66,7 @@ Create new client
     tonClient, err = tonlib.NewClient(
     	&req, // init request
     	tonlib.Config{}, // config
-    	10, // timeout in seconds
+    	10, // timeout in seconds for each (currently only QueryEstimateFees) tonlib.Client`s public method
     )
     if err != nil {
         panic(err)
