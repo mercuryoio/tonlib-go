@@ -13,7 +13,7 @@ var StructNamesExcludedFromGenerator = []string{
 }
 
 var SkipMethodNames = []string{
-	"sync",
+	"sync", "query.estimateFees",
 }
 
 func generateStructsFromTnEntities(

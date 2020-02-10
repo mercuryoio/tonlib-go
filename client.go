@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -54,8 +55,9 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
-	client unsafe.Pointer
-	config Config
+	client  unsafe.Pointer
+	config  Config
+	timeout int64
 	// wallet *TonWallet
 }
 
@@ -65,10 +67,10 @@ type TonInitRequest struct {
 }
 
 // NewClient Creates a new instance of TONLib.
-func NewClient(tonCnf *TonInitRequest, config Config) (*Client, error) {
+func NewClient(tonCnf *TonInitRequest, config Config, timeout int64) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: config}
+	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout,}
 	optionsInfo, err := client.Init(&tonCnf.Options)
 	//resp, err := client.executeAsynchronously(tonCnf)
 	if err != nil {
@@ -100,7 +102,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 
 	num := 0
 	for result == nil {
-		if num >= DefaultRetries{
+		if num >= DefaultRetries {
 			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
 		}
 		time.Sleep(1 * time.Second)
@@ -116,7 +118,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
 		err = json.Unmarshal(resB, &updateData)
 		if err == nil {
-			_, err = client.OnLiteServerQueryResult(updateData["data"].([]byte), updateData["id"].(JSONInt64),)
+			_, err = client.OnLiteServerQueryResult(updateData["data"].([]byte), updateData["id"].(JSONInt64), )
 		}
 	}
 	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {
@@ -168,12 +170,12 @@ func (client *Client) Destroy() {
 }
 
 //sync node`s blocks to current
-func (client *Client) Sync(syncState SyncState) (string, error){
+func (client *Client) Sync(syncState SyncState) (string, error) {
 	data := struct {
-		Type      string       `json:"@type"`
+		Type      string    `json:"@type"`
 		SyncState SyncState `json:"sync_state"`
 	}{
-		Type: "sync",
+		Type:      "sync",
 		SyncState: syncState,
 	}
 	req, err := json.Marshal(data)
@@ -201,7 +203,7 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 		if err != nil {
 			return "", err
 		}
-		if syncResp.Type == "error"{
+		if syncResp.Type == "error" {
 			return "", fmt.Errorf("Got an error response from ton: `%s` ", res)
 		}
 		if syncResp.SyncState.Type == "syncStateDone" {
@@ -221,7 +223,7 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 		if syncResp.Type == "ok" {
 			return "", nil
 		}
-		if syncResp.Type == "updateSyncState"{
+		if syncResp.Type == "updateSyncState" {
 			// continue updating
 			continue
 		}
@@ -230,11 +232,87 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 	}
 }
 
+// QueryEstimateFees
+// sometimes it`s respond with "@type: ok" instead of "query.fees"
+// @param id
+// @param ignoreChksig
+func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
+	callData := struct {
+		Type         string `json:"@type"`
+		Id           int64  `json:"id"`
+		IgnoreChksig bool   `json:"ignore_chksig"`
+	}{
+		Type:         "query.estimateFees",
+		Id:           id,
+		IgnoreChksig: ignoreChksig,
+	}
+
+	type Exit struct {
+		Exit bool
+		sync.Mutex
+	}
+
+	var queryFees QueryFees
+
+	type Resp struct {
+		Fee   *QueryFees
+		Error error
+	}
+
+	resultChan := make(chan Resp, 1)
+	ticker := time.NewTimer(time.Duration(client.timeout) * time.Second)
+	exit := &Exit{false, sync.Mutex{}}
+
+	go func() {
+		for true {
+			result, err := client.executeAsynchronously(callData)
+			// if timeout reached - close chan and exit
+			exit.Lock()
+			if exit.Exit {
+				exit.Unlock()
+				close(resultChan)
+				return
+			}
+			exit.Unlock()
+
+			if err != nil {
+				resultChan <- Resp{nil, err}
+				return
+			}
+
+			if result.Data["@type"].(string) == "error" {
+				resultChan <- Resp{nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])}
+				return
+			}
+
+			if result.Data["@type"].(string) == "query.fees" {
+				err = json.Unmarshal(result.Raw, &queryFees)
+				resultChan <- Resp{&queryFees, err}
+				return
+			}
+		}
+	}()
+
+	select {
+	case _ = <-ticker.C:
+		// notify gorutine that performing requests to TON
+		exit.Lock()
+		exit.Exit = true
+		exit.Unlock()
+
+		ticker.Stop()
+		return nil, fmt.Errorf("timeout")
+	case result := <-resultChan:
+		ticker.Stop()
+		return result.Fee, result.Error
+	}
+}
+
 // key struct cause it strings values no bytes
 // Key
 type Key struct {
 	tonCommon
-	PublicKey string       `json:"public_key"` //
+	PublicKey string `json:"public_key"` //
 	Secret    string `json:"secret"`     //
 }
 

@@ -1289,36 +1289,6 @@ func (client *Client) QueryForget(id int64) (*Ok, error) {
 
 }
 
-// QueryEstimateFees
-// @param id
-// @param ignoreChksig
-func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type         string `json:"@type"`
-			Id           int64  `json:"id"`
-			IgnoreChksig bool   `json:"ignore_chksig"`
-		}{
-			Type:         "query.estimateFees",
-			Id:           id,
-			IgnoreChksig: ignoreChksig,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var queryFees QueryFees
-	err = json.Unmarshal(result.Raw, &queryFees)
-	return &queryFees, err
-
-}
-
 // QueryGetInfo
 // @param id
 func (client *Client) QueryGetInfo(id int64) (*QueryInfo, error) {
