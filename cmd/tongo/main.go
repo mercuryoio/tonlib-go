@@ -28,7 +28,7 @@ func initClient(configPath string) error {
 		*options,
 	}
 
-	tonClient, err = tonlib.NewClient(&req, tonlib.Config{})
+	tonClient, err = tonlib.NewClient(&req, tonlib.Config{}, 10)
 	if err != nil {
 		err = fmt.Errorf("Init client error: %v. ", err)
 	}

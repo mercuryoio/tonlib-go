@@ -55,8 +55,9 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
-	client unsafe.Pointer
-	config Config
+	client  unsafe.Pointer
+	config  Config
+	timeout int64
 	// wallet *TonWallet
 }
 
@@ -66,10 +67,10 @@ type TonInitRequest struct {
 }
 
 // NewClient Creates a new instance of TONLib.
-func NewClient(tonCnf *TonInitRequest, config Config) (*Client, error) {
+func NewClient(tonCnf *TonInitRequest, config Config, timeout int64) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: config}
+	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout,}
 	optionsInfo, err := client.Init(&tonCnf.Options)
 	//resp, err := client.executeAsynchronously(tonCnf)
 	if err != nil {
@@ -101,7 +102,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 
 	num := 0
 	for result == nil {
-		if num >= DefaultRetries{
+		if num >= DefaultRetries {
 			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
 		}
 		time.Sleep(1 * time.Second)
@@ -117,7 +118,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
 		err = json.Unmarshal(resB, &updateData)
 		if err == nil {
-			_, err = client.OnLiteServerQueryResult(updateData["data"].([]byte), updateData["id"].(JSONInt64),)
+			_, err = client.OnLiteServerQueryResult(updateData["data"].([]byte), updateData["id"].(JSONInt64), )
 		}
 	}
 	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {
@@ -169,12 +170,12 @@ func (client *Client) Destroy() {
 }
 
 //sync node`s blocks to current
-func (client *Client) Sync(syncState SyncState) (string, error){
+func (client *Client) Sync(syncState SyncState) (string, error) {
 	data := struct {
-		Type      string       `json:"@type"`
+		Type      string    `json:"@type"`
 		SyncState SyncState `json:"sync_state"`
 	}{
-		Type: "sync",
+		Type:      "sync",
 		SyncState: syncState,
 	}
 	req, err := json.Marshal(data)
@@ -202,7 +203,7 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 		if err != nil {
 			return "", err
 		}
-		if syncResp.Type == "error"{
+		if syncResp.Type == "error" {
 			return "", fmt.Errorf("Got an error response from ton: `%s` ", res)
 		}
 		if syncResp.SyncState.Type == "syncStateDone" {
@@ -222,7 +223,7 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 		if syncResp.Type == "ok" {
 			return "", nil
 		}
-		if syncResp.Type == "updateSyncState"{
+		if syncResp.Type == "updateSyncState" {
 			// continue updating
 			continue
 		}
@@ -230,6 +231,7 @@ func (client *Client) Sync(syncState SyncState) (string, error){
 		return res, nil
 	}
 }
+
 // QueryEstimateFees
 // sometimes it`s respond with "@type: ok" instead of "query.fees"
 // @param id
@@ -246,20 +248,19 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 	}
 
 	type Exit struct {
-		Exit   bool
+		Exit bool
 		sync.Mutex
 	}
 
 	var queryFees QueryFees
 
-	type Resp struct{
-		Fee *QueryFees
+	type Resp struct {
+		Fee   *QueryFees
 		Error error
 	}
 
 	resultChan := make(chan Resp, 1)
-	timeout := DEFAULT_TIMEOUT
-	ticker :=time.NewTimer(time.Duration(timeout)*time.Second)
+	ticker := time.NewTimer(time.Duration(client.timeout) * time.Second)
 	exit := &Exit{false, sync.Mutex{}}
 
 	go func() {
@@ -267,7 +268,7 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 			result, err := client.executeAsynchronously(callData)
 			// if timeout reached - close chan and exit
 			exit.Lock()
-			if exit.Exit{
+			if exit.Exit {
 				exit.Unlock()
 				close(resultChan)
 				return
@@ -293,7 +294,7 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 	}()
 
 	select {
-	case _ = <- ticker.C:
+	case _ = <-ticker.C:
 		// notify gorutine that performing requests to TON
 		exit.Lock()
 		exit.Exit = true
@@ -301,16 +302,17 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 
 		ticker.Stop()
 		return nil, fmt.Errorf("timeout")
-	case result := <- resultChan:
+	case result := <-resultChan:
 		ticker.Stop()
 		return result.Fee, result.Error
 	}
 }
+
 // key struct cause it strings values no bytes
 // Key
 type Key struct {
 	tonCommon
-	PublicKey string       `json:"public_key"` //
+	PublicKey string `json:"public_key"` //
 	Secret    string `json:"secret"`     //
 }
 

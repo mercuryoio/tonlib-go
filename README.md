@@ -63,7 +63,11 @@ Create new client
         *options,
     }
 
-    tonClient, err = tonlib.NewClient(&req, tonlib.Config{})
+    tonClient, err = tonlib.NewClient(
+    	&req, // init request
+    	tonlib.Config{}, // config
+    	10, // timeout in seconds
+    )
     if err != nil {
         panic(err)
     }
