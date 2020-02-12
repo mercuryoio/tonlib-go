@@ -547,6 +547,29 @@ func NewExportedEncryptedKey(data *SecureBytes) *ExportedEncryptedKey {
 	return &exportedEncryptedKeyTemp
 }
 
+// ExportedUnencryptedKey
+type ExportedUnencryptedKey struct {
+	tonCommon
+	Data *SecureBytes `json:"data"` //
+}
+
+// MessageType return the string telegram-type of ExportedUnencryptedKey
+func (exportedUnencryptedKey *ExportedUnencryptedKey) MessageType() string {
+	return "exportedUnencryptedKey"
+}
+
+// NewExportedUnencryptedKey creates a new ExportedUnencryptedKey
+//
+// @param data
+func NewExportedUnencryptedKey(data *SecureBytes) *ExportedUnencryptedKey {
+	exportedUnencryptedKeyTemp := ExportedUnencryptedKey{
+		tonCommon: tonCommon{Type: "exportedUnencryptedKey"},
+		Data:      data,
+	}
+
+	return &exportedUnencryptedKeyTemp
+}
+
 // Bip39Hints
 type Bip39Hints struct {
 	tonCommon
@@ -1465,7 +1488,7 @@ func NewMsgDataEncryptedText(text string) *MsgDataEncryptedText {
 type MsgMessage struct {
 	tonCommon
 	Amount      JSONInt64       `json:"amount"`      //
-	Data        *MsgData        `json:"data"`        //
+	Data        MsgData        `json:"data"`        //
 	Destination *AccountAddress `json:"destination"` //
 }
 
@@ -1479,7 +1502,7 @@ func (msgMessage *MsgMessage) MessageType() string {
 // @param amount
 // @param data
 // @param destination
-func NewMsgMessage(amount JSONInt64, data *MsgData, destination *AccountAddress) *MsgMessage {
+func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress) *MsgMessage {
 	msgMessageTemp := MsgMessage{
 		tonCommon:   tonCommon{Type: "msg.message"},
 		Amount:      amount,

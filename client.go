@@ -341,9 +341,7 @@ type InitialAccountState interface {}
 
 type AccountState RawAccountState
 
-type MsgData struct {
-	Text string `json:"text"`
-}
+type MsgData interface{}
 type DnsEntryData string
 
 type Action interface {}

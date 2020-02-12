@@ -39,6 +39,6 @@ func deletePK(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 	pKey := tonlib.NewKey(publicKey, secret)
-	ok, err := tonClient.DeleteKey(pKey)
+	ok, err := tonClient.DeleteKey(*pKey)
 	fmt.Printf("Got a result: %#v,  error: %v. \n", ok, err)
 }

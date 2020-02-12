@@ -47,7 +47,7 @@ func createPK(cmd *cobra.Command, args []string) {
 	seed := tonlib.SecureBytes("")
 
 	// create ne wkey
-	pKey, err := tonClient.CreateNewKey(&loc, &mem, &seed,)
+	pKey, err := tonClient.CreateNewKey(loc, mem, seed,)
 	if err != nil{
 		log.Fatal("failed to create new key with error: ", err)
 	}

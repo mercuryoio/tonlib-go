@@ -51,6 +51,6 @@ func sendFile(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	res, err := tonClient.RawCreateAndSendMessage(bocFile, tonlib.NewAccountAddress(args[1]), bocInitialStateFile)
+	res, err := tonClient.RawCreateAndSendMessage(bocFile, *tonlib.NewAccountAddress(args[1]), bocInitialStateFile)
 	fmt.Printf("Got a result: %v. Errors: %v", res, err)
 }

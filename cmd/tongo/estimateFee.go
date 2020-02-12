@@ -65,27 +65,40 @@ func estimateFee(cmd *cobra.Command, args []string) {
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
 		Key: pKey,
 	}
-	_, err = tonClient.WalletInit(&inputKey)
-	if err != nil {
-		fmt.Println("init wallet error: ", err)
-		os.Exit(0)
-	}
+	//_, err = tonClient.WalletInit(&inputKey)
+	//if err != nil {
+	//	fmt.Println("init wallet error: ", err)
+	//	os.Exit(0)
+	//}
 
 	// get wallet adress info
-	addr, err := tonClient.WalletGetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey))
+	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0)
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
 
 	// get query info
-	queryInfo, err := tonClient.GenericCreateSendGramsQuery(
+	//true,
+	//	tonlib.JSONInt64(amount),
+	//	tonlib.NewAccountAddress(destinationAddr),
+	//	[]byte(message),
+	//	&inputKey,
+	//	addr,
+	//	300, // ti
+
+	msgAction := tonlib.NewActionMsg(
 		true,
-		tonlib.JSONInt64(amount),
-		tonlib.NewAccountAddress(destinationAddr),
-		[]byte(message),
-		&inputKey,
-		addr,
+		[]tonlib.MsgMessage{*tonlib.NewMsgMessage(
+			tonlib.JSONInt64(amount),
+			tonlib.NewMsgDataText(message),
+			addr,
+			)},
+		)
+	queryInfo, err := tonClient.CreateQuery(
+		msgAction,
+		*addr,
+		inputKey,
 		300, // time out of sending money not executing request
 	)
 	fmt.Println(fmt.Sprintf("queryInfo: %#v. err: %#v. ", queryInfo, err))

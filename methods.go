@@ -281,6 +281,33 @@ func (client *Client) ExportEncryptedKey(inputKey InputKey, keyPassword SecureBy
 
 }
 
+// ExportUnencryptedKey
+// @param inputKey
+func (client *Client) ExportUnencryptedKey(inputKey InputKey) (*ExportedUnencryptedKey, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type     string   `json:"@type"`
+			InputKey InputKey `json:"input_key"`
+		}{
+			Type:     "exportUnencryptedKey",
+			InputKey: inputKey,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var exportedUnencryptedKey ExportedUnencryptedKey
+	err = json.Unmarshal(result.Raw, &exportedUnencryptedKey)
+	return &exportedUnencryptedKey, err
+
+}
+
 // ImportKey
 // @param exportedKey
 // @param localPassword
@@ -377,6 +404,36 @@ func (client *Client) ImportEncryptedKey(exportedEncryptedKey ExportedEncryptedK
 	var keyDummy Key
 	err = json.Unmarshal(result.Raw, &keyDummy)
 	return &keyDummy, err
+
+}
+
+// ImportUnencryptedKey
+// @param exportedUnencryptedKey
+// @param localPassword
+func (client *Client) ImportUnencryptedKey(exportedUnencryptedKey ExportedUnencryptedKey, localPassword SecureBytes) (*Key, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type                   string                 `json:"@type"`
+			ExportedUnencryptedKey ExportedUnencryptedKey `json:" exported_unencrypted_key"`
+			LocalPassword          SecureBytes            `json:"local_password"`
+		}{
+			Type:                   "importUnencryptedKey",
+			ExportedUnencryptedKey: exportedUnencryptedKey,
+			LocalPassword:          localPassword,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var key Key
+	err = json.Unmarshal(result.Raw, &key)
+	return &key, err
 
 }
 
@@ -1059,18 +1116,21 @@ func (client *Client) SmcRunGetMethod(id int64, method SmcMethodId, stack []TvmS
 // @param accountAddress
 // @param category
 // @param name
-func (client *Client) DnsResolve(accountAddress AccountAddress, category int32, name string) (*DnsResolved, error) {
+// @param ttl
+func (client *Client) DnsResolve(accountAddress AccountAddress, category int32, name string, ttl int32) (*DnsResolved, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string         `json:"@type"`
 			AccountAddress AccountAddress `json:"account_address"`
 			Category       int32          `json:"category"`
 			Name           string         `json:"name"`
+			Ttl            int32          `json:"ttl"`
 		}{
 			Type:           "dns.resolve",
 			AccountAddress: accountAddress,
 			Category:       category,
 			Name:           name,
+			Ttl:            ttl,
 		},
 	)
 
