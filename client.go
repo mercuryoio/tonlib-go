@@ -71,7 +71,7 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64) (*Client, e
 	rand.Seed(time.Now().UnixNano())
 
 	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout,}
-	optionsInfo, err := client.Init(&tonCnf.Options)
+	optionsInfo, err := client.Init(tonCnf.Options)
 	//resp, err := client.executeAsynchronously(tonCnf)
 	if err != nil {
 		return &client, err
@@ -334,3 +334,17 @@ func NewKey(publicKey string, secret string) *Key {
 
 	return &keyTemp
 }
+
+// because of different subclasses in common class InitialAccountState and  AccountState
+// InitialAccountState
+type InitialAccountState interface {}
+
+type AccountState RawAccountState
+
+type MsgData struct {
+	Text string `json:"text"`
+}
+type DnsEntryData string
+
+type Action interface {}
+type DnsAction Action
