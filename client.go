@@ -76,7 +76,7 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64) (*Client, e
 	if err != nil {
 		return &client, err
 	}
-	if optionsInfo.tonCommon.Type == "ok" {
+	if optionsInfo.tonCommon.Type == "options.info" {
 		return &client, nil
 	}
 	if optionsInfo.tonCommon.Type == "error" {
