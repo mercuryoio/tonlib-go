@@ -92,7 +92,7 @@ func estimateFee(cmd *cobra.Command, args []string) {
 		[]tonlib.MsgMessage{*tonlib.NewMsgMessage(
 			tonlib.JSONInt64(amount),
 			tonlib.NewMsgDataText(message),
-			addr,
+			tonlib.NewAccountAddress(destinationAddr),
 			)},
 		)
 	queryInfo, err := tonClient.CreateQuery(
