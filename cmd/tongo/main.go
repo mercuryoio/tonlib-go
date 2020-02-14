@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
+	"os"
+	"os/signal"
 )
 
 var tonClient *tonlib.Client
@@ -45,12 +47,12 @@ func Execute() {
 	}
 }
 func main() {
-	//c := make(chan os.Signal, 1)
-	//signal.Notify(c, os.Interrupt, os.Kill)
-	//go func() {
-	//	<-c
-	//	os.Exit(0)
-	//}()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		<-c
+		os.Exit(0)
+	}()
 
 	Execute()
 }
