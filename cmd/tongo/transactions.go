@@ -33,6 +33,7 @@ var transactionsCmd = &cobra.Command{
 }
 
 func transactions(cmd *cobra.Command, args []string) {
+	panic("currently doesn't work, because of primary ton changes - working to get it back")
 	confPath := args[0]
 	address := args[1]
 	// parse lt
