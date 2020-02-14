@@ -67,6 +67,8 @@ Create new client
     	&req, // init request
     	tonlib.Config{}, // config
     	10, // timeout in seconds for each (currently only QueryEstimateFees) tonlib.Client`s public method
+    	true, // enable client`s logs
+    	true, // enable lo
     )
     if err != nil {
         panic(err)
