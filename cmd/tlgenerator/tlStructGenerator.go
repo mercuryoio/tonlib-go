@@ -51,7 +51,7 @@ func generateStructsFromTnEntities(
 	type Bytes         []byte
 	type TvmStackEntry interface {}
 	type SmcMethodId   interface {} 
-	type TvmNumber     string
+	type TvmNumber     interface {} 
 	type GenericAccountState string
 	`
 
