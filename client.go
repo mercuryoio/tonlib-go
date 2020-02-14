@@ -58,7 +58,7 @@ type Client struct {
 	client  unsafe.Pointer
 	config  Config
 	timeout int64
-	// wallet *TonWallet
+	clientLogging bool
 }
 
 type TonInitRequest struct {
@@ -67,10 +67,10 @@ type TonInitRequest struct {
 }
 
 // NewClient Creates a new instance of TONLib.
-func NewClient(tonCnf *TonInitRequest, config Config, timeout int64) (*Client, error) {
+func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout,}
+	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout, clientLogging:clientLogging}
 	optionsInfo, err := client.Init(tonCnf.Options)
 	//resp, err := client.executeAsynchronously(tonCnf)
 	if err != nil {
@@ -96,7 +96,9 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 
-	fmt.Println("call", string(req))
+	if client.clientLogging {
+		fmt.Println("call", string(req))
+	}
 	C.tonlib_client_json_send(client.client, cs)
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
@@ -114,7 +116,9 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	res := C.GoString(result)
 	resB := []byte(res)
 	err = json.Unmarshal(resB, &updateData)
-	fmt.Println("fetch data: ", string(resB))
+	if client.clientLogging {
+		fmt.Println("fetch data: ", string(resB))
+	}
 	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
 		err = json.Unmarshal(resB, &updateData)
 		if err == nil {
@@ -130,7 +134,9 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		if err != nil {
 			return &TONResult{}, err
 		}
-		fmt.Println("run sync", updateData)
+		if client.clientLogging {
+			fmt.Println("run sync", updateData)
+		}
 		res, err = client.Sync(syncResp.SyncState)
 		if err != nil {
 			return &TONResult{}, err
@@ -188,7 +194,9 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 	for {
 		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 		for result == nil {
-			fmt.Println("empty response. next attempt")
+			if client.clientLogging {
+				fmt.Println("empty response. next attempt")
+			}
 			time.Sleep(1 * time.Second)
 			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 		}
@@ -199,7 +207,9 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 		res := C.GoString(result)
 		resB := []byte(res)
 		err = json.Unmarshal(resB, &syncResp)
-		fmt.Println("sync result #1: ", res)
+		if client.clientLogging {
+			fmt.Println("sync result #1: ", res)
+		}
 		if err != nil {
 			return "", err
 		}
@@ -215,7 +225,9 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 			res := C.GoString(result)
 			resB := []byte(res)
 			err = json.Unmarshal(resB, &syncResp)
-			fmt.Println("sync result #2: ", string(resB))
+			if client.clientLogging {
+				fmt.Println("sync result #2: ", string(resB))
+			}
 			if err != nil {
 				return "", err
 			}
