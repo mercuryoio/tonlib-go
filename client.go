@@ -220,7 +220,7 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 				return "", err
 			}
 		}
-		if syncResp.Type == "ok" {
+		if syncResp.Type == "ton.blockIdExt" {
 			return "", nil
 		}
 		if syncResp.Type == "updateSyncState" {
