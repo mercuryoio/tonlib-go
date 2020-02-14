@@ -67,18 +67,16 @@ type TonInitRequest struct {
 }
 
 // NewClient Creates a new instance of TONLib.
-func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool, tonLogging bool) (*Client, error) {
+func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool, tonLogging int32) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
 	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout, clientLogging:clientLogging}
 
 	// disable ton logs if needed
-	if !tonLogging{
-		err := client.executeDisableLog()
+		err := client.executeSetLogLevel(tonLogging)
 		if err != nil{
 			return &client, err
 		}
-	}
 
 	optionsInfo, err := client.Init(tonCnf.Options)
 	if err != nil {
@@ -94,13 +92,13 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLoggi
 }
 
 // disable ton client C lib`s logs
-func (client *Client) executeDisableLog() (error) {
+func (client *Client) executeSetLogLevel(logLevel int32) (error) {
 	data := struct {
 		Type              string `json:"@type"`
 		NewVerbosityLevel int32  `json:"new_verbosity_level"`
 	}{
 		Type:              "setLogVerbosityLevel",
-		NewVerbosityLevel: 0,
+		NewVerbosityLevel: logLevel,
 	}
 	req, err := json.Marshal(data)
 	if err != nil {

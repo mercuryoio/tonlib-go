@@ -68,7 +68,7 @@ Create new client
     	tonlib.Config{}, // config
     	10, // timeout in seconds for each (currently only QueryEstimateFees) tonlib.Client`s public method
     	true, // enable client`s logs
-    	true, // enable lo
+    	9, // logging level in ton lib
     )
     if err != nil {
         panic(err)
