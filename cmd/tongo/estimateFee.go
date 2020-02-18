@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 var estimateFeeCmd = &cobra.Command{
@@ -72,6 +73,7 @@ func estimateFee(cmd *cobra.Command, args []string) {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
+	fmt.Printf("ADDR: %#v /n\n", addr)
 
 	msgAction := tonlib.NewActionMsg(
 		true,
@@ -85,9 +87,11 @@ func estimateFee(cmd *cobra.Command, args []string) {
 		msgAction,
 		*addr,
 		inputKey,
-		300, // time out of sending money not executing request
+		10, // time out of sending money not executing request
 	)
 	fmt.Println(fmt.Sprintf("queryInfo: %#v. err: %#v. ", queryInfo, err))
+	// TODO: investigate timeout attribute influence
+	time.Sleep(12*time.Second)
 	if err != nil{
 		fmt.Printf("Failed to create query with  error: %v \n", err)
 		os.Exit(1)

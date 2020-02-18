@@ -1505,7 +1505,7 @@ func (msgMessage *MsgMessage) MessageType() string {
 // @param amount
 // @param data
 // @param destination
-func NewMsgMessage(amount JSONInt64, data *MsgData, destination *AccountAddress) *MsgMessage {
+func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress) *MsgMessage {
 	msgMessageTemp := MsgMessage{
 		tonCommon:   tonCommon{Type: "msg.message"},
 		Amount:      amount,
