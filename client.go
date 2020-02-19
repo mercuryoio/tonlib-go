@@ -378,12 +378,12 @@ func NewKey(publicKey string, secret string) *Key {
 
 // because of different subclasses in common class InitialAccountState and  AccountState
 // InitialAccountState
-type InitialAccountState interface {}
+type InitialAccountState interface {MessageType() string}
 
 type AccountState RawAccountState
 
-type MsgData interface{}
+type MsgData interface {MessageType() string}
 type DnsEntryData string
 
-type Action interface {}
+type Action interface {MessageType() string}
 type DnsAction Action
