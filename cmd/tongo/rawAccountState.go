@@ -36,7 +36,7 @@ func rawAccountState(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 	res, err := tonClient.RawGetAccountState(*tonlib.NewAccountAddress(args[1]))
-	if err != nil{
+	if err != nil {
 		log.Fatal("Failed to get account state: ", err)
 	}
 	fmt.Printf("Got a result: balance :%d; last transaction id: %v. Errors: %v. \n", res.Balance, res.LastTransactionId, err)

@@ -62,9 +62,9 @@ func sendGramm(cmd *cobra.Command, args []string) {
 
 	// prepare input key
 	inputKey := tonlib.InputKey{
-		Type: "inputKeyRegular",
+		Type:          "inputKeyRegular",
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
-		Key: pKey,
+		Key:           pKey,
 	}
 
 	// get wallet adress info
@@ -90,7 +90,7 @@ func sendGramm(cmd *cobra.Command, args []string) {
 		300, // time out of sending money not executing request
 	)
 	fmt.Println(fmt.Sprintf("queryInfo: %#v. err: %#v. ", queryInfo, err))
-	if err != nil{
+	if err != nil {
 		fmt.Printf("Failed to create query with  error: %v \n", err)
 		os.Exit(1)
 	}
