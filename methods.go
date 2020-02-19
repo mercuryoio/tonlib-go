@@ -7,11 +7,11 @@ import (
 
 // Init
 // @param options
-func (client *Client) Init(options *Options) (*OptionsInfo, error) {
+func (client *Client) Init(options Options) (*OptionsInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type    string   `json:"@type"`
-			Options *Options `json:"options"`
+			Type    string  `json:"@type"`
+			Options Options `json:"options"`
 		}{
 			Type:    "init",
 			Options: options,
@@ -58,11 +58,11 @@ func (client *Client) Close() (*Ok, error) {
 
 // OptionsSetConfig
 // @param config
-func (client *Client) OptionsSetConfig(config *Config) (*OptionsConfigInfo, error) {
+func (client *Client) OptionsSetConfig(config Config) (*OptionsConfigInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type   string  `json:"@type"`
-			Config *Config `json:"config"`
+			Type   string `json:"@type"`
+			Config Config `json:"config"`
 		}{
 			Type:   "options.setConfig",
 			Config: config,
@@ -85,11 +85,11 @@ func (client *Client) OptionsSetConfig(config *Config) (*OptionsConfigInfo, erro
 
 // OptionsValidateConfig
 // @param config
-func (client *Client) OptionsValidateConfig(config *Config) (*OptionsConfigInfo, error) {
+func (client *Client) OptionsValidateConfig(config Config) (*OptionsConfigInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type   string  `json:"@type"`
-			Config *Config `json:"config"`
+			Type   string `json:"@type"`
+			Config Config `json:"config"`
 		}{
 			Type:   "options.validateConfig",
 			Config: config,
@@ -114,13 +114,13 @@ func (client *Client) OptionsValidateConfig(config *Config) (*OptionsConfigInfo,
 // @param localPassword
 // @param mnemonicPassword
 // @param randomExtraSeed
-func (client *Client) CreateNewKey(localPassword *SecureBytes, mnemonicPassword *SecureBytes, randomExtraSeed *SecureBytes) (*Key, error) {
+func (client *Client) CreateNewKey(localPassword SecureBytes, mnemonicPassword SecureBytes, randomExtraSeed SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type             string       `json:"@type"`
-			LocalPassword    *SecureBytes `json:"local_password"`
-			MnemonicPassword *SecureBytes `json:"mnemonic_password"`
-			RandomExtraSeed  *SecureBytes `json:"random_extra_seed"`
+			Type             string      `json:"@type"`
+			LocalPassword    SecureBytes `json:"local_password"`
+			MnemonicPassword SecureBytes `json:"mnemonic_password"`
+			RandomExtraSeed  SecureBytes `json:"random_extra_seed"`
 		}{
 			Type:             "createNewKey",
 			LocalPassword:    localPassword,
@@ -145,11 +145,11 @@ func (client *Client) CreateNewKey(localPassword *SecureBytes, mnemonicPassword 
 
 // DeleteKey
 // @param key
-func (client *Client) DeleteKey(key *Key) (*Ok, error) {
+func (client *Client) DeleteKey(key Key) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type string `json:"@type"`
-			Key  *Key   `json:"key"`
+			Key  Key    `json:"key"`
 		}{
 			Type: "deleteKey",
 			Key:  key,
@@ -196,11 +196,11 @@ func (client *Client) DeleteAllKeys() (*Ok, error) {
 
 // ExportKey
 // @param inputKey
-func (client *Client) ExportKey(inputKey *InputKey) (*ExportedKey, error) {
+func (client *Client) ExportKey(inputKey InputKey) (*ExportedKey, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type     string    `json:"@type"`
-			InputKey *InputKey `json:"input_key"`
+			Type     string   `json:"@type"`
+			InputKey InputKey `json:"input_key"`
 		}{
 			Type:     "exportKey",
 			InputKey: inputKey,
@@ -224,12 +224,12 @@ func (client *Client) ExportKey(inputKey *InputKey) (*ExportedKey, error) {
 // ExportPemKey
 // @param inputKey
 // @param keyPassword
-func (client *Client) ExportPemKey(inputKey *InputKey, keyPassword *SecureBytes) (*ExportedPemKey, error) {
+func (client *Client) ExportPemKey(inputKey InputKey, keyPassword SecureBytes) (*ExportedPemKey, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type        string       `json:"@type"`
-			InputKey    *InputKey    `json:"input_key"`
-			KeyPassword *SecureBytes `json:"key_password"`
+			Type        string      `json:"@type"`
+			InputKey    InputKey    `json:"input_key"`
+			KeyPassword SecureBytes `json:"key_password"`
 		}{
 			Type:        "exportPemKey",
 			InputKey:    inputKey,
@@ -254,12 +254,12 @@ func (client *Client) ExportPemKey(inputKey *InputKey, keyPassword *SecureBytes)
 // ExportEncryptedKey
 // @param inputKey
 // @param keyPassword
-func (client *Client) ExportEncryptedKey(inputKey *InputKey, keyPassword *SecureBytes) (*ExportedEncryptedKey, error) {
+func (client *Client) ExportEncryptedKey(inputKey InputKey, keyPassword SecureBytes) (*ExportedEncryptedKey, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type        string       `json:"@type"`
-			InputKey    *InputKey    `json:"input_key"`
-			KeyPassword *SecureBytes `json:"key_password"`
+			Type        string      `json:"@type"`
+			InputKey    InputKey    `json:"input_key"`
+			KeyPassword SecureBytes `json:"key_password"`
 		}{
 			Type:        "exportEncryptedKey",
 			InputKey:    inputKey,
@@ -281,17 +281,44 @@ func (client *Client) ExportEncryptedKey(inputKey *InputKey, keyPassword *Secure
 
 }
 
+// ExportUnencryptedKey
+// @param inputKey
+func (client *Client) ExportUnencryptedKey(inputKey InputKey) (*ExportedUnencryptedKey, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type     string   `json:"@type"`
+			InputKey InputKey `json:"input_key"`
+		}{
+			Type:     "exportUnencryptedKey",
+			InputKey: inputKey,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var exportedUnencryptedKey ExportedUnencryptedKey
+	err = json.Unmarshal(result.Raw, &exportedUnencryptedKey)
+	return &exportedUnencryptedKey, err
+
+}
+
 // ImportKey
 // @param exportedKey
 // @param localPassword
 // @param mnemonicPassword
-func (client *Client) ImportKey(exportedKey *ExportedKey, localPassword *SecureBytes, mnemonicPassword *SecureBytes) (*Key, error) {
+func (client *Client) ImportKey(exportedKey ExportedKey, localPassword SecureBytes, mnemonicPassword SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type             string       `json:"@type"`
-			ExportedKey      *ExportedKey `json:"exported_key"`
-			LocalPassword    *SecureBytes `json:"local_password"`
-			MnemonicPassword *SecureBytes `json:"mnemonic_password"`
+			Type             string      `json:"@type"`
+			ExportedKey      ExportedKey `json:"exported_key"`
+			LocalPassword    SecureBytes `json:"local_password"`
+			MnemonicPassword SecureBytes `json:"mnemonic_password"`
 		}{
 			Type:             "importKey",
 			ExportedKey:      exportedKey,
@@ -318,13 +345,13 @@ func (client *Client) ImportKey(exportedKey *ExportedKey, localPassword *SecureB
 // @param exportedKey
 // @param keyPassword
 // @param localPassword
-func (client *Client) ImportPemKey(exportedKey *ExportedPemKey, keyPassword *SecureBytes, localPassword *SecureBytes) (*Key, error) {
+func (client *Client) ImportPemKey(exportedKey ExportedPemKey, keyPassword SecureBytes, localPassword SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type          string          `json:"@type"`
-			ExportedKey   *ExportedPemKey `json:"exported_key"`
-			KeyPassword   *SecureBytes    `json:"key_password"`
-			LocalPassword *SecureBytes    `json:"local_password"`
+			Type          string         `json:"@type"`
+			ExportedKey   ExportedPemKey `json:"exported_key"`
+			KeyPassword   SecureBytes    `json:"key_password"`
+			LocalPassword SecureBytes    `json:"local_password"`
 		}{
 			Type:          "importPemKey",
 			ExportedKey:   exportedKey,
@@ -351,13 +378,13 @@ func (client *Client) ImportPemKey(exportedKey *ExportedPemKey, keyPassword *Sec
 // @param exportedEncryptedKey
 // @param keyPassword
 // @param localPassword
-func (client *Client) ImportEncryptedKey(exportedEncryptedKey *ExportedEncryptedKey, keyPassword *SecureBytes, localPassword *SecureBytes) (*Key, error) {
+func (client *Client) ImportEncryptedKey(exportedEncryptedKey ExportedEncryptedKey, keyPassword SecureBytes, localPassword SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type                 string                `json:"@type"`
-			ExportedEncryptedKey *ExportedEncryptedKey `json:"exported_encrypted_key"`
-			KeyPassword          *SecureBytes          `json:"key_password"`
-			LocalPassword        *SecureBytes          `json:"local_password"`
+			Type                 string               `json:"@type"`
+			ExportedEncryptedKey ExportedEncryptedKey `json:"exported_encrypted_key"`
+			KeyPassword          SecureBytes          `json:"key_password"`
+			LocalPassword        SecureBytes          `json:"local_password"`
 		}{
 			Type:                 "importEncryptedKey",
 			ExportedEncryptedKey: exportedEncryptedKey,
@@ -380,15 +407,45 @@ func (client *Client) ImportEncryptedKey(exportedEncryptedKey *ExportedEncrypted
 
 }
 
+// ImportUnencryptedKey
+// @param exportedUnencryptedKey
+// @param localPassword
+func (client *Client) ImportUnencryptedKey(exportedUnencryptedKey ExportedUnencryptedKey, localPassword SecureBytes) (*Key, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type                   string                 `json:"@type"`
+			ExportedUnencryptedKey ExportedUnencryptedKey `json:" exported_unencrypted_key"`
+			LocalPassword          SecureBytes            `json:"local_password"`
+		}{
+			Type:                   "importUnencryptedKey",
+			ExportedUnencryptedKey: exportedUnencryptedKey,
+			LocalPassword:          localPassword,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var key Key
+	err = json.Unmarshal(result.Raw, &key)
+	return &key, err
+
+}
+
 // ChangeLocalPassword
 // @param inputKey
 // @param newLocalPassword
-func (client *Client) ChangeLocalPassword(inputKey *InputKey, newLocalPassword *SecureBytes) (*Key, error) {
+func (client *Client) ChangeLocalPassword(inputKey InputKey, newLocalPassword SecureBytes) (*Key, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type             string       `json:"@type"`
-			InputKey         *InputKey    `json:"input_key"`
-			NewLocalPassword *SecureBytes `json:"new_local_password"`
+			Type             string      `json:"@type"`
+			InputKey         InputKey    `json:"input_key"`
+			NewLocalPassword SecureBytes `json:"new_local_password"`
 		}{
 			Type:             "changeLocalPassword",
 			InputKey:         inputKey,
@@ -413,12 +470,12 @@ func (client *Client) ChangeLocalPassword(inputKey *InputKey, newLocalPassword *
 // Encrypt
 // @param decryptedData
 // @param secret
-func (client *Client) Encrypt(decryptedData *SecureBytes, secret *SecureBytes) (*Data, error) {
+func (client *Client) Encrypt(decryptedData SecureBytes, secret SecureBytes) (*Data, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type          string       `json:"@type"`
-			DecryptedData *SecureBytes `json:"decrypted_data"`
-			Secret        *SecureBytes `json:"secret"`
+			Type          string      `json:"@type"`
+			DecryptedData SecureBytes `json:"decrypted_data"`
+			Secret        SecureBytes `json:"secret"`
 		}{
 			Type:          "encrypt",
 			DecryptedData: decryptedData,
@@ -443,12 +500,12 @@ func (client *Client) Encrypt(decryptedData *SecureBytes, secret *SecureBytes) (
 // Decrypt
 // @param encryptedData
 // @param secret
-func (client *Client) Decrypt(encryptedData *SecureBytes, secret *SecureBytes) (*Data, error) {
+func (client *Client) Decrypt(encryptedData SecureBytes, secret SecureBytes) (*Data, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type          string       `json:"@type"`
-			EncryptedData *SecureBytes `json:"encrypted_data"`
-			Secret        *SecureBytes `json:"secret"`
+			Type          string      `json:"@type"`
+			EncryptedData SecureBytes `json:"encrypted_data"`
+			Secret        SecureBytes `json:"secret"`
 		}{
 			Type:          "decrypt",
 			EncryptedData: encryptedData,
@@ -474,13 +531,13 @@ func (client *Client) Decrypt(encryptedData *SecureBytes, secret *SecureBytes) (
 // @param iterations
 // @param password
 // @param salt
-func (client *Client) Kdf(iterations int32, password *SecureBytes, salt *SecureBytes) (*Data, error) {
+func (client *Client) Kdf(iterations int32, password SecureBytes, salt SecureBytes) (*Data, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type       string       `json:"@type"`
-			Iterations int32        `json:"iterations"`
-			Password   *SecureBytes `json:"password"`
-			Salt       *SecureBytes `json:"salt"`
+			Type       string      `json:"@type"`
+			Iterations int32       `json:"iterations"`
+			Password   SecureBytes `json:"password"`
+			Salt       SecureBytes `json:"salt"`
 		}{
 			Type:       "kdf",
 			Iterations: iterations,
@@ -532,11 +589,11 @@ func (client *Client) UnpackAccountAddress(accountAddress string) (*UnpackedAcco
 
 // PackAccountAddress
 // @param accountAddress
-func (client *Client) PackAccountAddress(accountAddress *UnpackedAccountAddress) (*AccountAddress, error) {
+func (client *Client) PackAccountAddress(accountAddress UnpackedAccountAddress) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type           string                  `json:"@type"`
-			AccountAddress *UnpackedAccountAddress `json:"account_address"`
+			Type           string                 `json:"@type"`
+			AccountAddress UnpackedAccountAddress `json:"account_address"`
 		}{
 			Type:           "packAccountAddress",
 			AccountAddress: accountAddress,
@@ -584,40 +641,13 @@ func (client *Client) GetBip39Hints(prefix string) (*Bip39Hints, error) {
 
 }
 
-// RawGetAccountAddress
-// @param inititalAccountState
-func (client *Client) RawGetAccountAddress(inititalAccountState *RawInitialAccountState) (*AccountAddress, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type                 string                  `json:"@type"`
-			InititalAccountState *RawInitialAccountState `json:"initital_account_state"`
-		}{
-			Type:                 "raw.getAccountAddress",
-			InititalAccountState: inititalAccountState,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var accountAddress AccountAddress
-	err = json.Unmarshal(result.Raw, &accountAddress)
-	return &accountAddress, err
-
-}
-
 // RawGetAccountState
 // @param accountAddress
-func (client *Client) RawGetAccountState(accountAddress *AccountAddress) (*RawAccountState, error) {
+func (client *Client) RawGetAccountState(accountAddress AccountAddress) (*RawFullAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type           string          `json:"@type"`
-			AccountAddress *AccountAddress `json:"account_address"`
+			Type           string         `json:"@type"`
+			AccountAddress AccountAddress `json:"account_address"`
 		}{
 			Type:           "raw.getAccountState",
 			AccountAddress: accountAddress,
@@ -632,25 +662,28 @@ func (client *Client) RawGetAccountState(accountAddress *AccountAddress) (*RawAc
 		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
 	}
 
-	var rawAccountState RawAccountState
-	err = json.Unmarshal(result.Raw, &rawAccountState)
-	return &rawAccountState, err
+	var rawFullAccountState RawFullAccountState
+	err = json.Unmarshal(result.Raw, &rawFullAccountState)
+	return &rawFullAccountState, err
 
 }
 
 // RawGetTransactions
 // @param accountAddress
 // @param fromTransactionId
-func (client *Client) RawGetTransactions(accountAddress *AccountAddress, fromTransactionId *InternalTransactionId) (*RawTransactions, error) {
+// @param privateKey
+func (client *Client) RawGetTransactions(accountAddress AccountAddress, fromTransactionId InternalTransactionId, privateKey InputKey) (*RawTransactions, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type              string                 `json:"@type"`
-			AccountAddress    *AccountAddress        `json:"account_address"`
-			FromTransactionId *InternalTransactionId `json:"from_transaction_id"`
+			Type              string                `json:"@type"`
+			AccountAddress    AccountAddress        `json:"account_address"`
+			FromTransactionId InternalTransactionId `json:"from_transaction_id"`
+			PrivateKey        InputKey              `json:"private_key"`
 		}{
 			Type:              "raw.getTransactions",
 			AccountAddress:    accountAddress,
 			FromTransactionId: fromTransactionId,
+			PrivateKey:        privateKey,
 		},
 	)
 
@@ -699,13 +732,13 @@ func (client *Client) RawSendMessage(body []byte) (*Ok, error) {
 // @param data
 // @param destination
 // @param initialAccountState
-func (client *Client) RawCreateAndSendMessage(data []byte, destination *AccountAddress, initialAccountState []byte) (*Ok, error) {
+func (client *Client) RawCreateAndSendMessage(data []byte, destination AccountAddress, initialAccountState []byte) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type                string          `json:"@type"`
-			Data                []byte          `json:"data"`
-			Destination         *AccountAddress `json:"destination"`
-			InitialAccountState []byte          `json:"initial_account_state"`
+			Type                string         `json:"@type"`
+			Data                []byte         `json:"data"`
+			Destination         AccountAddress `json:"destination"`
+			InitialAccountState []byte         `json:"initial_account_state"`
 		}{
 			Type:                "raw.createAndSendMessage",
 			Data:                data,
@@ -733,14 +766,14 @@ func (client *Client) RawCreateAndSendMessage(data []byte, destination *AccountA
 // @param destination
 // @param initCode
 // @param initData
-func (client *Client) RawCreateQuery(body []byte, destination *AccountAddress, initCode []byte, initData []byte) (*QueryInfo, error) {
+func (client *Client) RawCreateQuery(body []byte, destination AccountAddress, initCode []byte, initData []byte) (*QueryInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type        string          `json:"@type"`
-			Body        []byte          `json:"body"`
-			Destination *AccountAddress `json:"destination"`
-			InitCode    []byte          `json:"init_code"`
-			InitData    []byte          `json:"init_data"`
+			Type        string         `json:"@type"`
+			Body        []byte         `json:"body"`
+			Destination AccountAddress `json:"destination"`
+			InitCode    []byte         `json:"init_code"`
+			InitData    []byte         `json:"init_data"`
 		}{
 			Type:        "raw.createQuery",
 			Body:        body,
@@ -764,43 +797,19 @@ func (client *Client) RawCreateQuery(body []byte, destination *AccountAddress, i
 
 }
 
-// TestWalletInit
-// @param privateKey
-func (client *Client) TestWalletInit(privateKey *InputKey) (*Ok, error) {
+// GetAccountAddress
+// @param initialAccountState
+// @param revision
+func (client *Client) GetAccountAddress(initialAccountState InitialAccountState, revision int32) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type       string    `json:"@type"`
-			PrivateKey *InputKey `json:"private_key"`
+			Type                string              `json:"@type"`
+			InitialAccountState InitialAccountState `json:"initial_account_state"`
+			Revision            int32               `json:"revision"`
 		}{
-			Type:       "testWallet.init",
-			PrivateKey: privateKey,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var ok Ok
-	err = json.Unmarshal(result.Raw, &ok)
-	return &ok, err
-
-}
-
-// TestWalletGetAccountAddress
-// @param inititalAccountState
-func (client *Client) TestWalletGetAccountAddress(inititalAccountState *TestWalletInitialAccountState) (*AccountAddress, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type                 string                         `json:"@type"`
-			InititalAccountState *TestWalletInitialAccountState `json:"initital_account_state"`
-		}{
-			Type:                 "testWallet.getAccountAddress",
-			InititalAccountState: inititalAccountState,
+			Type:                "getAccountAddress",
+			InitialAccountState: initialAccountState,
+			Revision:            revision,
 		},
 	)
 
@@ -818,15 +827,15 @@ func (client *Client) TestWalletGetAccountAddress(inititalAccountState *TestWall
 
 }
 
-// TestWalletGetAccountState
+// GetAccountState
 // @param accountAddress
-func (client *Client) TestWalletGetAccountState(accountAddress *AccountAddress) (*TestWalletAccountState, error) {
+func (client *Client) GetAccountState(accountAddress AccountAddress) (*FullAccountState, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type           string          `json:"@type"`
-			AccountAddress *AccountAddress `json:"account_address"`
+			Type           string         `json:"@type"`
+			AccountAddress AccountAddress `json:"account_address"`
 		}{
-			Type:           "testWallet.getAccountState",
+			Type:           "getAccountState",
 			AccountAddress: accountAddress,
 		},
 	)
@@ -839,385 +848,31 @@ func (client *Client) TestWalletGetAccountState(accountAddress *AccountAddress) 
 		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
 	}
 
-	var testWalletAccountState TestWalletAccountState
-	err = json.Unmarshal(result.Raw, &testWalletAccountState)
-	return &testWalletAccountState, err
+	var fullAccountState FullAccountState
+	err = json.Unmarshal(result.Raw, &fullAccountState)
+	return &fullAccountState, err
 
 }
 
-// TestWalletSendGrams
-// @param amount
-// @param destination
-// @param message
+// CreateQuery
+// @param action
+// @param address
 // @param privateKey
-// @param seqno
-func (client *Client) TestWalletSendGrams(amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, seqno int32) (*SendGramsResult, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type        string          `json:"@type"`
-			Amount      JSONInt64       `json:"amount"`
-			Destination *AccountAddress `json:"destination"`
-			Message     []byte          `json:"message"`
-			PrivateKey  *InputKey       `json:"private_key"`
-			Seqno       int32           `json:"seqno"`
-		}{
-			Type:        "testWallet.sendGrams",
-			Amount:      amount,
-			Destination: destination,
-			Message:     message,
-			PrivateKey:  privateKey,
-			Seqno:       seqno,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var sendGramsResult SendGramsResult
-	err = json.Unmarshal(result.Raw, &sendGramsResult)
-	return &sendGramsResult, err
-
-}
-
-// WalletInit
-// @param privateKey
-func (client *Client) WalletInit(privateKey *InputKey) (*Ok, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type       string    `json:"@type"`
-			PrivateKey *InputKey `json:"private_key"`
-		}{
-			Type:       "wallet.init",
-			PrivateKey: privateKey,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var ok Ok
-	err = json.Unmarshal(result.Raw, &ok)
-	return &ok, err
-
-}
-
-// WalletGetAccountAddress
-// @param inititalAccountState
-func (client *Client) WalletGetAccountAddress(inititalAccountState *WalletInitialAccountState) (*AccountAddress, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type                 string                     `json:"@type"`
-			InititalAccountState *WalletInitialAccountState `json:"initital_account_state"`
-		}{
-			Type:                 "wallet.getAccountAddress",
-			InititalAccountState: inititalAccountState,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var accountAddress AccountAddress
-	err = json.Unmarshal(result.Raw, &accountAddress)
-	return &accountAddress, err
-
-}
-
-// WalletGetAccountState
-// @param accountAddress
-func (client *Client) WalletGetAccountState(accountAddress *AccountAddress) (*WalletAccountState, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type           string          `json:"@type"`
-			AccountAddress *AccountAddress `json:"account_address"`
-		}{
-			Type:           "wallet.getAccountState",
-			AccountAddress: accountAddress,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var walletAccountState WalletAccountState
-	err = json.Unmarshal(result.Raw, &walletAccountState)
-	return &walletAccountState, err
-
-}
-
-// WalletSendGrams
-// @param amount
-// @param destination
-// @param message
-// @param privateKey
-// @param seqno
-// @param validUntil
-func (client *Client) WalletSendGrams(amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, seqno int32, validUntil int64) (*SendGramsResult, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type        string          `json:"@type"`
-			Amount      JSONInt64       `json:"amount"`
-			Destination *AccountAddress `json:"destination"`
-			Message     []byte          `json:"message"`
-			PrivateKey  *InputKey       `json:"private_key"`
-			Seqno       int32           `json:"seqno"`
-			ValidUntil  int64           `json:"valid_until"`
-		}{
-			Type:        "wallet.sendGrams",
-			Amount:      amount,
-			Destination: destination,
-			Message:     message,
-			PrivateKey:  privateKey,
-			Seqno:       seqno,
-			ValidUntil:  validUntil,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var sendGramsResult SendGramsResult
-	err = json.Unmarshal(result.Raw, &sendGramsResult)
-	return &sendGramsResult, err
-
-}
-
-// WalletV3GetAccountAddress
-// @param inititalAccountState
-func (client *Client) WalletV3GetAccountAddress(inititalAccountState *WalletV3InitialAccountState) (*AccountAddress, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type                 string                       `json:"@type"`
-			InititalAccountState *WalletV3InitialAccountState `json:"initital_account_state"`
-		}{
-			Type:                 "wallet.v3.getAccountAddress",
-			InititalAccountState: inititalAccountState,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var accountAddress AccountAddress
-	err = json.Unmarshal(result.Raw, &accountAddress)
-	return &accountAddress, err
-
-}
-
-// TestGiverGetAccountState
-func (client *Client) TestGiverGetAccountState() (*TestGiverAccountState, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type string `json:"@type"`
-		}{
-			Type: "testGiver.getAccountState",
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var testGiverAccountState TestGiverAccountState
-	err = json.Unmarshal(result.Raw, &testGiverAccountState)
-	return &testGiverAccountState, err
-
-}
-
-// TestGiverGetAccountAddress
-func (client *Client) TestGiverGetAccountAddress() (*AccountAddress, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type string `json:"@type"`
-		}{
-			Type: "testGiver.getAccountAddress",
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var accountAddress AccountAddress
-	err = json.Unmarshal(result.Raw, &accountAddress)
-	return &accountAddress, err
-
-}
-
-// TestGiverSendGrams
-// @param amount
-// @param destination
-// @param message
-// @param seqno
-func (client *Client) TestGiverSendGrams(amount JSONInt64, destination *AccountAddress, message []byte, seqno int32) (*SendGramsResult, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type        string          `json:"@type"`
-			Amount      JSONInt64       `json:"amount"`
-			Destination *AccountAddress `json:"destination"`
-			Message     []byte          `json:"message"`
-			Seqno       int32           `json:"seqno"`
-		}{
-			Type:        "testGiver.sendGrams",
-			Amount:      amount,
-			Destination: destination,
-			Message:     message,
-			Seqno:       seqno,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var sendGramsResult SendGramsResult
-	err = json.Unmarshal(result.Raw, &sendGramsResult)
-	return &sendGramsResult, err
-
-}
-
-// GenericGetAccountState
-// @param accountAddress
-func (client *Client) GenericGetAccountState(accountAddress *AccountAddress) (*GenericAccountState, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type           string          `json:"@type"`
-			AccountAddress *AccountAddress `json:"account_address"`
-		}{
-			Type:           "generic.getAccountState",
-			AccountAddress: accountAddress,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var genericAccountState GenericAccountState
-	err = json.Unmarshal(result.Raw, &genericAccountState)
-	return &genericAccountState, err
-
-}
-
-// GenericSendGrams
-// @param allowSendToUninited
-// @param amount
-// @param destination
-// @param message
-// @param privateKey
-// @param source
 // @param timeout
-func (client *Client) GenericSendGrams(allowSendToUninited bool, amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, source *AccountAddress, timeout int32) (*SendGramsResult, error) {
+func (client *Client) CreateQuery(action Action, address AccountAddress, privateKey InputKey, timeout int32) (*QueryInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type                string          `json:"@type"`
-			AllowSendToUninited bool            `json:"allow_send_to_uninited"`
-			Amount              JSONInt64       `json:"amount"`
-			Destination         *AccountAddress `json:"destination"`
-			Message             []byte          `json:"message"`
-			PrivateKey          *InputKey       `json:"private_key"`
-			Source              *AccountAddress `json:"source"`
-			Timeout             int32           `json:"timeout"`
+			Type       string         `json:"@type"`
+			Action     Action         `json:"action"`
+			Address    AccountAddress `json:"address"`
+			PrivateKey InputKey       `json:"private_key"`
+			Timeout    int32          `json:"timeout"`
 		}{
-			Type:                "generic.sendGrams",
-			AllowSendToUninited: allowSendToUninited,
-			Amount:              amount,
-			Destination:         destination,
-			Message:             message,
-			PrivateKey:          privateKey,
-			Source:              source,
-			Timeout:             timeout,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var sendGramsResult SendGramsResult
-	err = json.Unmarshal(result.Raw, &sendGramsResult)
-	return &sendGramsResult, err
-
-}
-
-// GenericCreateSendGramsQuery
-// @param allowSendToUninited
-// @param amount
-// @param destination
-// @param message
-// @param privateKey
-// @param source
-// @param timeout
-func (client *Client) GenericCreateSendGramsQuery(allowSendToUninited bool, amount JSONInt64, destination *AccountAddress, message []byte, privateKey *InputKey, source *AccountAddress, timeout int32) (*QueryInfo, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type                string          `json:"@type"`
-			AllowSendToUninited bool            `json:"allow_send_to_uninited"`
-			Amount              JSONInt64       `json:"amount"`
-			Destination         *AccountAddress `json:"destination"`
-			Message             []byte          `json:"message"`
-			PrivateKey          *InputKey       `json:"private_key"`
-			Source              *AccountAddress `json:"source"`
-			Timeout             int32           `json:"timeout"`
-		}{
-			Type:                "generic.createSendGramsQuery",
-			AllowSendToUninited: allowSendToUninited,
-			Amount:              amount,
-			Destination:         destination,
-			Message:             message,
-			PrivateKey:          privateKey,
-			Source:              source,
-			Timeout:             timeout,
+			Type:       "createQuery",
+			Action:     action,
+			Address:    address,
+			PrivateKey: privateKey,
+			Timeout:    timeout,
 		},
 	)
 
@@ -1318,11 +973,11 @@ func (client *Client) QueryGetInfo(id int64) (*QueryInfo, error) {
 
 // SmcLoad
 // @param accountAddress
-func (client *Client) SmcLoad(accountAddress *AccountAddress) (*SmcInfo, error) {
+func (client *Client) SmcLoad(accountAddress AccountAddress) (*SmcInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type           string          `json:"@type"`
-			AccountAddress *AccountAddress `json:"account_address"`
+			Type           string         `json:"@type"`
+			AccountAddress AccountAddress `json:"account_address"`
 		}{
 			Type:           "smc.load",
 			AccountAddress: accountAddress,
@@ -1428,12 +1083,12 @@ func (client *Client) SmcGetState(id int64) (*TvmCell, error) {
 // @param id
 // @param method
 // @param stack
-func (client *Client) SmcRunGetMethod(id int64, method *SmcMethodId, stack []TvmStackEntry) (*SmcRunResult, error) {
+func (client *Client) SmcRunGetMethod(id int64, method SmcMethodId, stack []TvmStackEntry) (*SmcRunResult, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string          `json:"@type"`
 			Id     int64           `json:"id"`
-			Method *SmcMethodId    `json:"method"`
+			Method SmcMethodId     `json:"method"`
 			Stack  []TvmStackEntry `json:"stack"`
 		}{
 			Type:   "smc.runGetMethod",
@@ -1454,6 +1109,42 @@ func (client *Client) SmcRunGetMethod(id int64, method *SmcMethodId, stack []Tvm
 	var smcRunResult SmcRunResult
 	err = json.Unmarshal(result.Raw, &smcRunResult)
 	return &smcRunResult, err
+
+}
+
+// DnsResolve
+// @param accountAddress
+// @param category
+// @param name
+// @param ttl
+func (client *Client) DnsResolve(accountAddress AccountAddress, category int32, name string, ttl int32) (*DnsResolved, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type           string         `json:"@type"`
+			AccountAddress AccountAddress `json:"account_address"`
+			Category       int32          `json:"category"`
+			Name           string         `json:"name"`
+			Ttl            int32          `json:"ttl"`
+		}{
+			Type:           "dns.resolve",
+			AccountAddress: accountAddress,
+			Category:       category,
+			Name:           name,
+			Ttl:            ttl,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var dnsResolved DnsResolved
+	err = json.Unmarshal(result.Raw, &dnsResolved)
+	return &dnsResolved, err
 
 }
 
@@ -1490,11 +1181,11 @@ func (client *Client) OnLiteServerQueryResult(bytes []byte, id JSONInt64) (*Ok, 
 // OnLiteServerQueryError
 // @param error
 // @param id
-func (client *Client) OnLiteServerQueryError(error *Error, id JSONInt64) (*Ok, error) {
+func (client *Client) OnLiteServerQueryError(error Error, id JSONInt64) (*Ok, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type  string    `json:"@type"`
-			Error *Error    `json:"error"`
+			Error Error     `json:"error"`
 			Id    JSONInt64 `json:"id"`
 		}{
 			Type:  "onLiteServerQueryError",
@@ -1514,6 +1205,36 @@ func (client *Client) OnLiteServerQueryError(error *Error, id JSONInt64) (*Ok, e
 	var ok Ok
 	err = json.Unmarshal(result.Raw, &ok)
 	return &ok, err
+
+}
+
+// WithBlock
+// @param function
+// @param id
+func (client *Client) WithBlock(function Function, id TonBlockIdExt) (*Object, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type     string        `json:"@type"`
+			Function Function      `json:"function"`
+			Id       TonBlockIdExt `json:"id"`
+		}{
+			Type:     "withBlock",
+			Function: function,
+			Id:       id,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var object Object
+	err = json.Unmarshal(result.Raw, &object)
+	return &object, err
 
 }
 
