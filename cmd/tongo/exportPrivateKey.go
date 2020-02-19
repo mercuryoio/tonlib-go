@@ -47,11 +47,11 @@ func exportPK(cmd *cobra.Command, args []string) {
 	}
 	pKey := tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
 
-	result, err := tonClient.ExportPemKey(&tonlib.InputKey{
+	result, err := tonClient.ExportPemKey(tonlib.InputKey{
 		"inputKeyRegular",
 		base64.StdEncoding.EncodeToString(locPass),
 		pKey,
-	}, &locPass)
+	}, locPass)
 
 	fmt.Printf("Got a result: %#v. Errors: %v. \n", result, err)
 }

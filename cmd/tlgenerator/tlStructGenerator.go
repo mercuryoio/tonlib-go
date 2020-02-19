@@ -357,8 +357,8 @@ func generateStructsFromTnEntities(
 					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
 
 				} else {
-					paramsStr += paramName + " *" + dataType
-					clientCallStructAttrs += fmt.Sprintf("%s *%s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
+					paramsStr += paramName + " " + dataType
+					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
 				}
 
 				if i < len(itemInfo.Properties)-1 {
