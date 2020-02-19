@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-
 	"github.com/mercuryoio/tonlib-go"
 	"github.com/spf13/cobra"
+	"os"
+	"os/signal"
 )
 
 var tonClient *tonlib.Client
