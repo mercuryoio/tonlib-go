@@ -15,7 +15,7 @@ var runSmcMethodCmd = &cobra.Command{
 	Long: `Run smc method. It contains thre or more attributes:
 - path2configfile. see tonlib.config.json.example
 - smc address % - in the beginig - required!
-- smc method name % - in the beginig - required!
+- smc method name - required
 - extra decimal args - as many as you want
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
