@@ -42,7 +42,7 @@ func sendGramm(cmd *cobra.Command, args []string) {
 	secret := args[2]
 	password := args[3]
 	destinationAddr := args[4]
-	//// parse amount
+	// parse amount
 	amount, err := strconv.ParseInt(args[5], 10, 64)
 	if err != nil {
 		log.Fatalf("failed to parse amount argument: %s as int. err: %s. ", args[5], err)
@@ -52,7 +52,6 @@ func sendGramm(cmd *cobra.Command, args []string) {
 	if len(args) > 6 {
 		message = args[6]
 	}
-
 	err = initClient(confPath)
 	if err != nil {
 		fmt.Println("init connection error: ", err)
@@ -66,36 +65,28 @@ func sendGramm(cmd *cobra.Command, args []string) {
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
 		Key: pKey,
 	}
-
-	// get wallet adress info
-	senderAddr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0)
+	_, err = tonClient.WalletInit(&inputKey)
 	if err != nil {
-		fmt.Println("get wallet address error: ", err, senderAddr)
+		fmt.Println("init wallet error: ", err)
 		os.Exit(0)
 	}
 
-	// create query to send grams
-	msgAction := tonlib.NewActionMsg(
-		true,
-		[]tonlib.MsgMessage{*tonlib.NewMsgMessage(
-			tonlib.JSONInt64(amount),
-			tonlib.NewMsgDataText(message),
-			tonlib.NewAccountAddress(destinationAddr),
-		)},
-	)
-	queryInfo, err := tonClient.CreateQuery(
-		msgAction,
-		*senderAddr,
-		inputKey,
-		300, // time out of sending money not executing request
-	)
-	fmt.Println(fmt.Sprintf("queryInfo: %#v. err: %#v. ", queryInfo, err))
-	if err != nil{
-		fmt.Printf("Failed to create query with  error: %v \n", err)
-		os.Exit(1)
+	// get wallet adress info
+	addr, err := tonClient.WalletGetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey))
+	if err != nil {
+		fmt.Println("get wallet address error: ", err)
+		os.Exit(0)
 	}
 
-	// send query
-	ok, err := tonClient.QuerySend(queryInfo.Id)
-	fmt.Println(fmt.Sprintf("send query. ok: %#v. err: %#v. ", ok, err))
+	// send grams
+	sendResult, err := tonClient.GenericSendGrams(
+		true,
+		tonlib.JSONInt64(amount),
+		tonlib.NewAccountAddress(destinationAddr),
+		[]byte(message),
+		&inputKey,
+		addr,
+		5,
+	)
+	fmt.Printf("Got a result: hash %v. Errors: %v \n", sendResult, err)
 }

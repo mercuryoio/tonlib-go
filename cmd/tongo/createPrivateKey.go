@@ -47,37 +47,9 @@ func createPK(cmd *cobra.Command, args []string) {
 	seed := tonlib.SecureBytes("")
 
 	// create ne wkey
-	pKey, err := tonClient.CreateNewKey(loc, mem, seed,)
+	pKey, err := tonClient.CreateNewKey(&loc, &mem, &seed,)
 	if err != nil{
 		log.Fatal("failed to create new key with error: ", err)
-		return
 	}
 	fmt.Printf("Got a result: publicKey :%v; secret: %s. Errors: %v. \n", pKey.PublicKey, pKey.Secret, err)
-
-	// prepare key for transffering
-	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0)
-	if err != nil {
-		log.Fatal("failed to get key address with error: ", err)
-		return
-	}
-
-	// unpack unpuck
-	unpackAddress, err := tonClient.UnpackAccountAddress(addr.AccountAddress)
-	if err != nil {
-		log.Fatalf("failed to unpack account address: %#v with error: %#v\n", addr.AccountAddress, err)
-		return
-	}
-
-	// change flag
-	unpackAddress.Bounceable = false
-
-	// pack address
-	newAddr, err := tonClient.PackAccountAddress(*unpackAddress)
-	if err != nil {
-		log.Fatalf("failed to pack account address: %#v with error: %#v\n", unpackAddress, err)
-		return
-	}
-
-	// print address
-	fmt.Printf("your new acount address: %s, public key: %s, secret key: %s \n", newAddr.AccountAddress, pKey.PublicKey, pKey.Secret)
 }
