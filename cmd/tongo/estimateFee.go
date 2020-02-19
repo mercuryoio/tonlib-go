@@ -61,9 +61,9 @@ func estimateFee(cmd *cobra.Command, args []string) {
 
 	// prepare input key
 	inputKey := tonlib.InputKey{
-		Type: "inputKeyRegular",
+		Type:          "inputKeyRegular",
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
-		Key: pKey,
+		Key:           pKey,
 	}
 
 	// get wallet adress info
@@ -72,6 +72,7 @@ func estimateFee(cmd *cobra.Command, args []string) {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
 	}
+	fmt.Printf("ADDR: %#v /n\n", addr)
 
 	msgAction := tonlib.NewActionMsg(
 		true,
@@ -79,16 +80,16 @@ func estimateFee(cmd *cobra.Command, args []string) {
 			tonlib.JSONInt64(amount),
 			tonlib.NewMsgDataText(message),
 			tonlib.NewAccountAddress(destinationAddr),
-			)},
-		)
+		)},
+	)
 	queryInfo, err := tonClient.CreateQuery(
 		msgAction,
 		*addr,
 		inputKey,
-		300, // time out of sending money not executing request
+		300, // If this timeout will be exceeded - all request are go as usual but grams wil not be sent
 	)
 	fmt.Println(fmt.Sprintf("queryInfo: %#v. err: %#v. ", queryInfo, err))
-	if err != nil{
+	if err != nil {
 		fmt.Printf("Failed to create query with  error: %v \n", err)
 		os.Exit(1)
 	}
@@ -96,5 +97,4 @@ func estimateFee(cmd *cobra.Command, args []string) {
 	// get fee
 	fees, err := tonClient.QueryEstimateFees(queryInfo.Id, false)
 	fmt.Println(fmt.Sprintf("fees: %#v. err: %#v. ", fees, err))
-
 }
