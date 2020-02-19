@@ -55,9 +55,9 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
-	client  unsafe.Pointer
-	config  Config
-	timeout int64
+	client        unsafe.Pointer
+	config        Config
+	timeout       int64
 	clientLogging bool
 }
 
@@ -70,13 +70,13 @@ type TonInitRequest struct {
 func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool, tonLogging int32) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout, clientLogging:clientLogging}
+	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout, clientLogging: clientLogging}
 
 	// disable ton logs if needed
-		err := client.executeSetLogLevel(tonLogging)
-		if err != nil{
-			return &client, err
-		}
+	err := client.executeSetLogLevel(tonLogging)
+	if err != nil {
+		return &client, err
+	}
 
 	optionsInfo, err := client.Init(tonCnf.Options)
 	if err != nil {
@@ -378,12 +378,12 @@ func NewKey(publicKey string, secret string) *Key {
 
 // because of different subclasses in common class InitialAccountState and  AccountState
 // InitialAccountState
-type InitialAccountState interface {MessageType() string}
+type InitialAccountState interface{ MessageType() string }
 
 type AccountState RawAccountState
 
-type MsgData interface {MessageType() string}
+type MsgData interface{ MessageType() string }
 type DnsEntryData string
 
-type Action interface {MessageType() string}
+type Action interface{ MessageType() string }
 type DnsAction Action

@@ -24,7 +24,7 @@ var transactionsCmd = &cobra.Command{
 - hash (optional)
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 5 && len(args) != 7  {
+		if len(args) != 5 && len(args) != 7 {
 			return fmt.Errorf("you have to use 5 or 7 args for this command \n")
 		}
 		_, err := os.Stat(args[0])
@@ -55,17 +55,17 @@ func transactions(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	if len(args) == 7{
+	if len(args) == 7 {
 		// parse lt
 		ltInt, err := strconv.ParseInt(args[5], 10, 64)
-		if err != nil{
+		if err != nil {
 			log.Fatalf("Failed to parse lt as integer number: `%s`. %s", args[2], err)
 		}
 		lt = tonlib.JSONInt64(ltInt)
 		hash = args[6]
 	} else {
 		accState, err := tonClient.GetAccountState(*addr)
-		if err != nil{
+		if err != nil {
 			log.Fatalf("Failed to get account state: %#v", err)
 		}
 
@@ -76,11 +76,10 @@ func transactions(cmd *cobra.Command, args []string) {
 	// prepare input key
 	pKey := tonlib.TONPrivateKey{PublicKey: publicKey, Secret: secret}
 	inputKey := tonlib.InputKey{
-		Type: "inputKeyRegular",
+		Type:          "inputKeyRegular",
 		LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
-		Key: pKey,
+		Key:           pKey,
 	}
-
 
 	txs, err := tonClient.RawGetTransactions(*addr, *tonlib.NewInternalTransactionId(hash, lt), inputKey)
 	if err != nil {
