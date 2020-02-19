@@ -68,7 +68,7 @@ Create new client
     	tonlib.Config{}, // config
     	10, // timeout in seconds for each (currently only QueryEstimateFees) tonlib.Client`s public method
     	true, // enable client`s logs
-    	9, // logging level in ton lib. You can see codes in https://github.com/ton-blockchain/ton/blob/c2da007f4065e2520e0d948b146e0fb12fa75751/tdutils/td/utils/logging.cpp
+    	9, // logging level in ton lib.
     )
     if err != nil {
         panic(err)
