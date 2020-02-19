@@ -11,19 +11,18 @@ import (
 var walletStateCmd = &cobra.Command{
 	Use:   "walletState",
 	Short: "Get wallet state",
-	Long: `Get wallet state command. It contains 4 attributes:
+	Long: `Get wallet state command. It contains 3 attributes:
 - path2configfile. see tonlib.config.json.example
 - public key
 - secret
-- password
 `,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 4 {
-			return fmt.Errorf("you have to use four args for this commaond \n")
+		if len(args) != 3 {
+			return fmt.Errorf("you have to use three args for this commaond \n")
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
-			errors.New("please choose config path")
+			return errors.New("please choose config path")
 		}
 		return nil
 	},
@@ -38,15 +37,6 @@ func walletState(cmd *cobra.Command, args []string) {
 	}
 
 	pKey := tonlib.TONPrivateKey{PublicKey: args[1], Secret: args[2]}
-	//password := args[3]
-
-	// prepare input key
-	//inputKey := tonlib.InputKey{
-	//	Type: "inputKeyRegular",
-	//	LocalPassword: base64.StdEncoding.EncodeToString(tonlib.SecureBytes(password)),
-	//	Key: pKey,
-	//}
-	// init wallet
 
 	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0)
 	if err != nil {

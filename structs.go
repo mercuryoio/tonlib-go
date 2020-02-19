@@ -16,8 +16,8 @@ type SecureBytes []byte
 type SecureString string
 type Bytes []byte
 type TvmStackEntry interface{}
-type SmcMethodId int32
-type TvmNumber string
+type SmcMethodId interface {}
+type TvmNumber interface {}
 type GenericAccountState string
 
 // JSONInt64 alias for int64, in order to deal with json big number problem
@@ -2072,7 +2072,7 @@ func NewTvmStackEntryCell(cell *TvmCell) *TvmStackEntryCell {
 // TvmStackEntryNumber
 type TvmStackEntryNumber struct {
 	tonCommon
-	Number *TvmNumber `json:"number"` //
+	Number TvmNumber `json:"number"` //
 }
 
 // MessageType return the string telegram-type of TvmStackEntryNumber
@@ -2083,7 +2083,7 @@ func (tvmStackEntryNumber *TvmStackEntryNumber) MessageType() string {
 // NewTvmStackEntryNumber creates a new TvmStackEntryNumber
 //
 // @param number
-func NewTvmStackEntryNumber(number *TvmNumber) *TvmStackEntryNumber {
+func NewTvmStackEntryNumber(number TvmNumber) *TvmStackEntryNumber {
 	tvmStackEntryNumberTemp := TvmStackEntryNumber{
 		tonCommon: tonCommon{Type: "tvm.stackEntryNumber"},
 		Number:    number,

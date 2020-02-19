@@ -33,7 +33,7 @@ func TestClient_NewClient(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -54,7 +54,7 @@ func TestClient_CreateNewKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -87,7 +87,7 @@ func TestClient_DeleteKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -127,7 +127,7 @@ func TestClient_ExportKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -174,7 +174,7 @@ func TestClient_ExportPemKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -221,7 +221,7 @@ func TestClient_RawGetAccountState(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("TestClient_RawGetAccountState Init client error. ", err)
 	}
@@ -249,7 +249,7 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountAddress Init client error. ", err)
 	}
@@ -290,7 +290,7 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState Init client error. ", err)
 	}
@@ -337,7 +337,7 @@ func TestClient_RawGetTransactions(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("TestClient_RawGetTransactions Init client error. ", err)
 	}
@@ -350,7 +350,6 @@ func TestClient_RawGetTransactions(t *testing.T) {
 		LocalPassword: base64.StdEncoding.EncodeToString(SecureBytes(TestAccountPassword)),
 		Key:           TONPrivateKey{PublicKey: TestAccountPublic, Secret: TestAccountSecret},
 	}
-
 
 	// get account state
 	state, err := cln.RawGetAccountState(*addr)
@@ -382,7 +381,7 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage Init client error. ", err)
 	}
