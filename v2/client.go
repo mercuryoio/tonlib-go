@@ -5,7 +5,7 @@ package v2
 //#cgo linux LDFLAGS: -L./lib/linux -ltonlibjson -ltonlibjson_private -ltonlibjson_static -ltonlib
 //#cgo darwin LDFLAGS: -L./lib/darwin -ltonlibjson -ltonlibjson_private -ltonlibjson_static -ltonlib
 //#include <stdlib.h>
-//#include <./v2/lib/tonlib_client_json.h>
+//#include <./lib/tonlib_client_json.h>
 import "C"
 import (
 	"encoding/json"
