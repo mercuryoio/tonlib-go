@@ -1,9 +1,9 @@
 package v2
 
-//#cgo linux CFLAGS: -I./v2/lib/linux
-//#cgo darwin CFLAGS: -I./v2/lib/darwin
-//#cgo linux LDFLAGS: -L./v2/lib/linux -ltonlibjson -ltonlibjson_private -ltonlibjson_static -ltonlib
-//#cgo darwin LDFLAGS: -L./v2/lib/darwin -ltonlibjson -ltonlibjson_private -ltonlibjson_static -ltonlib
+//#cgo linux CFLAGS: -I./lib/linux
+//#cgo darwin CFLAGS: -I./lib/darwin
+//#cgo linux LDFLAGS: -L./lib/linux -ltonlibjson -ltonlibjson_private -ltonlibjson_static -ltonlib
+//#cgo darwin LDFLAGS: -L./lib/darwin -ltonlibjson -ltonlibjson_private -ltonlibjson_static -ltonlib
 //#include <stdlib.h>
 //#include <./v2/lib/tonlib_client_json.h>
 import "C"
