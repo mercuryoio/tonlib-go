@@ -1,0 +1,16 @@
+*.exe
+*.exe~
+*.dll
+
+*.test
+
+*.out
+
+/vendor/
+/Godeps/
+
+.idea
+./vendor
+
+# auto generated files
+test.keys/*
