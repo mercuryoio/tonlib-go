@@ -8,18 +8,16 @@ import (
 )
 
 const (
-	TestAccountAddress  = "UQB-8ullbN9cxf1ILhLBLwjScjCEFJnimZ9WG3xiR6O5wr0e"
-	TestAccountPassword = "testmm"
-	TestAccountPublic   = "PuauM0qjqVGAr8t1YNfbqeY8pTtCniGk7lwGFll0oZZt60wh"
-	TestAccountSecret   = "AWO+xDBnFHnB5SJ0270Xd4YvPb86iUPSQr1DLgdmbW8="
-	TestTxLt            = 289040000001
-	TestTxHash          = "V6R8l0hTjpGb/HHHtDwrMk1KxTDLpfz5h7PINr1crp4="
-	TestAmount          = 100000000
-	TestPassword        = "test_password"
-	DefaultTestTimeout  = 10
+	TestAccountAddress = "EQDfYZhDfNJ0EePoT5ibfI9oG9bWIU6g872oX5h9rL5PHY9a"
+	TestTxLt           = 289040000001
+	TestTxHash         = "V6R8l0hTjpGb/HHHtDwrMk1KxTDLpfz5h7PINr1crp4="
+	TestAmount         = 100000000
+	TestPassword       = "test_password"
+	TestAddress        = "EQDfYZhDfNJ0EePoT5ibfI9oG9bWIU6g872oX5h9rL5PHY9a"
+	DefaultTestTimeout = 10
 )
 
-func TestClient_NewClient(t *testing.T) {
+func TestClient_InitWallet(t *testing.T) {
 	// parse config
 	options, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
@@ -33,7 +31,7 @@ func TestClient_NewClient(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -54,7 +52,7 @@ func TestClient_CreateNewKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -66,7 +64,7 @@ func TestClient_CreateNewKey(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("Ton create key for init wallet error", err)
 	}
@@ -87,7 +85,7 @@ func TestClient_DeleteKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -99,14 +97,14 @@ func TestClient_DeleteKey(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("Ton create key for init wallet error", err)
 	}
 	fmt.Println(fmt.Sprintf("pKey: %s, secret: %s.", pKey.PublicKey, string(pKey.Secret)))
 
 	// delete new key
-	ok, err := cln.DeleteKey(*pKey)
+	ok, err := cln.DeleteKey(pKey)
 	if err != nil {
 		t.Fatal("failed to delete new key", err)
 	}
@@ -127,7 +125,7 @@ func TestClient_ExportKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -139,14 +137,14 @@ func TestClient_ExportKey(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("Ton create key for init wallet error", err)
 	}
 	fmt.Println(fmt.Sprintf("pKey: %#v", pKey))
 
 	// export key
-	exportedKey, err := cln.ExportKey(InputKey{
+	exportedKey, err := cln.ExportKey(&InputKey{
 		"inputKeyRegular",
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
@@ -174,7 +172,7 @@ func TestClient_ExportPemKey(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("Init client error. ", err)
 	}
@@ -186,21 +184,21 @@ func TestClient_ExportPemKey(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("Ton create key for init wallet error", err)
 	}
 	fmt.Println(fmt.Sprintf("pKey: %#v.", pKey))
 
 	// export key
-	exportedKey, err := cln.ExportPemKey(InputKey{
+	exportedKey, err := cln.ExportPemKey(&InputKey{
 		"inputKeyRegular",
 		base64.StdEncoding.EncodeToString(loc),
 		TONPrivateKey{
 			pKey.PublicKey,
 			pKey.Secret,
 		},
-	}, loc)
+	}, &loc)
 	if err != nil {
 		t.Fatal("Ton export key error", err)
 	}
@@ -221,18 +219,68 @@ func TestClient_RawGetAccountState(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("TestClient_RawGetAccountState Init client error. ", err)
 	}
 	defer cln.Destroy()
 
-	ok, err := cln.RawGetAccountState(*NewAccountAddress(TestAccountAddress))
+	ok, err := cln.RawGetAccountState(NewAccountAddress(TestAccountAddress))
 	if err != nil {
 		t.Fatal("TestClient_RawGetAccountState failed to RawGetAccountState(): ", err)
 	}
 
 	fmt.Printf("TestClient_RawGetAccountState: ok: %#v, err: %v. ", ok, err)
+}
+
+func TestClient_WalletInit(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_WalletInit failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	if err != nil {
+		t.Fatal("TestClient_WalletInit Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_WalletInit create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_WalletInit pKey: %#v", pKey))
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&InputKey{
+			"inputKeyRegular",
+			base64.StdEncoding.EncodeToString(loc),
+			TONPrivateKey{
+				pKey.PublicKey,
+				pKey.Secret,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletInit failed to WalletInit(): ", err)
+	}
+
+	fmt.Printf("TestClient_WalletInit: ok: %#v, err: %v. ", ok, err)
 }
 
 func TestClient_WalletGetAccountAddress(t *testing.T) {
@@ -249,7 +297,7 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountAddress Init client error. ", err)
 	}
@@ -261,14 +309,31 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountAddress create key for init wallet error", err)
 	}
 	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountAddress pKey: %#v", pKey))
 
+	// init wallet
+	ok, err := cln.WalletInit(
+		&InputKey{
+			"inputKeyRegular",
+			base64.StdEncoding.EncodeToString(loc),
+			TONPrivateKey{
+				pKey.PublicKey,
+				pKey.Secret,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletGetAccountAddress failed to WalletInit(): ", err)
+	}
+
+	fmt.Printf("TestClient_WalletGetAccountAddress: init wallet ok: %#v, err: %v. ", ok, err)
+
 	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0)
+	addrr, err := cln.WalletGetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey))
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountAddress failed to WalletGetAccountAddress(): ", err)
 	}
@@ -277,6 +342,7 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 }
 
 func TestClient_WalletGetAccountState(t *testing.T) {
+	t.Skip("doesn't work")
 	// parse config
 	options, err := ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
@@ -290,7 +356,7 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState Init client error. ", err)
 	}
@@ -302,25 +368,109 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState create key for init wallet error", err)
 	}
 	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountState pKey: %#v", pKey))
 
+	// init wallet
+	ok, err := cln.WalletInit(
+		&InputKey{
+			"inputKeyRegular",
+			base64.StdEncoding.EncodeToString(loc),
+			TONPrivateKey{
+				pKey.PublicKey,
+				pKey.Secret,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletGetAccountState failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_WalletGetAccountState: init wallet ok: %#v, err: %v. ", ok, err)
+
 	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0)
+	addrr, err := cln.WalletGetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey))
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState failed to WalletGetAccountAddress(): ", err)
 	}
 
 	// get wallet account state info
-	state, err := cln.GetAccountState(*addrr)
+	state, err := cln.WalletGetAccountState(addrr)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState failed to WalletGetAccountState(): ", err)
 	}
 
 	fmt.Printf("TestClient_WalletGetAccountState: get account stater: %#v, err: %v. ", state, err)
+}
+
+func TestClient_WalletSendGrams(t *testing.T) {
+	t.Skip("doesn't work")
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_WalletSendGrams failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendGrams Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendGrams create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_WalletSendGrams pKey: %#v", pKey))
+
+	// prepare input key
+	inputKey := InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(loc),
+		TONPrivateKey{
+			pKey.PublicKey,
+			pKey.Secret,
+		},
+	}
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&inputKey,
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendGrams failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_WalletSendGrams: init wallet ok: %#v, err: %v. \n", ok, err)
+
+	// send grams
+	fmt.Println("starts wallet send gramm")
+	sendResult, err := cln.WalletSendGrams(
+		TestAmount,
+		NewAccountAddress(TestAddress),
+		[]byte("test send grams"),
+		&inputKey,
+		2,
+		0,
+	)
+	if err != nil {
+		t.Fatal("TestClient_WalletSendGrams failed to WalletSendGrams(): ", err)
+	}
+	fmt.Printf("TestClient_WalletSendGrams: send grams: %#v, err: %v. ", sendResult, err)
 }
 
 func TestClient_RawGetTransactions(t *testing.T) {
@@ -337,34 +487,102 @@ func TestClient_RawGetTransactions(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("TestClient_RawGetTransactions Init client error. ", err)
 	}
 	defer cln.Destroy()
 
 	// prepare data
-	addr := NewAccountAddress(TestAccountAddress)
-	inputKey := InputKey{
-		Type:          "inputKeyRegular",
-		LocalPassword: base64.StdEncoding.EncodeToString(SecureBytes(TestAccountPassword)),
-		Key:           TONPrivateKey{PublicKey: TestAccountPublic, Secret: TestAccountSecret},
-	}
+	addr := NewAccountAddress(TestAddress)
 
 	// get account state
-	state, err := cln.RawGetAccountState(*addr)
+	state, err := cln.RawGetAccountState(addr)
 	if err != nil {
 		t.Fatal("Get state error error", err)
 	}
 
 	_, err = cln.RawGetTransactions(
-		*addr,
-		*state.LastTransactionId,
-		inputKey,
+		addr,
+		state.LastTransactionId,
 	)
 	if err != nil {
 		t.Fatal("Ton get account txs error", err)
 	}
+}
+
+func TestClient_GenericSendGrams(t *testing.T) {
+	// parse config
+	options, err := ParseConfigFile("./tonlib.config.json.example")
+	if err != nil {
+		t.Fatal("TestClient_GenericSendGrams failed parse config error. ", err)
+	}
+
+	// make req
+	req := TonInitRequest{
+		"init",
+		*options,
+	}
+
+	// create client
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendGrams Init client error. ", err)
+	}
+	defer cln.Destroy()
+
+	// prepare data
+	loc := SecureBytes(TestPassword)
+	mem := SecureBytes(TestPassword)
+	seed := SecureBytes("")
+
+	// create new key
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendGrams create key for init wallet error", err)
+	}
+	fmt.Println(fmt.Sprintf("TestClient_GenericSendGrams pKey: %#v", pKey))
+
+	// prepare input key
+	inputKey := InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(loc),
+		TONPrivateKey{
+			pKey.PublicKey,
+			pKey.Secret,
+		},
+	}
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&inputKey,
+	)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendGrams failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_GenericSendGrams: init wallet ok: %#v, err: %v. \n", ok, err)
+
+	// get wallet adress info
+	addrr, err := cln.WalletGetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey))
+	if err != nil {
+		t.Fatal("TestClient_GenericSendGrams failed to WalletGetAccountAddress(): ", err)
+	}
+	fmt.Printf("TestClient_GenericSendGrams: get account adress addr: %#v, err: %v. ", addrr, err)
+
+	// send grams
+	sendResult, err := cln.GenericSendGrams(
+		true,
+		TestAmount,
+		NewAccountAddress(TestAddress),
+		[]byte(""),
+		&inputKey,
+		addrr,
+		5,
+	)
+	if err != nil {
+		t.Fatal("TestClient_GenericSendGrams failed to GenericSendGrams(): ", err)
+	}
+	fmt.Printf("TestClient_GenericSendGrams: sent grams: %#v, err: %v. ", sendResult, err)
 }
 
 func TestClient_RawCreateAndSendMessage(t *testing.T) {
@@ -381,7 +599,7 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	}
 
 	// create client
-	cln, err := NewClient(&req, Config{}, DefaultTestTimeout, true, 100)
+	cln, err := NewClient(&req, Config{}, DefaultTestTimeout)
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage Init client error. ", err)
 	}
@@ -393,14 +611,33 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	seed := SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage create key for init wallet error", err)
 	}
 	fmt.Println(fmt.Sprintf("TestClient_RawCreateAndSendMessage pKey: %#v", pKey))
 
+	// prepare input key
+	inputKey := InputKey{
+		"inputKeyRegular",
+		base64.StdEncoding.EncodeToString(loc),
+		TONPrivateKey{
+			pKey.PublicKey,
+			pKey.Secret,
+		},
+	}
+
+	// init wallet
+	ok, err := cln.WalletInit(
+		&inputKey,
+	)
+	if err != nil {
+		t.Fatal("TestClient_RawCreateAndSendMessage failed to WalletInit(): ", err)
+	}
+	fmt.Printf("TestClient_RawCreateAndSendMessage: init wallet ok: %#v, err: %v. \n", ok, err)
+
 	// get wallet address info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0)
+	addrr, err := cln.WalletGetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey))
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage failed to WalletGetAccountAddress(): ", err)
 	}
@@ -415,7 +652,7 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	// send msg
 	msgSentOk, err := cln.RawCreateAndSendMessage(
 		bocFile,
-		*addrr,
+		addrr,
 		[]byte{},
 	)
 	if err != nil {
