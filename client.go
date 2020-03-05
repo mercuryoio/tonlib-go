@@ -55,10 +55,10 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
-	client        unsafe.Pointer
-	config        Config
-	timeout       int64
-	clientLogging bool
+	client  unsafe.Pointer
+	config  Config
+	timeout int64
+	// wallet *TonWallet
 }
 
 type TonInitRequest struct {
@@ -67,51 +67,22 @@ type TonInitRequest struct {
 }
 
 // NewClient Creates a new instance of TONLib.
-func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool, tonLogging int32) (*Client, error) {
+func NewClient(tonCnf *TonInitRequest, config Config, timeout int64) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout, clientLogging: clientLogging}
-
-	// disable ton logs if needed
-	err := client.executeSetLogLevel(tonLogging)
+	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout,}
+	optionsInfo, err := client.Init(&tonCnf.Options)
+	//resp, err := client.executeAsynchronously(tonCnf)
 	if err != nil {
 		return &client, err
 	}
-
-	optionsInfo, err := client.Init(tonCnf.Options)
-	if err != nil {
-		return &client, err
-	}
-	if optionsInfo.tonCommon.Type == "options.info" {
+	if optionsInfo.tonCommon.Type == "ok" {
 		return &client, nil
 	}
 	if optionsInfo.tonCommon.Type == "error" {
 		return &client, fmt.Errorf("Error ton client init. Message: %s. ", optionsInfo.tonCommon.Extra)
 	}
 	return &client, fmt.Errorf("Error ton client init. ")
-}
-
-// disable ton client C lib`s logs
-func (client *Client) executeSetLogLevel(logLevel int32) (error) {
-	data := struct {
-		Type              string `json:"@type"`
-		NewVerbosityLevel int32  `json:"new_verbosity_level"`
-	}{
-		Type:              "setLogVerbosityLevel",
-		NewVerbosityLevel: logLevel,
-	}
-	req, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
-
-	if client.clientLogging {
-		fmt.Println("call execute setLogVerbosityLevel: ", string(req))
-	}
-	C.tonlib_client_json_execute(client.client, cs)
-	return nil
 }
 
 /**
@@ -125,9 +96,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 
-	if client.clientLogging {
-		fmt.Println("call", string(req))
-	}
+	fmt.Println("call", string(req))
 	C.tonlib_client_json_send(client.client, cs)
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
@@ -145,9 +114,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	res := C.GoString(result)
 	resB := []byte(res)
 	err = json.Unmarshal(resB, &updateData)
-	if client.clientLogging {
-		fmt.Println("fetch data: ", string(resB))
-	}
+	fmt.Println("fetch data: ", string(resB))
 	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
 		err = json.Unmarshal(resB, &updateData)
 		if err == nil {
@@ -163,9 +130,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		if err != nil {
 			return &TONResult{}, err
 		}
-		if client.clientLogging {
-			fmt.Println("run sync", updateData)
-		}
+		fmt.Println("run sync", updateData)
 		res, err = client.Sync(syncResp.SyncState)
 		if err != nil {
 			return &TONResult{}, err
@@ -223,9 +188,7 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 	for {
 		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 		for result == nil {
-			if client.clientLogging {
-				fmt.Println("empty response. next attempt")
-			}
+			fmt.Println("empty response. next attempt")
 			time.Sleep(1 * time.Second)
 			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 		}
@@ -236,9 +199,7 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 		res := C.GoString(result)
 		resB := []byte(res)
 		err = json.Unmarshal(resB, &syncResp)
-		if client.clientLogging {
-			fmt.Println("sync result #1: ", res)
-		}
+		fmt.Println("sync result #1: ", res)
 		if err != nil {
 			return "", err
 		}
@@ -254,14 +215,12 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 			res := C.GoString(result)
 			resB := []byte(res)
 			err = json.Unmarshal(resB, &syncResp)
-			if client.clientLogging {
-				fmt.Println("sync result #2: ", string(resB))
-			}
+			fmt.Println("sync result #2: ", string(resB))
 			if err != nil {
 				return "", err
 			}
 		}
-		if syncResp.Type == "ton.blockIdExt" {
+		if syncResp.Type == "ok" {
 			return "", nil
 		}
 		if syncResp.Type == "updateSyncState" {
@@ -375,15 +334,3 @@ func NewKey(publicKey string, secret string) *Key {
 
 	return &keyTemp
 }
-
-// because of different subclasses in common class InitialAccountState and  AccountState
-// InitialAccountState
-type InitialAccountState interface{ MessageType() string }
-
-type AccountState RawAccountState
-
-type MsgData interface{ MessageType() string }
-type DnsEntryData string
-
-type Action interface{ MessageType() string }
-type DnsAction Action

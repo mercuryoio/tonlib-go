@@ -50,8 +50,8 @@ func generateStructsFromTnEntities(
 	type SecureString  string
 	type Bytes         []byte
 	type TvmStackEntry interface {}
-	type SmcMethodId   interface {} 
-	type TvmNumber     interface {} 
+	type SmcMethodId   int32 
+	type TvmNumber     string
 	type GenericAccountState string
 	`
 
@@ -357,8 +357,8 @@ func generateStructsFromTnEntities(
 					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
 
 				} else {
-					paramsStr += paramName + " " + dataType
-					clientCallStructAttrs += fmt.Sprintf("%s %s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
+					paramsStr += paramName + " *" + dataType
+					clientCallStructAttrs += fmt.Sprintf("%s *%s `json:\"%s\"`\n", convertToExternalArgumentName(param.Name), dataType, param.Name)
 				}
 
 				if i < len(itemInfo.Properties)-1 {

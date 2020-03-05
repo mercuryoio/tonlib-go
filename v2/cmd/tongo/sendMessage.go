@@ -1,0 +1,40 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	tonlib "github.com/mercuryoio/tonlib-go/v2"
+	"github.com/spf13/cobra"
+	"os"
+)
+
+var sendMessageCmd = &cobra.Command{
+	Use:   "sendMessage",
+	Short: "Send short message command",
+	Long: `Send message command. It contains three attributes:
+- path2configfile. see tonlib.config.json.example
+- destinationAddress
+- data in boc format
+`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 3 {
+			return fmt.Errorf("you have to use three args for this commaond \n")
+		}
+		_, err := os.Stat(args[0])
+		if err != nil {
+			errors.New("please choose config path")
+		}
+		return nil
+	},
+	Run: sendMessage,
+}
+
+func sendMessage(cmd *cobra.Command, args []string) {
+	err := initClient(args[0])
+	if err != nil {
+		fmt.Println("init connection error: ", err)
+		os.Exit(0)
+	}
+	res, err := tonClient.RawCreateAndSendMessage([]byte(args[2]), *tonlib.NewAccountAddress(args[1]), []byte{})
+	fmt.Printf("Got a result: %v. Errors: %v", res, err)
+}
