@@ -59,6 +59,8 @@ type Client struct {
 	config        Config
 	timeout       int64
 	clientLogging bool
+	tonLogging    int32
+	options       Options
 }
 
 type TonInitRequest struct {
@@ -70,7 +72,14 @@ type TonInitRequest struct {
 func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool, tonLogging int32) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
-	client := Client{client: C.tonlib_client_json_create(), config: config, timeout: timeout, clientLogging: clientLogging}
+	client := Client{
+		client: C.tonlib_client_json_create(),
+		config: config,
+		timeout: timeout,
+		clientLogging: clientLogging,
+		tonLogging: tonLogging,
+		options: tonCnf.Options,
+	}
 
 	// disable ton logs if needed
 	err := client.executeSetLogLevel(tonLogging)
@@ -347,6 +356,23 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 		ticker.Stop()
 		return result.Fee, result.Error
 	}
+}
+
+// for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
+func (client *Client) UpdateTonConnection() (*Client, error) {
+
+	req := TonInitRequest{
+		Type:    "init",
+		Options: client.options,
+	}
+
+	cln, err := NewClient(&req, client.config, client.timeout, client.clientLogging,client.tonLogging)
+	if err != nil {
+		return nil, err
+	}
+	// close client
+	client.Destroy()
+	return cln, nil
 }
 
 // key struct cause it strings values no bytes
