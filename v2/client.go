@@ -359,20 +359,34 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 }
 
 // for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
-func (client *Client) UpdateTonConnection() (*Client, error) {
-
-	req := TonInitRequest{
-		Type:    "init",
-		Options: client.options,
+func (client *Client) UpdateTonConnection() (error) {
+	_, err := client.Close()
+	if err != nil{
+		return err
 	}
-
-	cln, err := NewClient(&req, client.config, client.timeout, client.clientLogging,client.tonLogging)
-	if err != nil {
-		return nil, err
-	}
-	// close client
+	// destroy old c.ient
 	client.Destroy()
-	return cln, nil
+
+	// create new C client
+	client.client = C.tonlib_client_json_create()
+	// set log level
+	err = client.executeSetLogLevel(client.tonLogging)
+	if err != nil {
+		return err
+	}
+
+	// init client
+	optionsInfo, err := client.Init(client.options)
+	if err != nil {
+		return err
+	}
+	if optionsInfo.tonCommon.Type == "options.info" {
+		return nil
+	}
+	if optionsInfo.tonCommon.Type == "error" {
+		return fmt.Errorf("Error ton client init. Message: %s. ", optionsInfo.tonCommon.Extra)
+	}
+	return fmt.Errorf("Unexpected client init response. %#v", optionsInfo)
 }
 
 // key struct cause it strings values no bytes
