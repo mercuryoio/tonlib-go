@@ -6,12 +6,12 @@ import (
 	"strconv"
 )
 
-const SmcRunResultType  = "smc.runResult"
-const SmcElectionIdMethod  = "active_election_id"
-const SmcWalletSeqnoMethod  =  "seqno"
-const SmcParicipiantListMethod  = "participant_list"
+const SmcRunResultType = "smc.runResult"
+const SmcElectionIdMethod = "active_election_id"
+const SmcWalletSeqnoMethod = "seqno"
+const SmcParicipiantListMethod = "participant_list"
 const SmcParicipiantListExtendedMethod = "participant_list_extended"
-const SmcParticipatesInMethod  = "participates_in"
+const SmcParticipatesInMethod = "participates_in"
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
 
 func (client *Client) GetActiveElectionID(address string) (int64, error) {
@@ -31,7 +31,17 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
 	}
 
-	return strconv.ParseInt(runMethodResult.Stack[0].(map[string]interface{})["number"].(map[string]interface{})["number"].(string), 10, 64)
+	// map response
+	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+	}
+	secondNum, ok := firstNum.(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+	}
+
+	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
 func (client *Client) LoadContract(address string) (*SmcInfo, error) {
@@ -57,7 +67,18 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != 0 {
 		return 0, fmt.Errorf("Got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
 	}
-	return strconv.ParseInt(runMethodResult.Stack[0].(map[string]interface{})["number"].(map[string]interface{})["number"].(string), 10, 64)
+
+	// map response
+	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+	}
+	secondNum, ok := firstNum.(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+	}
+
+	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
 func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, error) {
@@ -117,8 +138,17 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 		return 0, fmt.Errorf("got an empty Stack in the response")
 	}
 
-	return strconv.ParseInt(runMethodResult.Stack[0].(map[string]interface{})["number"].(map[string]interface{})["number"].(string), 10, 64)
+	// map response
+	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+	}
+	secondNum, ok := firstNum.(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+	}
 
+	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
 func (client *Client) CheckReward(address, electorAddress string) (int64, error) {
@@ -139,7 +169,21 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != 0 {
 		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
 	}
-	return strconv.ParseInt(runMethodResult.Stack[0].(map[string]interface{})["number"].(map[string]interface{})["number"].(string), 10, 64)
+	if len(runMethodResult.Stack) < 1 {
+		return 0, fmt.Errorf("got response with empty stack: %#v", runMethodResult)
+	}
+
+	// map response
+	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+	}
+	secondNum, ok := firstNum.(map[string]interface{})["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+	}
+
+	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
 func (client *Client) GetAccountStateSimple(address string) (*FullAccountState, error) {
@@ -149,7 +193,6 @@ func (client *Client) GetAccountStateSimple(address string) (*FullAccountState, 
 
 func (client *Client) GetLastBlock() (string, error) {
 	return client.Sync(SyncState(SyncState{}))
-
 }
 
 func (client *Client) TonlibSendFile(bocFilePath string) error {

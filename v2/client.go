@@ -73,12 +73,12 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLoggi
 	rand.Seed(time.Now().UnixNano())
 
 	client := Client{
-		client: C.tonlib_client_json_create(),
-		config: config,
-		timeout: timeout,
+		client:        C.tonlib_client_json_create(),
+		config:        config,
+		timeout:       timeout,
 		clientLogging: clientLogging,
-		tonLogging: tonLogging,
-		options: tonCnf.Options,
+		tonLogging:    tonLogging,
+		options:       tonCnf.Options,
 	}
 
 	// disable ton logs if needed
@@ -361,7 +361,7 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 // for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
 func (client *Client) UpdateTonConnection() (error) {
 	_, err := client.Close()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	// destroy old c.ient
