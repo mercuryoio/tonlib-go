@@ -36,27 +36,22 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	}
 
 	// map response
-	var firstNum, secondNum interface{}
-	var ok bool
-
-	switch t := runMethodResult.Stack[0].(type) {
-	case map[string]interface{}:
-		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
-	}
+	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	}
+	firstNum, ok := firstEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
 	}
 
-	switch t := firstNum.(type) {
-	case map[string]interface{}:
-		secondNum, ok = firstNum.(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
-	}
+	secondEntity, ok := firstNum.(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
+	}
+	secondNum, ok := secondEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
 	}
 
 	return strconv.ParseInt(secondNum.(string), 10, 64)
@@ -90,27 +85,22 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	}
 
 	// map response
-	var firstNum, secondNum interface{}
-	var ok bool
-
-	switch t := runMethodResult.Stack[0].(type) {
-	case map[string]interface{}:
-		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
-	}
+	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	}
+	firstNum, ok := firstEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
 	}
 
-	switch t := firstNum.(type) {
-	case map[string]interface{}:
-		secondNum, ok = firstNum.(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
-	}
+	secondEntity, ok := firstNum.(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
+	}
+	secondNum, ok := secondEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
 	}
 
 	return strconv.ParseInt(secondNum.(string), 10, 64)
@@ -174,27 +164,22 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 	}
 
 	// map response
-	var firstNum, secondNum interface{}
-	var ok bool
-
-	switch t := runMethodResult.Stack[0].(type) {
-	case map[string]interface{}:
-		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
-	}
+	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	}
+	firstNum, ok := firstEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
 	}
 
-	switch t := firstNum.(type) {
-	case map[string]interface{}:
-		secondNum, ok = firstNum.(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
-	}
+	secondEntity, ok := firstNum.(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
+	}
+	secondNum, ok := secondEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
 	}
 
 	return strconv.ParseInt(secondNum.(string), 10, 64)
@@ -223,27 +208,22 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 	}
 
 	// map response
-	var firstNum, secondNum interface{}
-	var ok bool
-
-	switch t := runMethodResult.Stack[0].(type) {
-	case map[string]interface{}:
-		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
-	}
+	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	}
+	firstNum, ok := firstEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
 	}
 
-	switch t := firstNum.(type) {
-	case map[string]interface{}:
-		secondNum, ok = firstNum.(map[string]interface{})["number"]
-	default:
-		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
-	}
+	secondEntity, ok := firstNum.(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
+	}
+	secondNum, ok := secondEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
 	}
 
 	return strconv.ParseInt(secondNum.(string), 10, 64)

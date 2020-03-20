@@ -35,9 +35,7 @@ func rawAccountState(cmd *cobra.Command, args []string) {
 		fmt.Println("init connection error: ", err)
 		os.Exit(0)
 	}
-
-	fmt.Println(tonClient.GetActiveElectionID("-1:3333333333333333333333333333333333333333333333333333333333333333"))
-
+	
 	res, err := tonClient.RawGetAccountState(*tonlib.NewAccountAddress(args[1]))
 	if err != nil {
 		log.Fatal("Failed to get account state: ", err)
