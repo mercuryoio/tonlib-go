@@ -13,6 +13,7 @@ const SmcParicipiantListMethod = "participant_list"
 const SmcParicipiantListExtendedMethod = "participant_list_extended"
 const SmcParticipatesInMethod = "participates_in"
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
+const NoErrorCode = 0
 
 func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	smcInfo, err := client.LoadContract(address)
@@ -30,13 +31,30 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	if runMethodResult.Type != SmcRunResultType {
 		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
 	}
+	if len(runMethodResult.Stack) < 1{
+		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+	}
 
 	// map response
-	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	var firstNum, secondNum interface{}
+	var ok bool
+
+	switch t := runMethodResult.Stack[0].(type) {
+	case map[string]interface{}:
+		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
 	}
-	secondNum, ok := firstNum.(map[string]interface{})["number"]
+
+	switch t := firstNum.(type) {
+	case map[string]interface{}:
+		secondNum, ok = firstNum.(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
 	}
@@ -64,16 +82,33 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	if err != nil {
 		return 0, fmt.Errorf("runMethodResult failed. %v", err)
 	}
-	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != 0 {
+	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
 		return 0, fmt.Errorf("Got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
+	}
+	if len(runMethodResult.Stack) < 1{
+		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
-	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	var firstNum, secondNum interface{}
+	var ok bool
+
+	switch t := runMethodResult.Stack[0].(type) {
+	case map[string]interface{}:
+		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
 	}
-	secondNum, ok := firstNum.(map[string]interface{})["number"]
+
+	switch t := firstNum.(type) {
+	case map[string]interface{}:
+		secondNum, ok = firstNum.(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
 	}
@@ -131,7 +166,7 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 		return 0, err
 	}
 
-	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != 0 {
+	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
 		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1 {
@@ -139,11 +174,25 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 	}
 
 	// map response
-	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	var firstNum, secondNum interface{}
+	var ok bool
+
+	switch t := runMethodResult.Stack[0].(type) {
+	case map[string]interface{}:
+		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
 	}
-	secondNum, ok := firstNum.(map[string]interface{})["number"]
+
+	switch t := firstNum.(type) {
+	case map[string]interface{}:
+		secondNum, ok = firstNum.(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
 	}
@@ -166,7 +215,7 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 	if err != nil {
 		return 0, fmt.Errorf("runMethodResult failed with params %#v. error: %v", params, err)
 	}
-	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != 0 {
+	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
 		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1 {
@@ -174,11 +223,25 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 	}
 
 	// map response
-	firstNum, ok := runMethodResult.Stack[0].(map[string]interface{})["number"]
+	var firstNum, secondNum interface{}
+	var ok bool
+
+	switch t := runMethodResult.Stack[0].(type) {
+	case map[string]interface{}:
+		firstNum, ok = runMethodResult.Stack[0].(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v  to `map[string]interface{}`", runMethodResult.Stack[0], t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", runMethodResult)
 	}
-	secondNum, ok := firstNum.(map[string]interface{})["number"]
+
+	switch t := firstNum.(type) {
+	case map[string]interface{}:
+		secondNum, ok = firstNum.(map[string]interface{})["number"]
+	default:
+		return 0, fmt.Errorf("Failed to map `%#v` with type %v to `map[string]interface{}`", firstNum, t)
+	}
 	if !ok {
 		return 0, fmt.Errorf("got response with empty 'number': %#v", firstNum)
 	}
