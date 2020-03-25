@@ -14,6 +14,7 @@ const SmcParicipiantListExtendedMethod = "participant_list_extended"
 const SmcParticipatesInMethod = "participates_in"
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
 const NoErrorCode = 0
+var errof = fmt.Errorf
 
 func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	smcInfo, err := client.LoadContract(address)
@@ -32,13 +33,13 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
 	}
 	if len(runMethodResult.Stack) < 1{
-		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, errof("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
 	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
 	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+		return 0, errof("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
 	}
 	firstNum, ok := firstEntity["number"]
 	if !ok {
@@ -81,7 +82,7 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 		return 0, fmt.Errorf("Got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1{
-		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, errof("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
