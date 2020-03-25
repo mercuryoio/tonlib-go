@@ -14,7 +14,6 @@ const SmcParicipiantListExtendedMethod = "participant_list_extended"
 const SmcParticipatesInMethod = "participates_in"
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
 const NoErrorCode = 0
-var errof = fmt.Errorf
 
 func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	smcInfo, err := client.LoadContract(address)
@@ -33,13 +32,13 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
 	}
 	if len(runMethodResult.Stack) < 1{
-		return 0, errof("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
 	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
 	if !ok {
-		return 0, errof("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
 	}
 	firstNum, ok := firstEntity["number"]
 	if !ok {
@@ -82,7 +81,7 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 		return 0, fmt.Errorf("Got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1{
-		return 0, errof("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
@@ -124,7 +123,7 @@ func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, erro
 	return &runMethodResult.Stack, nil
 }
 
-func (client *Client) GetParticipantListExtended(electorAddress string) (*[]TvmStackEntry, error) {
+func (client *Client) GetParticipantListExtended(electorAddress string) (*[]interface{}, error) {
 	smcInfo, err := client.LoadContract(electorAddress)
 	if err != nil {
 		return nil, err
@@ -138,7 +137,31 @@ func (client *Client) GetParticipantListExtended(electorAddress string) (*[]TvmS
 	if runMethodResult.Type != SmcRunResultType {
 		return nil, fmt.Errorf("Got response with type `%s` instead of `%s`", runMethodResult.Type, SmcRunResultType)
 	}
-	return &runMethodResult.Stack, nil
+	if len(runMethodResult.Stack) != 1 {
+		return nil, fmt.Errorf("expected length of Stack: 1, but got: %d. Resp: %#v", len(runMethodResult.Stack), runMethodResult.Stack)
+	}
+	stackEntryList, ok := runMethodResult.Stack[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("#1 failed to parse element as map[string]interface{}. element: %#v", runMethodResult.Stack[0])
+	}
+	listValueInterface, ok := stackEntryList["list"]
+	if !ok {
+		return nil, fmt.Errorf("#2 failed to find `list` in dict. element: %#v", stackEntryList)
+	}
+	tvmList, ok := listValueInterface.(map[string]interface{})
+	if !ok{
+		return nil, fmt.Errorf("#3 failed to parse element as map[string]interface{}. element: %#v", listValueInterface)
+	}
+	elementsListInterface, ok := tvmList["elements"]
+	if !ok {
+		return nil, fmt.Errorf("#4 failed to find `elements` in dict. element: %#v", tvmList)
+	}
+	elementsList, ok := elementsListInterface.([]interface{})
+	if !ok{
+		return nil, fmt.Errorf("#5 failed to parse element as []interface{}. element: %#v", elementsListInterface)
+	}
+
+	return &elementsList, nil
 }
 
 func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error) {

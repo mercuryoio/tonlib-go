@@ -833,7 +833,7 @@ type RawMessage struct {
 	Destination *AccountAddress `json:"destination"` //
 	FwdFee      JSONInt64       `json:"fwd_fee"`     //
 	IhrFee      JSONInt64       `json:"ihr_fee"`     //
-	MsgData     *MsgData        `json:"msg_data"`    //
+	MsgData     MsgData        `json:"msg_data"`    //
 	Source      *AccountAddress `json:"source"`      //
 	Value       JSONInt64       `json:"value"`       //
 }
@@ -853,7 +853,7 @@ func (rawMessage *RawMessage) MessageType() string {
 // @param msgData
 // @param source
 // @param value
-func NewRawMessage(bodyHash string, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData *MsgData, source *AccountAddress, value JSONInt64) *RawMessage {
+func NewRawMessage(bodyHash string, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData MsgData, source *AccountAddress, value JSONInt64) *RawMessage {
 	rawMessageTemp := RawMessage{
 		tonCommon:   tonCommon{Type: "raw.message"},
 		BodyHash:    bodyHash,
@@ -1533,7 +1533,7 @@ func NewMsgDataEncryptedText(text string) *MsgDataEncryptedText {
 // MsgDataEncrypted
 type MsgDataEncrypted struct {
 	tonCommon
-	Data   *MsgData        `json:"data"`   //
+	Data   MsgData        `json:"data"`   //
 	Source *AccountAddress `json:"source"` //
 }
 
@@ -1546,7 +1546,7 @@ func (msgDataEncrypted *MsgDataEncrypted) MessageType() string {
 //
 // @param data
 // @param source
-func NewMsgDataEncrypted(data *MsgData, source *AccountAddress) *MsgDataEncrypted {
+func NewMsgDataEncrypted(data MsgData, source *AccountAddress) *MsgDataEncrypted {
 	msgDataEncryptedTemp := MsgDataEncrypted{
 		tonCommon: tonCommon{Type: "msg.dataEncrypted"},
 		Data:      data,
@@ -1559,7 +1559,7 @@ func NewMsgDataEncrypted(data *MsgData, source *AccountAddress) *MsgDataEncrypte
 // MsgDataDecrypted
 type MsgDataDecrypted struct {
 	tonCommon
-	Data  *MsgData `json:"data"`  //
+	Data  MsgData `json:"data"`  //
 	Proof string   `json:"proof"` //
 }
 
@@ -1572,7 +1572,7 @@ func (msgDataDecrypted *MsgDataDecrypted) MessageType() string {
 //
 // @param data
 // @param proof
-func NewMsgDataDecrypted(data *MsgData, proof string) *MsgDataDecrypted {
+func NewMsgDataDecrypted(data MsgData, proof string) *MsgDataDecrypted {
 	msgDataDecryptedTemp := MsgDataDecrypted{
 		tonCommon: tonCommon{Type: "msg.dataDecrypted"},
 		Data:      data,
@@ -1632,7 +1632,7 @@ func NewMsgDataDecryptedArray(elements []MsgDataDecrypted) *MsgDataDecryptedArra
 type MsgMessage struct {
 	tonCommon
 	Amount      JSONInt64       `json:"amount"`      //
-	Data        *MsgData        `json:"data"`        //
+	Data        MsgData        `json:"data"`        //
 	Destination *AccountAddress `json:"destination"` //
 	PublicKey   string          `json:"public_key"`  //
 }
@@ -1648,7 +1648,7 @@ func (msgMessage *MsgMessage) MessageType() string {
 // @param data
 // @param destination
 // @param publicKey
-func NewMsgMessage(amount JSONInt64, data *MsgData, destination *AccountAddress, publicKey string) *MsgMessage {
+func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress, publicKey string) *MsgMessage {
 	msgMessageTemp := MsgMessage{
 		tonCommon:   tonCommon{Type: "msg.message"},
 		Amount:      amount,
