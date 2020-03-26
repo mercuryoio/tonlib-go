@@ -91,7 +91,7 @@ func transactions(cmd *cobra.Command, args []string) {
 		fmt.Printf("Got a result: data: %v; type: %v; transaction id: %v; fee: %v; inMsg: %v;\n", tx.Data, tx.Type, tx.TransactionId, tx.Fee, tx.InMsg)
 		for j := 0; j < len(tx.OutMsgs); j++ {
 			msg := tx.OutMsgs[j]
-			fmt.Printf("Got a out msg: message: %v; \n", msg.Message)
+			fmt.Printf("Got a out msg: message: %v; \n", msg.MsgData)
 		}
 	}
 

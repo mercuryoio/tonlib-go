@@ -16,8 +16,8 @@ type SecureBytes []byte
 type SecureString string
 type Bytes []byte
 type TvmStackEntry interface{}
-type SmcMethodId interface {}
-type TvmNumber interface {}
+type SmcMethodId interface{}
+type TvmNumber interface{}
 type GenericAccountState string
 
 // JSONInt64 alias for int64, in order to deal with json big number problem
@@ -828,15 +828,14 @@ func NewRawFullAccountState(balance JSONInt64, blockId *TonBlockIdExt, code stri
 // RawMessage
 type RawMessage struct {
 	tonCommon
-	BodyHash           string    `json:"body_hash"`            //
-	CreatedLt          JSONInt64 `json:"created_lt"`           //
-	Destination        string    `json:"destination"`          //
-	FwdFee             JSONInt64 `json:"fwd_fee"`              //
-	IhrFee             JSONInt64 `json:"ihr_fee"`              //
-	IsMessageEncrypted bool      `json:"is_message_encrypted"` //
-	Message            string    `json:"message"`              //
-	Source             string    `json:"source"`               //
-	Value              JSONInt64 `json:"value"`                //
+	BodyHash    string          `json:"body_hash"`   //
+	CreatedLt   JSONInt64       `json:"created_lt"`  //
+	Destination *AccountAddress `json:"destination"` //
+	FwdFee      JSONInt64       `json:"fwd_fee"`     //
+	IhrFee      JSONInt64       `json:"ihr_fee"`     //
+	MsgData     MsgData        `json:"msg_data"`    //
+	Source      *AccountAddress `json:"source"`      //
+	Value       JSONInt64       `json:"value"`       //
 }
 
 // MessageType return the string telegram-type of RawMessage
@@ -851,22 +850,20 @@ func (rawMessage *RawMessage) MessageType() string {
 // @param destination
 // @param fwdFee
 // @param ihrFee
-// @param isMessageEncrypted
-// @param message
+// @param msgData
 // @param source
 // @param value
-func NewRawMessage(bodyHash string, createdLt JSONInt64, destination string, fwdFee JSONInt64, ihrFee JSONInt64, isMessageEncrypted bool, message string, source string, value JSONInt64) *RawMessage {
+func NewRawMessage(bodyHash string, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData MsgData, source *AccountAddress, value JSONInt64) *RawMessage {
 	rawMessageTemp := RawMessage{
-		tonCommon:          tonCommon{Type: "raw.message"},
-		BodyHash:           bodyHash,
-		CreatedLt:          createdLt,
-		Destination:        destination,
-		FwdFee:             fwdFee,
-		IhrFee:             ihrFee,
-		IsMessageEncrypted: isMessageEncrypted,
-		Message:            message,
-		Source:             source,
-		Value:              value,
+		tonCommon:   tonCommon{Type: "raw.message"},
+		BodyHash:    bodyHash,
+		CreatedLt:   createdLt,
+		Destination: destination,
+		FwdFee:      fwdFee,
+		IhrFee:      ihrFee,
+		MsgData:     msgData,
+		Source:      source,
+		Value:       value,
 	}
 
 	return &rawMessageTemp
@@ -1441,6 +1438,29 @@ func NewSyncStateInProgress(currentSeqno int32, fromSeqno int32, toSeqno int32) 
 	return &syncStateInProgressTemp
 }
 
+// MsgDataRaw
+type MsgDataRaw struct {
+	tonCommon
+	Body string `json:"body"` //
+}
+
+// MessageType return the string telegram-type of MsgDataRaw
+func (msgDataRaw *MsgDataRaw) MessageType() string {
+	return "msg.dataRaw"
+}
+
+// NewMsgDataRaw creates a new MsgDataRaw
+//
+// @param body
+func NewMsgDataRaw(body string) *MsgDataRaw {
+	msgDataRawTemp := MsgDataRaw{
+		tonCommon: tonCommon{Type: "msg.dataRaw"},
+		Body:      body,
+	}
+
+	return &msgDataRawTemp
+}
+
 // MsgDataText
 type MsgDataText struct {
 	tonCommon
@@ -1462,6 +1482,29 @@ func NewMsgDataText(text string) *MsgDataText {
 	}
 
 	return &msgDataTextTemp
+}
+
+// MsgDataDecryptedText
+type MsgDataDecryptedText struct {
+	tonCommon
+	Text string `json:"text"` //
+}
+
+// MessageType return the string telegram-type of MsgDataDecryptedText
+func (msgDataDecryptedText *MsgDataDecryptedText) MessageType() string {
+	return "msg.dataDecryptedText"
+}
+
+// NewMsgDataDecryptedText creates a new MsgDataDecryptedText
+//
+// @param text
+func NewMsgDataDecryptedText(text string) *MsgDataDecryptedText {
+	msgDataDecryptedTextTemp := MsgDataDecryptedText{
+		tonCommon: tonCommon{Type: "msg.dataDecryptedText"},
+		Text:      text,
+	}
+
+	return &msgDataDecryptedTextTemp
 }
 
 // MsgDataEncryptedText
@@ -1487,12 +1530,111 @@ func NewMsgDataEncryptedText(text string) *MsgDataEncryptedText {
 	return &msgDataEncryptedTextTemp
 }
 
+// MsgDataEncrypted
+type MsgDataEncrypted struct {
+	tonCommon
+	Data   MsgData        `json:"data"`   //
+	Source *AccountAddress `json:"source"` //
+}
+
+// MessageType return the string telegram-type of MsgDataEncrypted
+func (msgDataEncrypted *MsgDataEncrypted) MessageType() string {
+	return "msg.dataEncrypted"
+}
+
+// NewMsgDataEncrypted creates a new MsgDataEncrypted
+//
+// @param data
+// @param source
+func NewMsgDataEncrypted(data MsgData, source *AccountAddress) *MsgDataEncrypted {
+	msgDataEncryptedTemp := MsgDataEncrypted{
+		tonCommon: tonCommon{Type: "msg.dataEncrypted"},
+		Data:      data,
+		Source:    source,
+	}
+
+	return &msgDataEncryptedTemp
+}
+
+// MsgDataDecrypted
+type MsgDataDecrypted struct {
+	tonCommon
+	Data  MsgData `json:"data"`  //
+	Proof string   `json:"proof"` //
+}
+
+// MessageType return the string telegram-type of MsgDataDecrypted
+func (msgDataDecrypted *MsgDataDecrypted) MessageType() string {
+	return "msg.dataDecrypted"
+}
+
+// NewMsgDataDecrypted creates a new MsgDataDecrypted
+//
+// @param data
+// @param proof
+func NewMsgDataDecrypted(data MsgData, proof string) *MsgDataDecrypted {
+	msgDataDecryptedTemp := MsgDataDecrypted{
+		tonCommon: tonCommon{Type: "msg.dataDecrypted"},
+		Data:      data,
+		Proof:     proof,
+	}
+
+	return &msgDataDecryptedTemp
+}
+
+// MsgDataEncryptedArray
+type MsgDataEncryptedArray struct {
+	tonCommon
+	Elements []MsgDataEncrypted `json:"elements"` //
+}
+
+// MessageType return the string telegram-type of MsgDataEncryptedArray
+func (msgDataEncryptedArray *MsgDataEncryptedArray) MessageType() string {
+	return "msg.dataEncryptedArray"
+}
+
+// NewMsgDataEncryptedArray creates a new MsgDataEncryptedArray
+//
+// @param elements
+func NewMsgDataEncryptedArray(elements []MsgDataEncrypted) *MsgDataEncryptedArray {
+	msgDataEncryptedArrayTemp := MsgDataEncryptedArray{
+		tonCommon: tonCommon{Type: "msg.dataEncryptedArray"},
+		Elements:  elements,
+	}
+
+	return &msgDataEncryptedArrayTemp
+}
+
+// MsgDataDecryptedArray
+type MsgDataDecryptedArray struct {
+	tonCommon
+	Elements []MsgDataDecrypted `json:"elements"` //
+}
+
+// MessageType return the string telegram-type of MsgDataDecryptedArray
+func (msgDataDecryptedArray *MsgDataDecryptedArray) MessageType() string {
+	return "msg.dataDecryptedArray"
+}
+
+// NewMsgDataDecryptedArray creates a new MsgDataDecryptedArray
+//
+// @param elements
+func NewMsgDataDecryptedArray(elements []MsgDataDecrypted) *MsgDataDecryptedArray {
+	msgDataDecryptedArrayTemp := MsgDataDecryptedArray{
+		tonCommon: tonCommon{Type: "msg.dataDecryptedArray"},
+		Elements:  elements,
+	}
+
+	return &msgDataDecryptedArrayTemp
+}
+
 // MsgMessage
 type MsgMessage struct {
 	tonCommon
 	Amount      JSONInt64       `json:"amount"`      //
-	Data        MsgData         `json:"data"`        //
+	Data        MsgData        `json:"data"`        //
 	Destination *AccountAddress `json:"destination"` //
+	PublicKey   string          `json:"public_key"`  //
 }
 
 // MessageType return the string telegram-type of MsgMessage
@@ -1505,12 +1647,14 @@ func (msgMessage *MsgMessage) MessageType() string {
 // @param amount
 // @param data
 // @param destination
-func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress) *MsgMessage {
+// @param publicKey
+func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress, publicKey string) *MsgMessage {
 	msgMessageTemp := MsgMessage{
 		tonCommon:   tonCommon{Type: "msg.message"},
 		Amount:      amount,
 		Data:        data,
 		Destination: destination,
+		PublicKey:   publicKey,
 	}
 
 	return &msgMessageTemp
