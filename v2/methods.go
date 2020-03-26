@@ -827,6 +827,33 @@ func (client *Client) GetAccountAddress(initialAccountState InitialAccountState,
 
 }
 
+// GuessAccountRevision
+// @param initialAccountState
+func (client *Client) GuessAccountRevision(initialAccountState InitialAccountState) (*AccountRevisionList, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type                string              `json:"@type"`
+			InitialAccountState InitialAccountState `json:"initial_account_state"`
+		}{
+			Type:                "guessAccountRevision",
+			InitialAccountState: initialAccountState,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var accountRevisionList AccountRevisionList
+	err = json.Unmarshal(result.Raw, &accountRevisionList)
+	return &accountRevisionList, err
+
+}
+
 // GetAccountState
 // @param accountAddress
 func (client *Client) GetAccountState(accountAddress AccountAddress) (*FullAccountState, error) {
@@ -887,6 +914,66 @@ func (client *Client) CreateQuery(action Action, address AccountAddress, private
 	var queryInfo QueryInfo
 	err = json.Unmarshal(result.Raw, &queryInfo)
 	return &queryInfo, err
+
+}
+
+// MsgDecrypt
+// @param data
+// @param inputKey
+func (client *Client) MsgDecrypt(data MsgDataEncryptedArray, inputKey InputKey) (*MsgDataDecryptedArray, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type     string                `json:"@type"`
+			Data     MsgDataEncryptedArray `json:"data"`
+			InputKey InputKey              `json:"input_key"`
+		}{
+			Type:     "msg.decrypt",
+			Data:     data,
+			InputKey: inputKey,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var msgDataDecryptedArray MsgDataDecryptedArray
+	err = json.Unmarshal(result.Raw, &msgDataDecryptedArray)
+	return &msgDataDecryptedArray, err
+
+}
+
+// MsgDecryptWithProof
+// @param data
+// @param proof
+func (client *Client) MsgDecryptWithProof(data MsgDataEncrypted, proof []byte) (*MsgData, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type  string           `json:"@type"`
+			Data  MsgDataEncrypted `json:"data"`
+			Proof []byte           `json:"proof"`
+		}{
+			Type:  "msg.decryptWithProof",
+			Data:  data,
+			Proof: proof,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var msgData MsgData
+	err = json.Unmarshal(result.Raw, &msgData)
+	return &msgData, err
 
 }
 
