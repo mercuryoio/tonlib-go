@@ -101,7 +101,7 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLoggi
 }
 
 // disable ton client C lib`s logs
-func (client *Client) executeSetLogLevel(logLevel int32) (error) {
+func (client *Client) executeSetLogLevel(logLevel int32) error {
 	data := struct {
 		Type              string `json:"@type"`
 		NewVerbosityLevel int32  `json:"new_verbosity_level"`
@@ -123,13 +123,66 @@ func (client *Client) executeSetLogLevel(logLevel int32) (error) {
 	return nil
 }
 
-/**
-execute ton-lib asynchronously
-*/
-func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error) {
+func (client *Client) GenerateRequestID() string {
+	return RandSeq(20)
+}
+
+func (client *Client) receive(maxRetries int, requestID *string) (*TONResult, error) {
+	attemptWaiting := 1 * time.Second
+
+	if maxRetries <= 0 {
+		return nil, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+	}
+
+	received := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+	maxRetries -= 1
+
+	for received == nil {
+		fmt.Printf("fetch nothing. Wait for: %s and try again\n", attemptWaiting)
+		if maxRetries <= 0 {
+			return nil, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+		}
+		time.Sleep(attemptWaiting)
+
+		received = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		maxRetries -= 1
+	}
+
+	res := C.GoString(received)
+	resB := []byte(res)
+
+	if client.clientLogging {
+		fmt.Println("fetch data: ", string(resB))
+	}
+
+	var response TONResponse
+	err := json.Unmarshal(resB, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	result := TONResult{Data: response, Raw: resB}
+
+	if requestID != nil && !client.isExtraMatch(result, *requestID) {
+		fmt.Println("fetched data is not fit by @extra. Try to fetch again")
+		return client.receive(maxRetries, requestID)
+	}
+
+	return &result, nil
+}
+
+func (client *Client) receiveAny(maxRetries int) (*TONResult, error) {
+	return client.receive(maxRetries, nil)
+}
+
+func (client *Client) receiveExactly(maxRetries int, requestID string) (*TONResult, error) {
+	return client.receive(maxRetries, &requestID)
+}
+
+func (client *Client) send(data interface{}) error {
 	req, err := json.Marshal(data)
 	if err != nil {
-		return &TONResult{}, err
+		return err
 	}
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
@@ -138,59 +191,94 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		fmt.Println("call", string(req))
 	}
 	C.tonlib_client_json_send(client.client, cs)
-	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
-	num := 0
-	for result == nil {
-		if num >= DefaultRetries {
-			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
-		}
-		time.Sleep(1 * time.Second)
-		result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
-		num += 1
+	return nil
+}
+
+func (client *Client) isExtraMatch(result TONResult, requestID string) bool {
+	extra, ok := result.Data["@extra"]
+	if !ok {
+		return false
 	}
 
-	var updateData TONResponse
-	res := C.GoString(result)
-	resB := []byte(res)
-	err = json.Unmarshal(resB, &updateData)
-	if client.clientLogging {
-		fmt.Println("fetch data: ", string(resB))
+	if extra != requestID {
+		return false
 	}
-	if st, ok := updateData["@type"]; ok && st == "updateSendLiteServerQuery" {
-		err = json.Unmarshal(resB, &updateData)
-		if err == nil {
-			_, err = client.OnLiteServerQueryResult(updateData["data"].([]byte), updateData["id"].(JSONInt64), )
+
+	return true
+}
+
+func (client *Client) executeAsynchronously(data interface{}, requestID string) (*TONResult, error) {
+	return client.executeAsynchronouslyCommon(data, requestID, false)
+}
+
+func (client *Client) executeAsynchronouslyExactlyOnce(data interface{}, requestID string) (*TONResult, error) {
+	return client.executeAsynchronouslyCommon(data, requestID, true)
+}
+
+/**
+execute ton-lib asynchronously
+*/
+func (client *Client) executeAsynchronouslyCommon(data interface{}, requestID string, exactlyOnce bool) (*TONResult, error) {
+	if err := client.send(data); err != nil {
+		return nil, err
+	}
+
+	result, err := client.receiveAny(DefaultRetries)
+	if err != nil {
+		return nil, err
+	}
+
+	resultType, ok := result.Data["@type"]
+	if !ok {
+		return nil, fmt.Errorf("got response invalid struct: field `@type` is undefined")
+	}
+
+	if resultType == "updateSendLiteServerQuery" {
+		_, err = client.OnLiteServerQueryResult(result.Data["data"].([]byte), result.Data["id"].(JSONInt64))
+		if err != nil {
+			return nil, err
 		}
+		if exactlyOnce {
+			return nil, fmt.Errorf("can't send to lib more than once")
+		}
+		return client.executeAsynchronouslyCommon(data, requestID, exactlyOnce)
 	}
-	if st, ok := updateData["@type"]; ok && st == "updateSyncState" {
+
+	if resultType == "updateSyncState" {
 		syncResp := struct {
 			Type      string    `json:"@type"`
 			SyncState SyncState `json:"sync_state"`
 		}{}
-		err = json.Unmarshal(resB, &syncResp)
+		err = json.Unmarshal(result.Raw, &syncResp)
 		if err != nil {
-			return &TONResult{}, err
+			return nil, err
 		}
 		if client.clientLogging {
-			fmt.Println("run sync", updateData)
+			fmt.Println("run sync", syncResp)
 		}
-		res, err = client.Sync(syncResp.SyncState)
+		resultWhileSync, err := client.Sync(syncResp.SyncState, &requestID)
 		if err != nil {
-			return &TONResult{}, err
+			return nil, err
 		}
-		if res != "" {
-			// parse and return reponse that has been catched while sync
-			resB := []byte(res)
-			err = json.Unmarshal(resB, &updateData)
-			if err != nil {
-				return &TONResult{}, err
-			}
-			return &TONResult{Data: updateData, Raw: resB}, err
+
+		if resultWhileSync != nil && client.isExtraMatch(*resultWhileSync, requestID) {
+			fmt.Printf("got result while sync: %s", resultWhileSync.Raw)
+			return resultWhileSync, nil
 		}
-		return client.executeAsynchronously(data)
+
+		if exactlyOnce {
+			return nil, fmt.Errorf("can't send to lib more than once")
+		}
+		return client.executeAsynchronouslyCommon(data, requestID, exactlyOnce)
 	}
-	return &TONResult{Data: updateData, Raw: resB}, err
+
+	if !client.isExtraMatch(*result, requestID) {
+		fmt.Printf("@extra is not the same: real:%s expected:%s. Skip result: %s\n", result.Data["@extra"], requestID, result.Raw)
+		return client.receiveExactly(DefaultRetries, requestID)
+	}
+
+	return result, nil
 }
 
 /**
@@ -214,7 +302,7 @@ func (client *Client) Destroy() {
 }
 
 //sync node`s blocks to current
-func (client *Client) Sync(syncState SyncState) (string, error) {
+func (client *Client) Sync(syncState SyncState, requestID *string) (*TONResult, error) {
 	data := struct {
 		Type      string    `json:"@type"`
 		SyncState SyncState `json:"sync_state"`
@@ -222,64 +310,62 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 		Type:      "sync",
 		SyncState: syncState,
 	}
-	req, err := json.Marshal(data)
-	if err != nil {
-		return "", err
+	if err := client.send(data); err != nil {
+		return nil, err
 	}
-	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
-	C.tonlib_client_json_send(client.client, cs)
+
+	var meaningfulResult *TONResult
+
+	syncAttempt := 0
 	for {
-		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
-		for result == nil {
-			if client.clientLogging {
-				fmt.Println("empty response. next attempt")
-			}
-			time.Sleep(1 * time.Second)
-			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		syncAttempt += 1
+
+		result, err := client.receiveAny(DefaultRetries)
+		if err != nil {
+			return nil, err
 		}
+
 		syncResp := struct {
 			Type      string    `json:"@type"`
 			SyncState SyncState `json:"sync_state"`
 		}{}
-		res := C.GoString(result)
-		resB := []byte(res)
-		err = json.Unmarshal(resB, &syncResp)
-		if client.clientLogging {
-			fmt.Println("sync result #1: ", res)
-		}
+		err = json.Unmarshal(result.Raw, &syncResp)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
+
+		if client.clientLogging {
+			fmt.Printf("sync result #%d: %s \n", syncAttempt, result.Raw)
+		}
+
+		if requestID != nil && client.isExtraMatch(*result, *requestID) {
+			if meaningfulResult != nil {
+				return nil, fmt.Errorf("Got several fit result while sync. It's unexpected behavior: `%s` ", result.Raw)
+			}
+			meaningfulResult = result
+			fmt.Printf("catch meaningful result while sync: %s \n", result.Raw)
+			continue
+		}
+
 		if syncResp.Type == "error" {
-			return "", fmt.Errorf("Got an error response from ton: `%s` ", res)
+			return nil, fmt.Errorf("Got an error response from ton: `%s` ", result.Raw)
 		}
+
 		if syncResp.SyncState.Type == "syncStateDone" {
-			result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
-			syncResp = struct {
-				Type      string    `json:"@type"`
-				SyncState SyncState `json:"sync_state"`
-			}{}
-			res := C.GoString(result)
-			resB := []byte(res)
-			err = json.Unmarshal(resB, &syncResp)
-			if client.clientLogging {
-				fmt.Println("sync result #2: ", string(resB))
-			}
-			if err != nil {
-				return "", err
-			}
+			break
 		}
+
 		if syncResp.Type == "ton.blockIdExt" {
-			return "", nil
+			break
 		}
+
 		if syncResp.Type == "updateSyncState" {
 			// continue updating
 			continue
 		}
-		// response on previously not sync request
-		return res, nil
 	}
+
+	return meaningfulResult, nil
 }
 
 // QueryEstimateFees
@@ -287,12 +373,15 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 // @param id
 // @param ignoreChksig
 func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
+	requestID := client.GenerateRequestID()
 	callData := struct {
 		Type         string `json:"@type"`
+		Extra        string `json:"@extra"`
 		Id           int64  `json:"id"`
 		IgnoreChksig bool   `json:"ignore_chksig"`
 	}{
 		Type:         "query.estimateFees",
+		Extra:        requestID,
 		Id:           id,
 		IgnoreChksig: ignoreChksig,
 	}
@@ -315,7 +404,7 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 
 	go func() {
 		for true {
-			result, err := client.executeAsynchronously(callData)
+			result, err := client.executeAsynchronously(callData, requestID)
 			// if timeout reached - close chan and exit
 			exit.Lock()
 			if exit.Exit {
@@ -420,10 +509,20 @@ func NewKey(publicKey string, secret string) *Key {
 // InitialAccountState
 type InitialAccountState interface{ MessageType() string }
 
-type AccountState RawAccountState
+type AccountState CommonAccountState
 
 type MsgData interface{ MessageType() string }
 type DnsEntryData string
 
 type Action interface{ MessageType() string }
 type DnsAction Action
+
+type CommonAccountState struct {
+	tonCommon
+	Code       string    `json:"code"`
+	Data       string    `json:"data"`
+	FrozenHash []byte    `json:"frozen_hash"`
+	PublicKey  string    `json:"public_key"`
+	WalletId   JSONInt64 `json:"wallet_id"`
+	Seqno      JSONInt64 `json:"seqno"`
+}

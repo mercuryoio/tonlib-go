@@ -8,14 +8,18 @@ import (
 // Init
 // @param options
 func (client *Client) Init(options Options) (*OptionsInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type    string  `json:"@type"`
+			Extra   string  `json:"@extra"`
 			Options Options `json:"options"`
 		}{
 			Type:    "init",
+			Extra:   requestID,
 			Options: options,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -34,12 +38,16 @@ func (client *Client) Init(options Options) (*OptionsInfo, error) {
 
 // Close
 func (client *Client) Close() (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
 		}{
-			Type: "close",
+			Type:  "close",
+			Extra: requestID,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -59,14 +67,18 @@ func (client *Client) Close() (*Ok, error) {
 // OptionsSetConfig
 // @param config
 func (client *Client) OptionsSetConfig(config Config) (*OptionsConfigInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string `json:"@type"`
+			Extra  string `json:"@extra"`
 			Config Config `json:"config"`
 		}{
 			Type:   "options.setConfig",
+			Extra:  requestID,
 			Config: config,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -86,14 +98,18 @@ func (client *Client) OptionsSetConfig(config Config) (*OptionsConfigInfo, error
 // OptionsValidateConfig
 // @param config
 func (client *Client) OptionsValidateConfig(config Config) (*OptionsConfigInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string `json:"@type"`
+			Extra  string `json:"@extra"`
 			Config Config `json:"config"`
 		}{
 			Type:   "options.validateConfig",
+			Extra:  requestID,
 			Config: config,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -115,18 +131,22 @@ func (client *Client) OptionsValidateConfig(config Config) (*OptionsConfigInfo, 
 // @param mnemonicPassword
 // @param randomExtraSeed
 func (client *Client) CreateNewKey(localPassword SecureBytes, mnemonicPassword SecureBytes, randomExtraSeed SecureBytes) (*Key, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type             string      `json:"@type"`
+			Extra            string      `json:"@extra"`
 			LocalPassword    SecureBytes `json:"local_password"`
 			MnemonicPassword SecureBytes `json:"mnemonic_password"`
 			RandomExtraSeed  SecureBytes `json:"random_extra_seed"`
 		}{
 			Type:             "createNewKey",
+			Extra:            requestID,
 			LocalPassword:    localPassword,
 			MnemonicPassword: mnemonicPassword,
 			RandomExtraSeed:  randomExtraSeed,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -146,14 +166,18 @@ func (client *Client) CreateNewKey(localPassword SecureBytes, mnemonicPassword S
 // DeleteKey
 // @param key
 func (client *Client) DeleteKey(key Key) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Key  Key    `json:"key"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Key   Key    `json:"key"`
 		}{
-			Type: "deleteKey",
-			Key:  key,
+			Type:  "deleteKey",
+			Extra: requestID,
+			Key:   key,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -172,12 +196,16 @@ func (client *Client) DeleteKey(key Key) (*Ok, error) {
 
 // DeleteAllKeys
 func (client *Client) DeleteAllKeys() (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
 		}{
-			Type: "deleteAllKeys",
+			Type:  "deleteAllKeys",
+			Extra: requestID,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -197,14 +225,18 @@ func (client *Client) DeleteAllKeys() (*Ok, error) {
 // ExportKey
 // @param inputKey
 func (client *Client) ExportKey(inputKey InputKey) (*ExportedKey, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type     string   `json:"@type"`
+			Extra    string   `json:"@extra"`
 			InputKey InputKey `json:"input_key"`
 		}{
 			Type:     "exportKey",
+			Extra:    requestID,
 			InputKey: inputKey,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -225,16 +257,20 @@ func (client *Client) ExportKey(inputKey InputKey) (*ExportedKey, error) {
 // @param inputKey
 // @param keyPassword
 func (client *Client) ExportPemKey(inputKey InputKey, keyPassword SecureBytes) (*ExportedPemKey, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string      `json:"@type"`
+			Extra       string      `json:"@extra"`
 			InputKey    InputKey    `json:"input_key"`
 			KeyPassword SecureBytes `json:"key_password"`
 		}{
 			Type:        "exportPemKey",
+			Extra:       requestID,
 			InputKey:    inputKey,
 			KeyPassword: keyPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -255,16 +291,20 @@ func (client *Client) ExportPemKey(inputKey InputKey, keyPassword SecureBytes) (
 // @param inputKey
 // @param keyPassword
 func (client *Client) ExportEncryptedKey(inputKey InputKey, keyPassword SecureBytes) (*ExportedEncryptedKey, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string      `json:"@type"`
+			Extra       string      `json:"@extra"`
 			InputKey    InputKey    `json:"input_key"`
 			KeyPassword SecureBytes `json:"key_password"`
 		}{
 			Type:        "exportEncryptedKey",
+			Extra:       requestID,
 			InputKey:    inputKey,
 			KeyPassword: keyPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -284,14 +324,18 @@ func (client *Client) ExportEncryptedKey(inputKey InputKey, keyPassword SecureBy
 // ExportUnencryptedKey
 // @param inputKey
 func (client *Client) ExportUnencryptedKey(inputKey InputKey) (*ExportedUnencryptedKey, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type     string   `json:"@type"`
+			Extra    string   `json:"@extra"`
 			InputKey InputKey `json:"input_key"`
 		}{
 			Type:     "exportUnencryptedKey",
+			Extra:    requestID,
 			InputKey: inputKey,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -313,18 +357,22 @@ func (client *Client) ExportUnencryptedKey(inputKey InputKey) (*ExportedUnencryp
 // @param localPassword
 // @param mnemonicPassword
 func (client *Client) ImportKey(exportedKey ExportedKey, localPassword SecureBytes, mnemonicPassword SecureBytes) (*Key, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type             string      `json:"@type"`
+			Extra            string      `json:"@extra"`
 			ExportedKey      ExportedKey `json:"exported_key"`
 			LocalPassword    SecureBytes `json:"local_password"`
 			MnemonicPassword SecureBytes `json:"mnemonic_password"`
 		}{
 			Type:             "importKey",
+			Extra:            requestID,
 			ExportedKey:      exportedKey,
 			LocalPassword:    localPassword,
 			MnemonicPassword: mnemonicPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -346,18 +394,22 @@ func (client *Client) ImportKey(exportedKey ExportedKey, localPassword SecureByt
 // @param keyPassword
 // @param localPassword
 func (client *Client) ImportPemKey(exportedKey ExportedPemKey, keyPassword SecureBytes, localPassword SecureBytes) (*Key, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type          string         `json:"@type"`
+			Extra         string         `json:"@extra"`
 			ExportedKey   ExportedPemKey `json:"exported_key"`
 			KeyPassword   SecureBytes    `json:"key_password"`
 			LocalPassword SecureBytes    `json:"local_password"`
 		}{
 			Type:          "importPemKey",
+			Extra:         requestID,
 			ExportedKey:   exportedKey,
 			KeyPassword:   keyPassword,
 			LocalPassword: localPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -379,18 +431,22 @@ func (client *Client) ImportPemKey(exportedKey ExportedPemKey, keyPassword Secur
 // @param keyPassword
 // @param localPassword
 func (client *Client) ImportEncryptedKey(exportedEncryptedKey ExportedEncryptedKey, keyPassword SecureBytes, localPassword SecureBytes) (*Key, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                 string               `json:"@type"`
+			Extra                string               `json:"@extra"`
 			ExportedEncryptedKey ExportedEncryptedKey `json:"exported_encrypted_key"`
 			KeyPassword          SecureBytes          `json:"key_password"`
 			LocalPassword        SecureBytes          `json:"local_password"`
 		}{
 			Type:                 "importEncryptedKey",
+			Extra:                requestID,
 			ExportedEncryptedKey: exportedEncryptedKey,
 			KeyPassword:          keyPassword,
 			LocalPassword:        localPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -411,16 +467,20 @@ func (client *Client) ImportEncryptedKey(exportedEncryptedKey ExportedEncryptedK
 // @param exportedUnencryptedKey
 // @param localPassword
 func (client *Client) ImportUnencryptedKey(exportedUnencryptedKey ExportedUnencryptedKey, localPassword SecureBytes) (*Key, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                   string                 `json:"@type"`
+			Extra                  string                 `json:"@extra"`
 			ExportedUnencryptedKey ExportedUnencryptedKey `json:" exported_unencrypted_key"`
 			LocalPassword          SecureBytes            `json:"local_password"`
 		}{
 			Type:                   "importUnencryptedKey",
+			Extra:                  requestID,
 			ExportedUnencryptedKey: exportedUnencryptedKey,
 			LocalPassword:          localPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -441,16 +501,20 @@ func (client *Client) ImportUnencryptedKey(exportedUnencryptedKey ExportedUnencr
 // @param inputKey
 // @param newLocalPassword
 func (client *Client) ChangeLocalPassword(inputKey InputKey, newLocalPassword SecureBytes) (*Key, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type             string      `json:"@type"`
+			Extra            string      `json:"@extra"`
 			InputKey         InputKey    `json:"input_key"`
 			NewLocalPassword SecureBytes `json:"new_local_password"`
 		}{
 			Type:             "changeLocalPassword",
+			Extra:            requestID,
 			InputKey:         inputKey,
 			NewLocalPassword: newLocalPassword,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -471,16 +535,20 @@ func (client *Client) ChangeLocalPassword(inputKey InputKey, newLocalPassword Se
 // @param decryptedData
 // @param secret
 func (client *Client) Encrypt(decryptedData SecureBytes, secret SecureBytes) (*Data, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type          string      `json:"@type"`
+			Extra         string      `json:"@extra"`
 			DecryptedData SecureBytes `json:"decrypted_data"`
 			Secret        SecureBytes `json:"secret"`
 		}{
 			Type:          "encrypt",
+			Extra:         requestID,
 			DecryptedData: decryptedData,
 			Secret:        secret,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -501,16 +569,20 @@ func (client *Client) Encrypt(decryptedData SecureBytes, secret SecureBytes) (*D
 // @param encryptedData
 // @param secret
 func (client *Client) Decrypt(encryptedData SecureBytes, secret SecureBytes) (*Data, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type          string      `json:"@type"`
+			Extra         string      `json:"@extra"`
 			EncryptedData SecureBytes `json:"encrypted_data"`
 			Secret        SecureBytes `json:"secret"`
 		}{
 			Type:          "decrypt",
+			Extra:         requestID,
 			EncryptedData: encryptedData,
 			Secret:        secret,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -532,18 +604,22 @@ func (client *Client) Decrypt(encryptedData SecureBytes, secret SecureBytes) (*D
 // @param password
 // @param salt
 func (client *Client) Kdf(iterations int32, password SecureBytes, salt SecureBytes) (*Data, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type       string      `json:"@type"`
+			Extra      string      `json:"@extra"`
 			Iterations int32       `json:"iterations"`
 			Password   SecureBytes `json:"password"`
 			Salt       SecureBytes `json:"salt"`
 		}{
 			Type:       "kdf",
+			Extra:      requestID,
 			Iterations: iterations,
 			Password:   password,
 			Salt:       salt,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -563,14 +639,18 @@ func (client *Client) Kdf(iterations int32, password SecureBytes, salt SecureByt
 // UnpackAccountAddress
 // @param accountAddress
 func (client *Client) UnpackAccountAddress(accountAddress string) (*UnpackedAccountAddress, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string `json:"@type"`
+			Extra          string `json:"@extra"`
 			AccountAddress string `json:"account_address"`
 		}{
 			Type:           "unpackAccountAddress",
+			Extra:          requestID,
 			AccountAddress: accountAddress,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -590,14 +670,18 @@ func (client *Client) UnpackAccountAddress(accountAddress string) (*UnpackedAcco
 // PackAccountAddress
 // @param accountAddress
 func (client *Client) PackAccountAddress(accountAddress UnpackedAccountAddress) (*AccountAddress, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string                 `json:"@type"`
+			Extra          string                 `json:"@extra"`
 			AccountAddress UnpackedAccountAddress `json:"account_address"`
 		}{
 			Type:           "packAccountAddress",
+			Extra:          requestID,
 			AccountAddress: accountAddress,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -617,14 +701,18 @@ func (client *Client) PackAccountAddress(accountAddress UnpackedAccountAddress) 
 // GetBip39Hints
 // @param prefix
 func (client *Client) GetBip39Hints(prefix string) (*Bip39Hints, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string `json:"@type"`
+			Extra  string `json:"@extra"`
 			Prefix string `json:"prefix"`
 		}{
 			Type:   "getBip39Hints",
+			Extra:  requestID,
 			Prefix: prefix,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -644,14 +732,18 @@ func (client *Client) GetBip39Hints(prefix string) (*Bip39Hints, error) {
 // RawGetAccountState
 // @param accountAddress
 func (client *Client) RawGetAccountState(accountAddress AccountAddress) (*RawFullAccountState, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string         `json:"@type"`
+			Extra          string         `json:"@extra"`
 			AccountAddress AccountAddress `json:"account_address"`
 		}{
 			Type:           "raw.getAccountState",
+			Extra:          requestID,
 			AccountAddress: accountAddress,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -671,20 +763,21 @@ func (client *Client) RawGetAccountState(accountAddress AccountAddress) (*RawFul
 // RawGetTransactions
 // @param accountAddress
 // @param fromTransactionId
-// @param privateKey
-func (client *Client) RawGetTransactions(accountAddress AccountAddress, fromTransactionId InternalTransactionId, privateKey InputKey) (*RawTransactions, error) {
+func (client *Client) RawGetTransactions(accountAddress AccountAddress, fromTransactionId InternalTransactionId) (*RawTransactions, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type              string                `json:"@type"`
+			Extra             string                `json:"@extra"`
 			AccountAddress    AccountAddress        `json:"account_address"`
 			FromTransactionId InternalTransactionId `json:"from_transaction_id"`
-			PrivateKey        InputKey              `json:"private_key"`
 		}{
 			Type:              "raw.getTransactions",
+			Extra:             requestID,
 			AccountAddress:    accountAddress,
 			FromTransactionId: fromTransactionId,
-			PrivateKey:        privateKey,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -704,14 +797,18 @@ func (client *Client) RawGetTransactions(accountAddress AccountAddress, fromTran
 // RawSendMessage
 // @param body
 func (client *Client) RawSendMessage(body []byte) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Body []byte `json:"body"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Body  []byte `json:"body"`
 		}{
-			Type: "raw.sendMessage",
-			Body: body,
+			Type:  "raw.sendMessage",
+			Extra: requestID,
+			Body:  body,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -733,18 +830,22 @@ func (client *Client) RawSendMessage(body []byte) (*Ok, error) {
 // @param destination
 // @param initialAccountState
 func (client *Client) RawCreateAndSendMessage(data []byte, destination AccountAddress, initialAccountState []byte) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string         `json:"@type"`
+			Extra               string         `json:"@extra"`
 			Data                []byte         `json:"data"`
 			Destination         AccountAddress `json:"destination"`
 			InitialAccountState []byte         `json:"initial_account_state"`
 		}{
 			Type:                "raw.createAndSendMessage",
+			Extra:               requestID,
 			Data:                data,
 			Destination:         destination,
 			InitialAccountState: initialAccountState,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -767,20 +868,24 @@ func (client *Client) RawCreateAndSendMessage(data []byte, destination AccountAd
 // @param initCode
 // @param initData
 func (client *Client) RawCreateQuery(body []byte, destination AccountAddress, initCode []byte, initData []byte) (*QueryInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type        string         `json:"@type"`
+			Extra       string         `json:"@extra"`
 			Body        []byte         `json:"body"`
 			Destination AccountAddress `json:"destination"`
 			InitCode    []byte         `json:"init_code"`
 			InitData    []byte         `json:"init_data"`
 		}{
 			Type:        "raw.createQuery",
+			Extra:       requestID,
 			Body:        body,
 			Destination: destination,
 			InitCode:    initCode,
 			InitData:    initData,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -801,16 +906,20 @@ func (client *Client) RawCreateQuery(body []byte, destination AccountAddress, in
 // @param initialAccountState
 // @param revision
 func (client *Client) GetAccountAddress(initialAccountState InitialAccountState, revision int32) (*AccountAddress, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string              `json:"@type"`
+			Extra               string              `json:"@extra"`
 			InitialAccountState InitialAccountState `json:"initial_account_state"`
 			Revision            int32               `json:"revision"`
 		}{
 			Type:                "getAccountAddress",
+			Extra:               requestID,
 			InitialAccountState: initialAccountState,
 			Revision:            revision,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -830,14 +939,18 @@ func (client *Client) GetAccountAddress(initialAccountState InitialAccountState,
 // GuessAccountRevision
 // @param initialAccountState
 func (client *Client) GuessAccountRevision(initialAccountState InitialAccountState) (*AccountRevisionList, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string              `json:"@type"`
+			Extra               string              `json:"@extra"`
 			InitialAccountState InitialAccountState `json:"initial_account_state"`
 		}{
 			Type:                "guessAccountRevision",
+			Extra:               requestID,
 			InitialAccountState: initialAccountState,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -857,14 +970,18 @@ func (client *Client) GuessAccountRevision(initialAccountState InitialAccountSta
 // GetAccountState
 // @param accountAddress
 func (client *Client) GetAccountState(accountAddress AccountAddress) (*FullAccountState, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string         `json:"@type"`
+			Extra          string         `json:"@extra"`
 			AccountAddress AccountAddress `json:"account_address"`
 		}{
 			Type:           "getAccountState",
+			Extra:          requestID,
 			AccountAddress: accountAddress,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -887,20 +1004,24 @@ func (client *Client) GetAccountState(accountAddress AccountAddress) (*FullAccou
 // @param privateKey
 // @param timeout
 func (client *Client) CreateQuery(action Action, address AccountAddress, privateKey InputKey, timeout int32) (*QueryInfo, error) {
-	result, err := client.executeAsynchronously(
+	requestID := client.GenerateRequestID()
+	result, err := client.executeAsynchronouslyExactlyOnce(
 		struct {
 			Type       string         `json:"@type"`
+			Extra      string         `json:"@extra"`
 			Action     Action         `json:"action"`
 			Address    AccountAddress `json:"address"`
 			PrivateKey InputKey       `json:"private_key"`
 			Timeout    int32          `json:"timeout"`
 		}{
 			Type:       "createQuery",
+			Extra:      requestID,
 			Action:     action,
 			Address:    address,
 			PrivateKey: privateKey,
 			Timeout:    timeout,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -921,16 +1042,20 @@ func (client *Client) CreateQuery(action Action, address AccountAddress, private
 // @param data
 // @param inputKey
 func (client *Client) MsgDecrypt(data MsgDataEncryptedArray, inputKey InputKey) (*MsgDataDecryptedArray, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type     string                `json:"@type"`
+			Extra    string                `json:"@extra"`
 			Data     MsgDataEncryptedArray `json:"data"`
 			InputKey InputKey              `json:"input_key"`
 		}{
 			Type:     "msg.decrypt",
+			Extra:    requestID,
 			Data:     data,
 			InputKey: inputKey,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -951,16 +1076,20 @@ func (client *Client) MsgDecrypt(data MsgDataEncryptedArray, inputKey InputKey) 
 // @param data
 // @param proof
 func (client *Client) MsgDecryptWithProof(data MsgDataEncrypted, proof []byte) (*MsgData, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type  string           `json:"@type"`
+			Extra string           `json:"@extra"`
 			Data  MsgDataEncrypted `json:"data"`
 			Proof []byte           `json:"proof"`
 		}{
 			Type:  "msg.decryptWithProof",
+			Extra: requestID,
 			Data:  data,
 			Proof: proof,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -980,14 +1109,18 @@ func (client *Client) MsgDecryptWithProof(data MsgDataEncrypted, proof []byte) (
 // QuerySend
 // @param id
 func (client *Client) QuerySend(id int64) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Id   int64  `json:"id"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Id    int64  `json:"id"`
 		}{
-			Type: "query.send",
-			Id:   id,
+			Type:  "query.send",
+			Extra: requestID,
+			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1007,14 +1140,18 @@ func (client *Client) QuerySend(id int64) (*Ok, error) {
 // QueryForget
 // @param id
 func (client *Client) QueryForget(id int64) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Id   int64  `json:"id"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Id    int64  `json:"id"`
 		}{
-			Type: "query.forget",
-			Id:   id,
+			Type:  "query.forget",
+			Extra: requestID,
+			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1034,14 +1171,18 @@ func (client *Client) QueryForget(id int64) (*Ok, error) {
 // QueryGetInfo
 // @param id
 func (client *Client) QueryGetInfo(id int64) (*QueryInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Id   int64  `json:"id"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Id    int64  `json:"id"`
 		}{
-			Type: "query.getInfo",
-			Id:   id,
+			Type:  "query.getInfo",
+			Extra: requestID,
+			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1061,14 +1202,18 @@ func (client *Client) QueryGetInfo(id int64) (*QueryInfo, error) {
 // SmcLoad
 // @param accountAddress
 func (client *Client) SmcLoad(accountAddress AccountAddress) (*SmcInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string         `json:"@type"`
+			Extra          string         `json:"@extra"`
 			AccountAddress AccountAddress `json:"account_address"`
 		}{
 			Type:           "smc.load",
+			Extra:          requestID,
 			AccountAddress: accountAddress,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1088,14 +1233,18 @@ func (client *Client) SmcLoad(accountAddress AccountAddress) (*SmcInfo, error) {
 // SmcGetCode
 // @param id
 func (client *Client) SmcGetCode(id int64) (*TvmCell, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Id   int64  `json:"id"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Id    int64  `json:"id"`
 		}{
-			Type: "smc.getCode",
-			Id:   id,
+			Type:  "smc.getCode",
+			Extra: requestID,
+			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1115,14 +1264,18 @@ func (client *Client) SmcGetCode(id int64) (*TvmCell, error) {
 // SmcGetData
 // @param id
 func (client *Client) SmcGetData(id int64) (*TvmCell, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Id   int64  `json:"id"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Id    int64  `json:"id"`
 		}{
-			Type: "smc.getData",
-			Id:   id,
+			Type:  "smc.getData",
+			Extra: requestID,
+			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1142,14 +1295,18 @@ func (client *Client) SmcGetData(id int64) (*TvmCell, error) {
 // SmcGetState
 // @param id
 func (client *Client) SmcGetState(id int64) (*TvmCell, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Id   int64  `json:"id"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Id    int64  `json:"id"`
 		}{
-			Type: "smc.getState",
-			Id:   id,
+			Type:  "smc.getState",
+			Extra: requestID,
+			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1171,18 +1328,22 @@ func (client *Client) SmcGetState(id int64) (*TvmCell, error) {
 // @param method
 // @param stack
 func (client *Client) SmcRunGetMethod(id int64, method SmcMethodId, stack []TvmStackEntry) (*SmcRunResult, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type   string          `json:"@type"`
+			Extra  string          `json:"@extra"`
 			Id     int64           `json:"id"`
 			Method SmcMethodId     `json:"method"`
 			Stack  []TvmStackEntry `json:"stack"`
 		}{
 			Type:   "smc.runGetMethod",
+			Extra:  requestID,
 			Id:     id,
 			Method: method,
 			Stack:  stack,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1205,20 +1366,24 @@ func (client *Client) SmcRunGetMethod(id int64, method SmcMethodId, stack []TvmS
 // @param name
 // @param ttl
 func (client *Client) DnsResolve(accountAddress AccountAddress, category int32, name string, ttl int32) (*DnsResolved, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string         `json:"@type"`
+			Extra          string         `json:"@extra"`
 			AccountAddress AccountAddress `json:"account_address"`
 			Category       int32          `json:"category"`
 			Name           string         `json:"name"`
 			Ttl            int32          `json:"ttl"`
 		}{
 			Type:           "dns.resolve",
+			Extra:          requestID,
 			AccountAddress: accountAddress,
 			Category:       category,
 			Name:           name,
 			Ttl:            ttl,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1239,16 +1404,20 @@ func (client *Client) DnsResolve(accountAddress AccountAddress, category int32, 
 // @param bytes
 // @param id
 func (client *Client) OnLiteServerQueryResult(bytes []byte, id JSONInt64) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type  string    `json:"@type"`
+			Extra string    `json:"@extra"`
 			Bytes []byte    `json:"bytes"`
 			Id    JSONInt64 `json:"id"`
 		}{
 			Type:  "onLiteServerQueryResult",
+			Extra: requestID,
 			Bytes: bytes,
 			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1269,16 +1438,20 @@ func (client *Client) OnLiteServerQueryResult(bytes []byte, id JSONInt64) (*Ok, 
 // @param error
 // @param id
 func (client *Client) OnLiteServerQueryError(error Error, id JSONInt64) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type  string    `json:"@type"`
+			Extra string    `json:"@extra"`
 			Error Error     `json:"error"`
 			Id    JSONInt64 `json:"id"`
 		}{
 			Type:  "onLiteServerQueryError",
+			Extra: requestID,
 			Error: error,
 			Id:    id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1299,16 +1472,20 @@ func (client *Client) OnLiteServerQueryError(error Error, id JSONInt64) (*Ok, er
 // @param function
 // @param id
 func (client *Client) WithBlock(function Function, id TonBlockIdExt) (*Object, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type     string        `json:"@type"`
+			Extra    string        `json:"@extra"`
 			Function Function      `json:"function"`
 			Id       TonBlockIdExt `json:"id"`
 		}{
 			Type:     "withBlock",
+			Extra:    requestID,
 			Function: function,
 			Id:       id,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1328,14 +1505,18 @@ func (client *Client) WithBlock(function Function, id TonBlockIdExt) (*Object, e
 // RunTests
 // @param dir
 func (client *Client) RunTests(dir string) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Dir  string `json:"dir"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Dir   string `json:"dir"`
 		}{
-			Type: "runTests",
-			Dir:  dir,
+			Type:  "runTests",
+			Extra: requestID,
+			Dir:   dir,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1354,12 +1535,16 @@ func (client *Client) RunTests(dir string) (*Ok, error) {
 
 // LiteServerGetInfo
 func (client *Client) LiteServerGetInfo() (*LiteServerInfo, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
 		}{
-			Type: "liteServer.getInfo",
+			Type:  "liteServer.getInfo",
+			Extra: requestID,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1379,14 +1564,18 @@ func (client *Client) LiteServerGetInfo() (*LiteServerInfo, error) {
 // SetLogStream Sets new log stream for internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param logStream New log stream
 func (client *Client) SetLogStream(logStream LogStream) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type      string    `json:"@type"`
+			Extra     string    `json:"@extra"`
 			LogStream LogStream `json:"log_stream"`
 		}{
 			Type:      "setLogStream",
+			Extra:     requestID,
 			LogStream: logStream,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1405,12 +1594,16 @@ func (client *Client) SetLogStream(logStream LogStream) (*Ok, error) {
 
 // GetLogStream Returns information about currently used log stream for internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
 func (client *Client) GetLogStream() (LogStream, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
 		}{
-			Type: "getLogStream",
+			Type:  "getLogStream",
+			Extra: requestID,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1446,14 +1639,18 @@ func (client *Client) GetLogStream() (LogStream, error) {
 // SetLogVerbosityLevel Sets the verbosity level of the internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param newVerbosityLevel New value of the verbosity level for logging. Value 0 corresponds to fatal errors, value 1 corresponds to errors, value 2 corresponds to warnings and debug warnings, value 3 corresponds to informational, value 4 corresponds to debug, value 5 corresponds to verbose debug, value greater than 5 and up to 1023 can be used to enable even more logging
 func (client *Client) SetLogVerbosityLevel(newVerbosityLevel int32) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type              string `json:"@type"`
+			Extra             string `json:"@extra"`
 			NewVerbosityLevel int32  `json:"new_verbosity_level"`
 		}{
 			Type:              "setLogVerbosityLevel",
+			Extra:             requestID,
 			NewVerbosityLevel: newVerbosityLevel,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1472,12 +1669,16 @@ func (client *Client) SetLogVerbosityLevel(newVerbosityLevel int32) (*Ok, error)
 
 // GetLogVerbosityLevel Returns current verbosity level of the internal logging of tonlib. This is an offline method. Can be called before authorization. Can be called synchronously
 func (client *Client) GetLogVerbosityLevel() (*LogVerbosityLevel, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
 		}{
-			Type: "getLogVerbosityLevel",
+			Type:  "getLogVerbosityLevel",
+			Extra: requestID,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1496,12 +1697,16 @@ func (client *Client) GetLogVerbosityLevel() (*LogVerbosityLevel, error) {
 
 // GetLogTags Returns list of available tonlib internal log tags, for example, ["actor", "binlog", "connections", "notifications", "proxy"]. This is an offline method. Can be called before authorization. Can be called synchronously
 func (client *Client) GetLogTags() (*LogTags, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
 		}{
-			Type: "getLogTags",
+			Type:  "getLogTags",
+			Extra: requestID,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1522,16 +1727,20 @@ func (client *Client) GetLogTags() (*LogTags, error) {
 // @param newVerbosityLevel New verbosity level; 1-1024
 // @param tag Logging tag to change verbosity level
 func (client *Client) SetLogTagVerbosityLevel(newVerbosityLevel int32, tag string) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type              string `json:"@type"`
+			Extra             string `json:"@extra"`
 			NewVerbosityLevel int32  `json:"new_verbosity_level"`
 			Tag               string `json:"tag"`
 		}{
 			Type:              "setLogTagVerbosityLevel",
+			Extra:             requestID,
 			NewVerbosityLevel: newVerbosityLevel,
 			Tag:               tag,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1551,14 +1760,18 @@ func (client *Client) SetLogTagVerbosityLevel(newVerbosityLevel int32, tag strin
 // GetLogTagVerbosityLevel Returns current verbosity level for a specified tonlib internal log tag. This is an offline method. Can be called before authorization. Can be called synchronously
 // @param tag Logging tag to change verbosity level
 func (client *Client) GetLogTagVerbosityLevel(tag string) (*LogVerbosityLevel, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
-			Type string `json:"@type"`
-			Tag  string `json:"tag"`
+			Type  string `json:"@type"`
+			Extra string `json:"@extra"`
+			Tag   string `json:"tag"`
 		}{
-			Type: "getLogTagVerbosityLevel",
-			Tag:  tag,
+			Type:  "getLogTagVerbosityLevel",
+			Extra: requestID,
+			Tag:   tag,
 		},
+		requestID,
 	)
 
 	if err != nil {
@@ -1579,16 +1792,20 @@ func (client *Client) GetLogTagVerbosityLevel(tag string) (*LogVerbosityLevel, e
 // @param text Text of a message to log
 // @param verbosityLevel Minimum verbosity level needed for the message to be logged, 0-1023
 func (client *Client) AddLogMessage(text string, verbosityLevel int32) (*Ok, error) {
+	requestID := client.GenerateRequestID()
 	result, err := client.executeAsynchronously(
 		struct {
 			Type           string `json:"@type"`
+			Extra          string `json:"@extra"`
 			Text           string `json:"text"`
 			VerbosityLevel int32  `json:"verbosity_level"`
 		}{
 			Type:           "addLogMessage",
+			Extra:          requestID,
 			Text:           text,
 			VerbosityLevel: verbosityLevel,
 		},
+		requestID,
 	)
 
 	if err != nil {

@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"math/rand"
 	"encoding/json"
 	"io/ioutil"
 	"math/big"
@@ -89,4 +90,14 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

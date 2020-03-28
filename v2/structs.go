@@ -665,7 +665,7 @@ func NewAccountRevisionList(revisions []int32) *AccountRevisionList {
 // UnpackedAccountAddress
 type UnpackedAccountAddress struct {
 	tonCommon
-	Addr        string `json:"addr"`         //
+	Addr        []byte `json:"addr"`         //
 	Bounceable  bool   `json:"bounceable"`   //
 	Testnet     bool   `json:"testnet"`      //
 	WorkchainId int32  `json:"workchain_id"` //
@@ -682,7 +682,7 @@ func (unpackedAccountAddress *UnpackedAccountAddress) MessageType() string {
 // @param bounceable
 // @param testnet
 // @param workchainId
-func NewUnpackedAccountAddress(addr string, bounceable bool, testnet bool, workchainId int32) *UnpackedAccountAddress {
+func NewUnpackedAccountAddress(addr []byte, bounceable bool, testnet bool, workchainId int32) *UnpackedAccountAddress {
 	unpackedAccountAddressTemp := UnpackedAccountAddress{
 		tonCommon:   tonCommon{Type: "unpackedAccountAddress"},
 		Addr:        addr,
@@ -697,7 +697,7 @@ func NewUnpackedAccountAddress(addr string, bounceable bool, testnet bool, workc
 // InternalTransactionId
 type InternalTransactionId struct {
 	tonCommon
-	Hash string    `json:"hash"` //
+	Hash []byte    `json:"hash"` //
 	Lt   JSONInt64 `json:"lt"`   //
 }
 
@@ -710,7 +710,7 @@ func (internalTransactionId *InternalTransactionId) MessageType() string {
 //
 // @param hash
 // @param lt
-func NewInternalTransactionId(hash string, lt JSONInt64) *InternalTransactionId {
+func NewInternalTransactionId(hash []byte, lt JSONInt64) *InternalTransactionId {
 	internalTransactionIdTemp := InternalTransactionId{
 		tonCommon: tonCommon{Type: "internal.transactionId"},
 		Hash:      hash,
@@ -752,8 +752,8 @@ func NewTonBlockId(seqno int32, shard JSONInt64, workchain int32) *TonBlockId {
 // TonBlockIdExt
 type TonBlockIdExt struct {
 	tonCommon
-	FileHash  string    `json:"file_hash"` //
-	RootHash  string    `json:"root_hash"` //
+	FileHash  []byte    `json:"file_hash"` //
+	RootHash  []byte    `json:"root_hash"` //
 	Seqno     int32     `json:"seqno"`     //
 	Shard     JSONInt64 `json:"shard"`     //
 	Workchain int32     `json:"workchain"` //
@@ -771,7 +771,7 @@ func (tonBlockIdExt *TonBlockIdExt) MessageType() string {
 // @param seqno
 // @param shard
 // @param workchain
-func NewTonBlockIdExt(fileHash string, rootHash string, seqno int32, shard JSONInt64, workchain int32) *TonBlockIdExt {
+func NewTonBlockIdExt(fileHash []byte, rootHash []byte, seqno int32, shard JSONInt64, workchain int32) *TonBlockIdExt {
 	tonBlockIdExtTemp := TonBlockIdExt{
 		tonCommon: tonCommon{Type: "ton.blockIdExt"},
 		FileHash:  fileHash,
@@ -791,7 +791,7 @@ type RawFullAccountState struct {
 	BlockId           *TonBlockIdExt         `json:"block_id"`            //
 	Code              string                 `json:"code"`                //
 	Data              string                 `json:"data"`                //
-	FrozenHash        string                 `json:"frozen_hash"`         //
+	FrozenHash        []byte                 `json:"frozen_hash"`         //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
 	SyncUtime         int64                  `json:"sync_utime"`          //
 }
@@ -810,7 +810,7 @@ func (rawFullAccountState *RawFullAccountState) MessageType() string {
 // @param frozenHash
 // @param lastTransactionId
 // @param syncUtime
-func NewRawFullAccountState(balance JSONInt64, blockId *TonBlockIdExt, code string, data string, frozenHash string, lastTransactionId *InternalTransactionId, syncUtime int64) *RawFullAccountState {
+func NewRawFullAccountState(balance JSONInt64, blockId *TonBlockIdExt, code string, data string, frozenHash []byte, lastTransactionId *InternalTransactionId, syncUtime int64) *RawFullAccountState {
 	rawFullAccountStateTemp := RawFullAccountState{
 		tonCommon:         tonCommon{Type: "raw.fullAccountState"},
 		Balance:           balance,
@@ -828,14 +828,14 @@ func NewRawFullAccountState(balance JSONInt64, blockId *TonBlockIdExt, code stri
 // RawMessage
 type RawMessage struct {
 	tonCommon
-	BodyHash    string          `json:"body_hash"`   //
+	BodyHash    []byte          `json:"body_hash"`   //
 	CreatedLt   JSONInt64       `json:"created_lt"`  //
 	Destination *AccountAddress `json:"destination"` //
 	FwdFee      JSONInt64       `json:"fwd_fee"`     //
 	IhrFee      JSONInt64       `json:"ihr_fee"`     //
-	MsgData     MsgData        `json:"msg_data"`    //
 	Source      *AccountAddress `json:"source"`      //
 	Value       JSONInt64       `json:"value"`       //
+	MsgData     *MsgDataText    `json:"msg_data"`    //
 }
 
 // MessageType return the string telegram-type of RawMessage
@@ -850,10 +850,11 @@ func (rawMessage *RawMessage) MessageType() string {
 // @param destination
 // @param fwdFee
 // @param ihrFee
-// @param msgData
+// @param isMessageEncrypted
+// @param message
 // @param source
 // @param value
-func NewRawMessage(bodyHash string, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData MsgData, source *AccountAddress, value JSONInt64) *RawMessage {
+func NewRawMessage(bodyHash []byte, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData *MsgDataText, source *AccountAddress, value JSONInt64) *RawMessage {
 	rawMessageTemp := RawMessage{
 		tonCommon:   tonCommon{Type: "raw.message"},
 		BodyHash:    bodyHash,
@@ -1140,7 +1141,7 @@ type RawAccountState struct {
 	tonCommon
 	Code       string `json:"code"`        //
 	Data       string `json:"data"`        //
-	FrozenHash string `json:"frozen_hash"` //
+	FrozenHash []byte `json:"frozen_hash"` //
 }
 
 // MessageType return the string telegram-type of RawAccountState
@@ -1153,7 +1154,7 @@ func (rawAccountState *RawAccountState) MessageType() string {
 // @param code
 // @param data
 // @param frozenHash
-func NewRawAccountState(code string, data string, frozenHash string) *RawAccountState {
+func NewRawAccountState(code string, data string, frozenHash []byte) *RawAccountState {
 	rawAccountStateTemp := RawAccountState{
 		tonCommon:  tonCommon{Type: "raw.accountState"},
 		Code:       code,
@@ -1334,7 +1335,7 @@ func NewDnsAccountState(walletId JSONInt64) *DnsAccountState {
 // UninitedAccountState
 type UninitedAccountState struct {
 	tonCommon
-	FrozenHash string `json:"frozen_hash"` //
+	FrozenHash []byte `json:"frozen_hash"` //
 }
 
 // MessageType return the string telegram-type of UninitedAccountState
@@ -1345,7 +1346,7 @@ func (uninitedAccountState *UninitedAccountState) MessageType() string {
 // NewUninitedAccountState creates a new UninitedAccountState
 //
 // @param frozenHash
-func NewUninitedAccountState(frozenHash string) *UninitedAccountState {
+func NewUninitedAccountState(frozenHash []byte) *UninitedAccountState {
 	uninitedAccountStateTemp := UninitedAccountState{
 		tonCommon:  tonCommon{Type: "uninited.accountState"},
 		FrozenHash: frozenHash,
@@ -1464,7 +1465,7 @@ func NewMsgDataRaw(body string) *MsgDataRaw {
 // MsgDataText
 type MsgDataText struct {
 	tonCommon
-	Text string `json:"text"` //
+	Text []byte `json:"text"` //
 }
 
 // MessageType return the string telegram-type of MsgDataText
@@ -1475,7 +1476,7 @@ func (msgDataText *MsgDataText) MessageType() string {
 // NewMsgDataText creates a new MsgDataText
 //
 // @param text
-func NewMsgDataText(text string) *MsgDataText {
+func NewMsgDataText(text []byte) *MsgDataText {
 	msgDataTextTemp := MsgDataText{
 		tonCommon: tonCommon{Type: "msg.dataText"},
 		Text:      text,
@@ -1632,7 +1633,7 @@ func NewMsgDataDecryptedArray(elements []MsgDataDecrypted) *MsgDataDecryptedArra
 type MsgMessage struct {
 	tonCommon
 	Amount      JSONInt64       `json:"amount"`      //
-	Data        MsgData        `json:"data"`        //
+	Data        MsgData         `json:"data"`        //
 	Destination *AccountAddress `json:"destination"` //
 	PublicKey   string          `json:"public_key"`  //
 }
@@ -2026,7 +2027,7 @@ func NewQueryFees(destinationFees []Fees, sourceFees *Fees) *QueryFees {
 // QueryInfo
 type QueryInfo struct {
 	tonCommon
-	BodyHash   string `json:"body_hash"`   //
+	BodyHash   []byte `json:"body_hash"`   //
 	Id         int64  `json:"id"`          //
 	ValidUntil int64  `json:"valid_until"` //
 }
@@ -2041,7 +2042,7 @@ func (queryInfo *QueryInfo) MessageType() string {
 // @param bodyHash
 // @param id
 // @param validUntil
-func NewQueryInfo(bodyHash string, id int64, validUntil int64) *QueryInfo {
+func NewQueryInfo(bodyHash []byte, id int64, validUntil int64) *QueryInfo {
 	queryInfoTemp := QueryInfo{
 		tonCommon:  tonCommon{Type: "query.info"},
 		BodyHash:   bodyHash,
