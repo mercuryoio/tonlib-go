@@ -374,8 +374,8 @@ func (client *Client) GetAccountStateSimple(address string) (*FullAccountState, 
 	return client.GetAccountState(*accountAddress)
 }
 
-func (client *Client) GetLastBlock() (string, error) {
-	return client.Sync(SyncState(SyncState{}))
+func (client *Client) GetLastBlock() (*TONResult, error) {
+	return client.Sync(SyncState(SyncState{}), nil)
 }
 
 func (client *Client) TonlibSendFile(bocFilePath string) error {
