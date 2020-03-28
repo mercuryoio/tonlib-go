@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/mercuryoio/tonlib-go"
+	"github.com/varche1/tonlib-go"
 	"github.com/spf13/cobra"
 )
 
