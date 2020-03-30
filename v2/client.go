@@ -131,7 +131,7 @@ func (client *Client) receive(maxRetries int, requestID *string) (*TONResult, er
 	attemptWaiting := 1 * time.Second
 
 	if maxRetries <= 0 {
-		return nil, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+		return nil, fmt.Errorf("Client.executeAsynchronously: exceed limit of retries to get json response from TON C`s lib. ")
 	}
 
 	received := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
@@ -140,7 +140,7 @@ func (client *Client) receive(maxRetries int, requestID *string) (*TONResult, er
 	for received == nil {
 		fmt.Printf("fetch nothing. Wait for: %s and try again\n", attemptWaiting)
 		if maxRetries <= 0 {
-			return nil, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+			return nil, fmt.Errorf("Client.executeAsynchronously: exceed limit of retries to get json response from TON C`s lib. ")
 		}
 		time.Sleep(attemptWaiting)
 

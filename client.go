@@ -103,7 +103,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	num := 0
 	for result == nil {
 		if num >= DefaultRetries {
-			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
+			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exceed limit of retries to get json response from TON C`s lib. ")
 		}
 		time.Sleep(1 * time.Second)
 		result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
