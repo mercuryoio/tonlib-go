@@ -35,6 +35,7 @@ jobs:
         env:
           LD_LIBRARY_PATH: "../darwin"
         run: |
+          export LD_LIBRARY_PATH="../darwin"
           cd v2/lib/test
           mkdir test.keys
           go run libtest.go
