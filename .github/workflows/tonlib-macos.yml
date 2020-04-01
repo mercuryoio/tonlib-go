@@ -34,7 +34,7 @@ jobs:
       - name: Test build
         env:
           LD_LIBRARY_PATH: "../darwin"
-        run:
+        run: |
           cd v2/lib/test
           mkdir test.keys
           go run libtest.go
@@ -57,5 +57,5 @@ jobs:
           git checkout develop-tonlib
           git add .
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin tonlib)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin develop-tonlib)
 

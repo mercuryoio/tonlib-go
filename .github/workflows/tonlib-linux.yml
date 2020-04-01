@@ -32,12 +32,12 @@ jobs:
           cp ../build/tonlib/libtonlib* v2/lib/linux
 
       - name: Test build
-	env:
-	  LD_LIBRARY_PATH: "../linux"
-	run:
+        env:
+          LD_LIBRARY_PATH: "../linux"
+        run: |
           cd v2/lib/test
-	  mkdir test.keys
-	  go run libtest.go
+          mkdir test.keys
+          go run libtest.go
       - name: Commit updated Linux tonlib files
         env:
          GITHUB_TOKEN: ${{ secrets.github_token }}
@@ -54,4 +54,4 @@ jobs:
           git pull
           git add .
           # Only commit and push if we have changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin tonlib)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin develop-tonlib)
