@@ -39,6 +39,7 @@ jobs:
           cd v2/lib/test
           mkdir test.keys
           go run libtest.go
+          rm -rf test.keys
 
           
       - name: Commit updated MacOS tonlib files

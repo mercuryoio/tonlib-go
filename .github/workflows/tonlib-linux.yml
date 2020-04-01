@@ -38,6 +38,7 @@ jobs:
           cd v2/lib/test
           mkdir test.keys
           go run libtest.go
+          rm -rf test.keys
       - name: Commit updated Linux tonlib files
         env:
          GITHUB_TOKEN: ${{ secrets.github_token }}
