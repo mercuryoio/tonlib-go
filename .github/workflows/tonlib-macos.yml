@@ -30,6 +30,15 @@ jobs:
       - name: Copy built lib
         run: |
           cp ../build/tonlib/libtonlib* v2/lib/darwin
+
+      - name: Test build
+        env:
+          LD_LIBRARY_PATH: "../darwin"
+        run:
+          cd v2/lib/test
+          mkdir test.keys
+          go run libtest.go
+
           
       - name: Commit updated MacOS tonlib files
         env:
@@ -45,7 +54,7 @@ jobs:
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
           git pull
           # Checkout the branch so we can push back to it
-          git checkout tonlib
+          git checkout develop-tonlib
           git add .
           # Only commit and push if we have changes
           git diff --quiet && git diff --staged --quiet || (git commit -m "${COMMIT_MSG}"; git push origin tonlib)
