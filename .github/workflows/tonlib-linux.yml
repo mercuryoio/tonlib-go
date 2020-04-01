@@ -24,8 +24,8 @@ jobs:
           cd ..
           mkdir build
           cd build
-          cmake ../ton
-          cmake --build . --target tonlibjson -DCMAKE_BUILD_TYPE=Release
+          cmake ../ton -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --target tonlibjson
           
       - name: Copy built lib
         run: |
