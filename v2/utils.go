@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
-	"strconv"
 )
 
 type TonlibConfigServer struct {
@@ -107,7 +106,7 @@ func min(x, y int64) int64 {
 	return x
 }
 
-func computeTotalStake(l *[]ElectionParticipant, n, m_stake int64) (int64, error) {
+func computeTotalStake(l *[]parsedParticipant, n, m_stake int64) (int64, error) {
 	var totStake int64
 	var i int64 = 0
 	if n > int64(len(*l)) {
@@ -115,15 +114,7 @@ func computeTotalStake(l *[]ElectionParticipant, n, m_stake int64) (int64, error
 	}
 	for i=0;  i < n; i++ {
 		p := (*l)[i]
-		stake, err := strconv.ParseInt(p.Stake, 10, 64)
-		if err != nil{
-			return 0, err
-		}
-		maxF, err := strconv.ParseInt(p.MaxFactor, 10, 64)
-		if err != nil{
-			return 0, err
-		}
-		stake = min(stake, (maxF* m_stake) >> 16);
+		stake := min(p.Stake, (p.MaxFactor * m_stake) >> 16);
 		totStake += stake;
 	}
 	return totStake, nil
