@@ -2,9 +2,11 @@ package v2
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
+	"strconv"
 )
 
 type TonlibConfigServer struct {
@@ -89,4 +91,40 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func max(x, y int64) int64 {
+	if x < y {
+		return y
+	}
+	return x
+}
+
+func min(x, y int64) int64 {
+	if x > y {
+		return y
+	}
+	return x
+}
+
+func computeTotalStake(l *[]ElectionParticipant, n, m_stake int64) (int64, error) {
+	var totStake int64
+	var i int64 = 0
+	if n > int64(len(*l)) {
+		return 0, fmt.Errorf("list has not enought length")
+	}
+	for i=0;  i < n; i++ {
+		p := (*l)[i]
+		stake, err := strconv.ParseInt(p.Stake, 10, 64)
+		if err != nil{
+			return 0, err
+		}
+		maxF, err := strconv.ParseInt(p.MaxFactor, 10, 64)
+		if err != nil{
+			return 0, err
+		}
+		stake = min(stake, (maxF* m_stake) >> 16);
+		totStake += stake;
+	}
+	return totStake, nil
 }
