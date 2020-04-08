@@ -401,7 +401,7 @@ type parsedParticipant struct {
 	Id string
 }
 
-func (client *Client) GetElectionStackes(electorAddress string, minStake, maxStake, maxStakeFactor, minValidators int64) (minEffectStake, maxEffectStake int64, err error) {
+func (client *Client) GetElectionStakes(electorAddress string, minStake, maxStake, maxStakeFactor, minValidators int64) (minEffectStake, maxEffectStake int64, err error) {
 	participants, err := client.GetParticipantListExtended(electorAddress)
 	if err != nil{
 		return 0,0 , fmt.Errorf("failed to get participants")
@@ -414,11 +414,11 @@ func (client *Client) GetElectionStackes(electorAddress string, minStake, maxSta
 		if err != nil{
 			return 0,0 , fmt.Errorf("failed to parse participant %v stake. %v", p, err)
 		}
-		maxFacor, err := strconv.ParseInt(p.Stake, 10, 64)
+		maxFactor, err := strconv.ParseInt(p.MaxFactor, 10, 64)
 		if err != nil{
 			return 0,0 , fmt.Errorf("failed to parse participant %v maxFactor. %v", p, err)
 		}
-		parsedPartisipants = append(parsedPartisipants, parsedParticipant{stake, min(maxStakeFactor, maxFacor), p.Id})
+		parsedPartisipants = append(parsedPartisipants, parsedParticipant{stake, min(maxStakeFactor, maxFactor), p.Id})
 	}
 
 	// sort array
@@ -452,8 +452,8 @@ func (client *Client) GetElectionStackes(electorAddress string, minStake, maxSta
 	}
 
 	// evaulate  minEffectStake
-	minEffectStake = parsedPartisipants[m].Stake
-	minEffectStake = min(minEffectStake, (parsedPartisipants[m].MaxFactor*minEffectStake) >> 16);
+	minEffectStake = parsedPartisipants[m-1].Stake
+	minEffectStake = min(minEffectStake, (parsedPartisipants[m-1].MaxFactor*minEffectStake) >> 16);
 
 	// evaluate maxEffectStake
 	newMinStake := minEffectStake
