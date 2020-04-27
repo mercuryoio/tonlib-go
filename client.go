@@ -157,7 +157,6 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 	result := C.tonlib_client_json_execute(client.client, cs)
-	defer C.free(unsafe.Pointer(result))
 	var updateData TONResponse
 	res := C.GoString(result)
 	resB := []byte(res)
