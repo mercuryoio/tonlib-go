@@ -149,7 +149,6 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 		num += 1
 	}
-	defer C.free(unsafe.Pointer(result))
 
 	var updateData TONResponse
 	res := C.GoString(result)

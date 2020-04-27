@@ -110,7 +110,6 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		num += 1
 	}
 
-	defer C.free(unsafe.Pointer(result))
 	var updateData TONResponse
 	res := C.GoString(result)
 	resB := []byte(res)
