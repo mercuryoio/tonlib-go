@@ -209,7 +209,7 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
-	C.free(client.client)
+	//C.free(client.client)
 }
 
 //sync node`s blocks to current
