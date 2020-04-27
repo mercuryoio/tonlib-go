@@ -139,6 +139,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 	}
 	C.tonlib_client_json_send(client.client, cs)
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+	defer C.free(unsafe.Pointer(result))
 
 	num := 0
 	for result == nil {
@@ -200,7 +201,7 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 	result := C.tonlib_client_json_execute(client.client, cs)
-
+	defer C.free(unsafe.Pointer(result))
 	var updateData TONResponse
 	res := C.GoString(result)
 	resB := []byte(res)
@@ -210,6 +211,7 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
+	C.free(client.client)
 }
 
 //sync node`s blocks to current
@@ -363,7 +365,7 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 }
 
 // for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
-func (client *Client) UpdateTonConnection() (error) {
+func (client *Client) UpdateTonConnection() error {
 	_, err := client.Close()
 	if err != nil {
 		return err
