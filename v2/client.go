@@ -55,6 +55,7 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
+	mu            sync.Mutex
 	client        unsafe.Pointer
 	config        Config
 	timeout       int64
@@ -73,6 +74,7 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLoggi
 	rand.Seed(time.Now().UnixNano())
 
 	client := Client{
+		mu:            sync.Mutex{},
 		client:        C.tonlib_client_json_create(),
 		config:        config,
 		timeout:       timeout,
@@ -208,8 +210,10 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 }
 
 func (client *Client) Destroy() {
+	client.mu.Lock()
+	defer client.mu.Unlock()
 	C.tonlib_client_json_destroy(client.client)
-	//C.free(client.client)
+	C.free(client.client)
 }
 
 //sync node`s blocks to current
