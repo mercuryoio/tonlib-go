@@ -19,7 +19,7 @@ func main() {
 		"init",
 		*options,
 	}
-	cln, err := tonlib.NewClient(&req, tonlib.Config{}, 10, true, 9)
+	cln, _, err := tonlib.NewClient(&req, tonlib.Config{}, 10, true, 9)
 	if err != nil {
 		log.Fatalln("Init client error", err)
 	}
