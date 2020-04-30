@@ -1005,7 +1005,7 @@ func (client *Client) GetAccountState(accountAddress AccountAddress) (*FullAccou
 // @param timeout
 func (client *Client) CreateQuery(action Action, address AccountAddress, privateKey InputKey, timeout int32) (*QueryInfo, error) {
 	requestID := client.GenerateRequestID()
-	result, err := client.executeAsynchronouslyExactlyOnce(
+	result, err := client.executeAsynchronously(
 		struct {
 			Type       string         `json:"@type"`
 			Extra      string         `json:"@extra"`

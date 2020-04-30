@@ -242,7 +242,7 @@ func (client *Client) executeAsynchronouslyCommon(data interface{}, requestID st
 			return nil, err
 		}
 		if exactlyOnce {
-			return nil, fmt.Errorf("can't send to lib more than once")
+			return nil, fmt.Errorf("can't send to lib more than once [by getting updateSendLiteServerQuery]")
 		}
 		return client.executeAsynchronouslyCommon(data, requestID, exactlyOnce)
 	}
@@ -265,12 +265,12 @@ func (client *Client) executeAsynchronouslyCommon(data interface{}, requestID st
 		}
 
 		if resultWhileSync != nil && client.isExtraMatch(*resultWhileSync, requestID) {
-			fmt.Printf("got result while sync: %s", resultWhileSync.Raw)
+			fmt.Printf("got result while sync: %s\n", resultWhileSync.Raw)
 			return resultWhileSync, nil
 		}
 
 		if exactlyOnce {
-			return nil, fmt.Errorf("can't send to lib more than once")
+			return nil, fmt.Errorf("can't send to lib more than once [by getting updateSyncState]")
 		}
 		return client.executeAsynchronouslyCommon(data, requestID, exactlyOnce)
 	}
