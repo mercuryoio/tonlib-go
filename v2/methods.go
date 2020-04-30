@@ -800,16 +800,19 @@ func (client *Client) RawCreateQuery(body []byte, destination AccountAddress, in
 // GetAccountAddress
 // @param initialAccountState
 // @param revision
-func (client *Client) GetAccountAddress(initialAccountState InitialAccountState, revision int32) (*AccountAddress, error) {
+// @param workchainId
+func (client *Client) GetAccountAddress(initialAccountState InitialAccountState, revision int32, workchainId int32) (*AccountAddress, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string              `json:"@type"`
 			InitialAccountState InitialAccountState `json:"initial_account_state"`
 			Revision            int32               `json:"revision"`
+			WorkchainId         int32               `json:"workchain_id"`
 		}{
 			Type:                "getAccountAddress",
 			InitialAccountState: initialAccountState,
 			Revision:            revision,
+			WorkchainId:         workchainId,
 		},
 	)
 
@@ -829,14 +832,47 @@ func (client *Client) GetAccountAddress(initialAccountState InitialAccountState,
 
 // GuessAccountRevision
 // @param initialAccountState
-func (client *Client) GuessAccountRevision(initialAccountState InitialAccountState) (*AccountRevisionList, error) {
+// @param workchainId
+func (client *Client) GuessAccountRevision(initialAccountState InitialAccountState, workchainId int32) (*AccountRevisionList, error) {
 	result, err := client.executeAsynchronously(
 		struct {
 			Type                string              `json:"@type"`
 			InitialAccountState InitialAccountState `json:"initial_account_state"`
+			WorkchainId         int32               `json:"workchain_id"`
 		}{
 			Type:                "guessAccountRevision",
 			InitialAccountState: initialAccountState,
+			WorkchainId:         workchainId,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var accountRevisionList AccountRevisionList
+	err = json.Unmarshal(result.Raw, &accountRevisionList)
+	return &accountRevisionList, err
+
+}
+
+// GuessAccount
+// @param publicKey
+// @param rwalletInitPublicKey
+func (client *Client) GuessAccount(publicKey string, rwalletInitPublicKey string) (*AccountRevisionList, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type                 string `json:"@type"`
+			PublicKey            string `json:"public_key"`
+			RwalletInitPublicKey string `json:"rwallet_init_public_key"`
+		}{
+			Type:                 "guessAccount",
+			PublicKey:            publicKey,
+			RwalletInitPublicKey: rwalletInitPublicKey,
 		},
 	)
 
@@ -884,22 +920,25 @@ func (client *Client) GetAccountState(accountAddress AccountAddress) (*FullAccou
 // CreateQuery
 // @param action
 // @param address
+// @param initialAccountState
 // @param privateKey
 // @param timeout
-func (client *Client) CreateQuery(action Action, address AccountAddress, privateKey InputKey, timeout int32) (*QueryInfo, error) {
+func (client *Client) CreateQuery(action Action, address AccountAddress, initialAccountState InitialAccountState, privateKey InputKey, timeout int32) (*QueryInfo, error) {
 	result, err := client.executeAsynchronously(
 		struct {
-			Type       string         `json:"@type"`
-			Action     Action         `json:"action"`
-			Address    AccountAddress `json:"address"`
-			PrivateKey InputKey       `json:"private_key"`
-			Timeout    int32          `json:"timeout"`
+			Type                string              `json:"@type"`
+			Action              Action              `json:"action"`
+			Address             AccountAddress      `json:"address"`
+			InitialAccountState InitialAccountState `json:"initial_account_state"`
+			PrivateKey          InputKey            `json:"private_key"`
+			Timeout             int32               `json:"timeout"`
 		}{
-			Type:       "createQuery",
-			Action:     action,
-			Address:    address,
-			PrivateKey: privateKey,
-			Timeout:    timeout,
+			Type:                "createQuery",
+			Action:              action,
+			Address:             address,
+			InitialAccountState: initialAccountState,
+			PrivateKey:          privateKey,
+			Timeout:             timeout,
 		},
 	)
 
@@ -1232,6 +1271,120 @@ func (client *Client) DnsResolve(accountAddress AccountAddress, category int32, 
 	var dnsResolved DnsResolved
 	err = json.Unmarshal(result.Raw, &dnsResolved)
 	return &dnsResolved, err
+
+}
+
+// PchanSignPromise
+// @param inputKey
+// @param promise
+func (client *Client) PchanSignPromise(inputKey InputKey, promise PchanPromise) (*PchanPromise, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type     string       `json:"@type"`
+			InputKey InputKey     `json:"input_key"`
+			Promise  PchanPromise `json:"promise"`
+		}{
+			Type:     "pchan.signPromise",
+			InputKey: inputKey,
+			Promise:  promise,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var pchanPromise PchanPromise
+	err = json.Unmarshal(result.Raw, &pchanPromise)
+	return &pchanPromise, err
+
+}
+
+// PchanValidatePromise
+// @param promise
+// @param publicKey
+func (client *Client) PchanValidatePromise(promise PchanPromise, publicKey []byte) (*Ok, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type      string       `json:"@type"`
+			Promise   PchanPromise `json:"promise"`
+			PublicKey []byte       `json:"public_key"`
+		}{
+			Type:      "pchan.validatePromise",
+			Promise:   promise,
+			PublicKey: publicKey,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var ok Ok
+	err = json.Unmarshal(result.Raw, &ok)
+	return &ok, err
+
+}
+
+// PchanPackPromise
+// @param promise
+func (client *Client) PchanPackPromise(promise PchanPromise) (*Data, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type    string       `json:"@type"`
+			Promise PchanPromise `json:"promise"`
+		}{
+			Type:    "pchan.packPromise",
+			Promise: promise,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var data Data
+	err = json.Unmarshal(result.Raw, &data)
+	return &data, err
+
+}
+
+// PchanUnpackPromise
+// @param data
+func (client *Client) PchanUnpackPromise(data SecureBytes) (*PchanPromise, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type string      `json:"@type"`
+			Data SecureBytes `json:"data"`
+		}{
+			Type: "pchan.unpackPromise",
+			Data: data,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var pchanPromise PchanPromise
+	err = json.Unmarshal(result.Raw, &pchanPromise)
+	return &pchanPromise, err
 
 }
 

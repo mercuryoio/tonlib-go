@@ -389,7 +389,8 @@ func NewOptions(config *Config, keystoreType *KeyStoreType) *Options {
 // OptionsConfigInfo
 type OptionsConfigInfo struct {
 	tonCommon
-	DefaultWalletId JSONInt64 `json:"default_wallet_id"` //
+	DefaultRwalletInitPublicKey string    `json:"default_rwallet_init_public_key"` //
+	DefaultWalletId             JSONInt64 `json:"default_wallet_id"`               //
 }
 
 // MessageType return the string telegram-type of OptionsConfigInfo
@@ -399,11 +400,13 @@ func (optionsConfigInfo *OptionsConfigInfo) MessageType() string {
 
 // NewOptionsConfigInfo creates a new OptionsConfigInfo
 //
+// @param defaultRwalletInitPublicKey
 // @param defaultWalletId
-func NewOptionsConfigInfo(defaultWalletId JSONInt64) *OptionsConfigInfo {
+func NewOptionsConfigInfo(defaultRwalletInitPublicKey string, defaultWalletId JSONInt64) *OptionsConfigInfo {
 	optionsConfigInfoTemp := OptionsConfigInfo{
-		tonCommon:       tonCommon{Type: "options.configInfo"},
-		DefaultWalletId: defaultWalletId,
+		tonCommon:                   tonCommon{Type: "options.configInfo"},
+		DefaultRwalletInitPublicKey: defaultRwalletInitPublicKey,
+		DefaultWalletId:             defaultWalletId,
 	}
 
 	return &optionsConfigInfoTemp
@@ -637,29 +640,6 @@ func NewAccountAddress(accountAddress string) *AccountAddress {
 	}
 
 	return &accountAddressTemp
-}
-
-// AccountRevisionList
-type AccountRevisionList struct {
-	tonCommon
-	Revisions []int32 `json:"revisions"` //
-}
-
-// MessageType return the string telegram-type of AccountRevisionList
-func (accountRevisionList *AccountRevisionList) MessageType() string {
-	return "accountRevisionList"
-}
-
-// NewAccountRevisionList creates a new AccountRevisionList
-//
-// @param revisions
-func NewAccountRevisionList(revisions []int32) *AccountRevisionList {
-	accountRevisionListTemp := AccountRevisionList{
-		tonCommon: tonCommon{Type: "accountRevisionList"},
-		Revisions: revisions,
-	}
-
-	return &accountRevisionListTemp
 }
 
 // UnpackedAccountAddress
@@ -939,6 +919,47 @@ func NewRawTransactions(previousTransactionId *InternalTransactionId, transactio
 	return &rawTransactionsTemp
 }
 
+// PchanConfig
+type PchanConfig struct {
+	tonCommon
+	AliceAddress   *AccountAddress `json:"alice_address"`    //
+	AlicePublicKey string          `json:"alice_public_key"` //
+	BobAddress     *AccountAddress `json:"bob_address"`      //
+	BobPublicKey   string          `json:"bob_public_key"`   //
+	ChannelId      JSONInt64       `json:"channel_id"`       //
+	CloseTimeout   int32           `json:"close_timeout"`    //
+	InitTimeout    int32           `json:"init_timeout"`     //
+}
+
+// MessageType return the string telegram-type of PchanConfig
+func (pchanConfig *PchanConfig) MessageType() string {
+	return "pchan.config"
+}
+
+// NewPchanConfig creates a new PchanConfig
+//
+// @param aliceAddress
+// @param alicePublicKey
+// @param bobAddress
+// @param bobPublicKey
+// @param channelId
+// @param closeTimeout
+// @param initTimeout
+func NewPchanConfig(aliceAddress *AccountAddress, alicePublicKey string, bobAddress *AccountAddress, bobPublicKey string, channelId JSONInt64, closeTimeout int32, initTimeout int32) *PchanConfig {
+	pchanConfigTemp := PchanConfig{
+		tonCommon:      tonCommon{Type: "pchan.config"},
+		AliceAddress:   aliceAddress,
+		AlicePublicKey: alicePublicKey,
+		BobAddress:     bobAddress,
+		BobPublicKey:   bobPublicKey,
+		ChannelId:      channelId,
+		CloseTimeout:   closeTimeout,
+		InitTimeout:    initTimeout,
+	}
+
+	return &pchanConfigTemp
+}
+
 // RawInitialAccountState
 type RawInitialAccountState struct {
 	tonCommon
@@ -1109,6 +1130,87 @@ func NewWalletHighloadV2InitialAccountState(publicKey string, walletId JSONInt64
 	return &walletHighloadV2InitialAccountStateTemp
 }
 
+// RwalletLimit
+type RwalletLimit struct {
+	tonCommon
+	Seconds int32     `json:"seconds"` //
+	Value   JSONInt64 `json:"value"`   //
+}
+
+// MessageType return the string telegram-type of RwalletLimit
+func (rwalletLimit *RwalletLimit) MessageType() string {
+	return "rwallet.limit"
+}
+
+// NewRwalletLimit creates a new RwalletLimit
+//
+// @param seconds
+// @param value
+func NewRwalletLimit(seconds int32, value JSONInt64) *RwalletLimit {
+	rwalletLimitTemp := RwalletLimit{
+		tonCommon: tonCommon{Type: "rwallet.limit"},
+		Seconds:   seconds,
+		Value:     value,
+	}
+
+	return &rwalletLimitTemp
+}
+
+// RwalletConfig
+type RwalletConfig struct {
+	tonCommon
+	Limits  []RwalletLimit `json:"limits"`   //
+	StartAt int64          `json:"start_at"` //
+}
+
+// MessageType return the string telegram-type of RwalletConfig
+func (rwalletConfig *RwalletConfig) MessageType() string {
+	return "rwallet.config"
+}
+
+// NewRwalletConfig creates a new RwalletConfig
+//
+// @param limits
+// @param startAt
+func NewRwalletConfig(limits []RwalletLimit, startAt int64) *RwalletConfig {
+	rwalletConfigTemp := RwalletConfig{
+		tonCommon: tonCommon{Type: "rwallet.config"},
+		Limits:    limits,
+		StartAt:   startAt,
+	}
+
+	return &rwalletConfigTemp
+}
+
+// RwalletInitialAccountState
+type RwalletInitialAccountState struct {
+	tonCommon
+	InitPublicKey string    `json:"init_public_key"` //
+	PublicKey     string    `json:"public_key"`      //
+	WalletId      JSONInt64 `json:"wallet_id"`       //
+}
+
+// MessageType return the string telegram-type of RwalletInitialAccountState
+func (rwalletInitialAccountState *RwalletInitialAccountState) MessageType() string {
+	return "rwallet.initialAccountState"
+}
+
+// NewRwalletInitialAccountState creates a new RwalletInitialAccountState
+//
+// @param initPublicKey
+// @param publicKey
+// @param walletId
+func NewRwalletInitialAccountState(initPublicKey string, publicKey string, walletId JSONInt64) *RwalletInitialAccountState {
+	rwalletInitialAccountStateTemp := RwalletInitialAccountState{
+		tonCommon:     tonCommon{Type: "rwallet.initialAccountState"},
+		InitPublicKey: initPublicKey,
+		PublicKey:     publicKey,
+		WalletId:      walletId,
+	}
+
+	return &rwalletInitialAccountStateTemp
+}
+
 // DnsInitialAccountState
 type DnsInitialAccountState struct {
 	tonCommon
@@ -1133,6 +1235,29 @@ func NewDnsInitialAccountState(publicKey string, walletId JSONInt64) *DnsInitial
 	}
 
 	return &dnsInitialAccountStateTemp
+}
+
+// PchanInitialAccountState
+type PchanInitialAccountState struct {
+	tonCommon
+	Config *PchanConfig `json:"config"` //
+}
+
+// MessageType return the string telegram-type of PchanInitialAccountState
+func (pchanInitialAccountState *PchanInitialAccountState) MessageType() string {
+	return "pchan.initialAccountState"
+}
+
+// NewPchanInitialAccountState creates a new PchanInitialAccountState
+//
+// @param config
+func NewPchanInitialAccountState(config *PchanConfig) *PchanInitialAccountState {
+	pchanInitialAccountStateTemp := PchanInitialAccountState{
+		tonCommon: tonCommon{Type: "pchan.initialAccountState"},
+		Config:    config,
+	}
+
+	return &pchanInitialAccountStateTemp
 }
 
 // RawAccountState
@@ -1331,6 +1456,175 @@ func NewDnsAccountState(walletId JSONInt64) *DnsAccountState {
 	return &dnsAccountStateTemp
 }
 
+// RwalletAccountState
+type RwalletAccountState struct {
+	tonCommon
+	Config          *RwalletConfig `json:"config"`           //
+	Seqno           int32          `json:"seqno"`            //
+	UnlockedBalance JSONInt64      `json:"unlocked_balance"` //
+	WalletId        JSONInt64      `json:"wallet_id"`        //
+}
+
+// MessageType return the string telegram-type of RwalletAccountState
+func (rwalletAccountState *RwalletAccountState) MessageType() string {
+	return "rwallet.accountState"
+}
+
+// NewRwalletAccountState creates a new RwalletAccountState
+//
+// @param config
+// @param seqno
+// @param unlockedBalance
+// @param walletId
+func NewRwalletAccountState(config *RwalletConfig, seqno int32, unlockedBalance JSONInt64, walletId JSONInt64) *RwalletAccountState {
+	rwalletAccountStateTemp := RwalletAccountState{
+		tonCommon:       tonCommon{Type: "rwallet.accountState"},
+		Config:          config,
+		Seqno:           seqno,
+		UnlockedBalance: unlockedBalance,
+		WalletId:        walletId,
+	}
+
+	return &rwalletAccountStateTemp
+}
+
+// PchanStateInit
+type PchanStateInit struct {
+	tonCommon
+	A        JSONInt64 `json:"A"`         //
+	B        JSONInt64 `json:"B"`         //
+	ExpireAt int64     `json:"expire_at"` //
+	MinA     JSONInt64 `json:"min_A"`     //
+	MinB     JSONInt64 `json:"min_B"`     //
+	SignedA  bool      `json:"signed_A"`  //
+	SignedB  bool      `json:"signed_B"`  //
+}
+
+// MessageType return the string telegram-type of PchanStateInit
+func (pchanStateInit *PchanStateInit) MessageType() string {
+	return "pchan.stateInit"
+}
+
+// NewPchanStateInit creates a new PchanStateInit
+//
+// @param a
+// @param b
+// @param expireAt
+// @param minA
+// @param minB
+// @param signedA
+// @param signedB
+func NewPchanStateInit(a JSONInt64, b JSONInt64, expireAt int64, minA JSONInt64, minB JSONInt64, signedA bool, signedB bool) *PchanStateInit {
+	pchanStateInitTemp := PchanStateInit{
+		tonCommon: tonCommon{Type: "pchan.stateInit"},
+		A:         a,
+		B:         b,
+		ExpireAt:  expireAt,
+		MinA:      minA,
+		MinB:      minB,
+		SignedA:   signedA,
+		SignedB:   signedB,
+	}
+
+	return &pchanStateInitTemp
+}
+
+// PchanStateClose
+type PchanStateClose struct {
+	tonCommon
+	A        JSONInt64 `json:"A"`         //
+	B        JSONInt64 `json:"B"`         //
+	ExpireAt int64     `json:"expire_at"` //
+	MinA     JSONInt64 `json:"min_A"`     //
+	MinB     JSONInt64 `json:"min_B"`     //
+	SignedA  bool      `json:"signed_A"`  //
+	SignedB  bool      `json:"signed_B"`  //
+}
+
+// MessageType return the string telegram-type of PchanStateClose
+func (pchanStateClose *PchanStateClose) MessageType() string {
+	return "pchan.stateClose"
+}
+
+// NewPchanStateClose creates a new PchanStateClose
+//
+// @param a
+// @param b
+// @param expireAt
+// @param minA
+// @param minB
+// @param signedA
+// @param signedB
+func NewPchanStateClose(a JSONInt64, b JSONInt64, expireAt int64, minA JSONInt64, minB JSONInt64, signedA bool, signedB bool) *PchanStateClose {
+	pchanStateCloseTemp := PchanStateClose{
+		tonCommon: tonCommon{Type: "pchan.stateClose"},
+		A:         a,
+		B:         b,
+		ExpireAt:  expireAt,
+		MinA:      minA,
+		MinB:      minB,
+		SignedA:   signedA,
+		SignedB:   signedB,
+	}
+
+	return &pchanStateCloseTemp
+}
+
+// PchanStatePayout
+type PchanStatePayout struct {
+	tonCommon
+	A JSONInt64 `json:"A"` //
+	B JSONInt64 `json:"B"` //
+}
+
+// MessageType return the string telegram-type of PchanStatePayout
+func (pchanStatePayout *PchanStatePayout) MessageType() string {
+	return "pchan.statePayout"
+}
+
+// NewPchanStatePayout creates a new PchanStatePayout
+//
+// @param a
+// @param b
+func NewPchanStatePayout(a JSONInt64, b JSONInt64) *PchanStatePayout {
+	pchanStatePayoutTemp := PchanStatePayout{
+		tonCommon: tonCommon{Type: "pchan.statePayout"},
+		A:         a,
+		B:         b,
+	}
+
+	return &pchanStatePayoutTemp
+}
+
+// PchanAccountState
+type PchanAccountState struct {
+	tonCommon
+	Config      *PchanConfig `json:"config"`      //
+	Description string       `json:"description"` //
+	State       PchanState  `json:"state"`       //
+}
+
+// MessageType return the string telegram-type of PchanAccountState
+func (pchanAccountState *PchanAccountState) MessageType() string {
+	return "pchan.accountState"
+}
+
+// NewPchanAccountState creates a new PchanAccountState
+//
+// @param config
+// @param description
+// @param state
+func NewPchanAccountState(config *PchanConfig, description string, state PchanState) *PchanAccountState {
+	pchanAccountStateTemp := PchanAccountState{
+		tonCommon:   tonCommon{Type: "pchan.accountState"},
+		Config:      config,
+		Description: description,
+		State:       state,
+	}
+
+	return &pchanAccountStateTemp
+}
+
 // UninitedAccountState
 type UninitedAccountState struct {
 	tonCommon
@@ -1358,9 +1652,11 @@ func NewUninitedAccountState(frozenHash string) *UninitedAccountState {
 type FullAccountState struct {
 	tonCommon
 	AccountState      *AccountState          `json:"account_state"`       //
+	Address           *AccountAddress        `json:"address"`             //
 	Balance           JSONInt64              `json:"balance"`             //
 	BlockId           *TonBlockIdExt         `json:"block_id"`            //
 	LastTransactionId *InternalTransactionId `json:"last_transaction_id"` //
+	Revision          int32                  `json:"revision"`            //
 	SyncUtime         int64                  `json:"sync_utime"`          //
 }
 
@@ -1372,21 +1668,71 @@ func (fullAccountState *FullAccountState) MessageType() string {
 // NewFullAccountState creates a new FullAccountState
 //
 // @param accountState
+// @param address
 // @param balance
 // @param blockId
 // @param lastTransactionId
+// @param revision
 // @param syncUtime
-func NewFullAccountState(accountState *AccountState, balance JSONInt64, blockId *TonBlockIdExt, lastTransactionId *InternalTransactionId, syncUtime int64) *FullAccountState {
+func NewFullAccountState(accountState *AccountState, address *AccountAddress, balance JSONInt64, blockId *TonBlockIdExt, lastTransactionId *InternalTransactionId, revision int32, syncUtime int64) *FullAccountState {
 	fullAccountStateTemp := FullAccountState{
 		tonCommon:         tonCommon{Type: "fullAccountState"},
 		AccountState:      accountState,
+		Address:           address,
 		Balance:           balance,
 		BlockId:           blockId,
 		LastTransactionId: lastTransactionId,
+		Revision:          revision,
 		SyncUtime:         syncUtime,
 	}
 
 	return &fullAccountStateTemp
+}
+
+// AccountRevisionList
+type AccountRevisionList struct {
+	tonCommon
+	Revisions []FullAccountState `json:"revisions"` //
+}
+
+// MessageType return the string telegram-type of AccountRevisionList
+func (accountRevisionList *AccountRevisionList) MessageType() string {
+	return "accountRevisionList"
+}
+
+// NewAccountRevisionList creates a new AccountRevisionList
+//
+// @param revisions
+func NewAccountRevisionList(revisions []FullAccountState) *AccountRevisionList {
+	accountRevisionListTemp := AccountRevisionList{
+		tonCommon: tonCommon{Type: "accountRevisionList"},
+		Revisions: revisions,
+	}
+
+	return &accountRevisionListTemp
+}
+
+// AccountList
+type AccountList struct {
+	tonCommon
+	Accounts []FullAccountState `json:"accounts"` //
+}
+
+// MessageType return the string telegram-type of AccountList
+func (accountList *AccountList) MessageType() string {
+	return "accountList"
+}
+
+// NewAccountList creates a new AccountList
+//
+// @param accounts
+func NewAccountList(accounts []FullAccountState) *AccountList {
+	accountListTemp := AccountList{
+		tonCommon: tonCommon{Type: "accountList"},
+		Accounts:  accounts,
+	}
+
+	return &accountListTemp
 }
 
 // SyncStateDone
@@ -1441,7 +1787,8 @@ func NewSyncStateInProgress(currentSeqno int32, fromSeqno int32, toSeqno int32) 
 // MsgDataRaw
 type MsgDataRaw struct {
 	tonCommon
-	Body string `json:"body"` //
+	Body      string `json:"body"`       //
+	InitState string `json:"init_state"` //
 }
 
 // MessageType return the string telegram-type of MsgDataRaw
@@ -1452,10 +1799,12 @@ func (msgDataRaw *MsgDataRaw) MessageType() string {
 // NewMsgDataRaw creates a new MsgDataRaw
 //
 // @param body
-func NewMsgDataRaw(body string) *MsgDataRaw {
+// @param initState
+func NewMsgDataRaw(body string, initState string) *MsgDataRaw {
 	msgDataRawTemp := MsgDataRaw{
 		tonCommon: tonCommon{Type: "msg.dataRaw"},
 		Body:      body,
+		InitState: initState,
 	}
 
 	return &msgDataRawTemp
@@ -1896,6 +2245,142 @@ func NewDnsResolved(entries []DnsEntry) *DnsResolved {
 	return &dnsResolvedTemp
 }
 
+// PchanPromise
+type PchanPromise struct {
+	tonCommon
+	ChannelId JSONInt64 `json:"channel_id"` //
+	PromiseA  JSONInt64 `json:"promise_A"`  //
+	PromiseB  JSONInt64 `json:"promise_B"`  //
+	Signature string    `json:"signature"`  //
+}
+
+// MessageType return the string telegram-type of PchanPromise
+func (pchanPromise *PchanPromise) MessageType() string {
+	return "pchan.promise"
+}
+
+// NewPchanPromise creates a new PchanPromise
+//
+// @param channelId
+// @param promiseA
+// @param promiseB
+// @param signature
+func NewPchanPromise(channelId JSONInt64, promiseA JSONInt64, promiseB JSONInt64, signature string) *PchanPromise {
+	pchanPromiseTemp := PchanPromise{
+		tonCommon: tonCommon{Type: "pchan.promise"},
+		ChannelId: channelId,
+		PromiseA:  promiseA,
+		PromiseB:  promiseB,
+		Signature: signature,
+	}
+
+	return &pchanPromiseTemp
+}
+
+// PchanActionInit
+type PchanActionInit struct {
+	tonCommon
+	IncA JSONInt64 `json:"inc_A"` //
+	IncB JSONInt64 `json:"inc_B"` //
+	MinA JSONInt64 `json:"min_A"` //
+	MinB JSONInt64 `json:"min_B"` //
+}
+
+// MessageType return the string telegram-type of PchanActionInit
+func (pchanActionInit *PchanActionInit) MessageType() string {
+	return "pchan.actionInit"
+}
+
+// NewPchanActionInit creates a new PchanActionInit
+//
+// @param incA
+// @param incB
+// @param minA
+// @param minB
+func NewPchanActionInit(incA JSONInt64, incB JSONInt64, minA JSONInt64, minB JSONInt64) *PchanActionInit {
+	pchanActionInitTemp := PchanActionInit{
+		tonCommon: tonCommon{Type: "pchan.actionInit"},
+		IncA:      incA,
+		IncB:      incB,
+		MinA:      minA,
+		MinB:      minB,
+	}
+
+	return &pchanActionInitTemp
+}
+
+// PchanActionClose
+type PchanActionClose struct {
+	tonCommon
+	ExtraA  JSONInt64     `json:"extra_A"` //
+	ExtraB  JSONInt64     `json:"extra_B"` //
+	Promise *PchanPromise `json:"promise"` //
+}
+
+// MessageType return the string telegram-type of PchanActionClose
+func (pchanActionClose *PchanActionClose) MessageType() string {
+	return "pchan.actionClose"
+}
+
+// NewPchanActionClose creates a new PchanActionClose
+//
+// @param extraA
+// @param extraB
+// @param promise
+func NewPchanActionClose(extraA JSONInt64, extraB JSONInt64, promise *PchanPromise) *PchanActionClose {
+	pchanActionCloseTemp := PchanActionClose{
+		tonCommon: tonCommon{Type: "pchan.actionClose"},
+		ExtraA:    extraA,
+		ExtraB:    extraB,
+		Promise:   promise,
+	}
+
+	return &pchanActionCloseTemp
+}
+
+// PchanActionTimeout
+type PchanActionTimeout struct {
+	tonCommon
+}
+
+// MessageType return the string telegram-type of PchanActionTimeout
+func (pchanActionTimeout *PchanActionTimeout) MessageType() string {
+	return "pchan.actionTimeout"
+}
+
+// NewPchanActionTimeout creates a new PchanActionTimeout
+//
+func NewPchanActionTimeout() *PchanActionTimeout {
+	pchanActionTimeoutTemp := PchanActionTimeout{
+		tonCommon: tonCommon{Type: "pchan.actionTimeout"},
+	}
+
+	return &pchanActionTimeoutTemp
+}
+
+// RwalletActionInit
+type RwalletActionInit struct {
+	tonCommon
+	Config *RwalletConfig `json:"config"` //
+}
+
+// MessageType return the string telegram-type of RwalletActionInit
+func (rwalletActionInit *RwalletActionInit) MessageType() string {
+	return "rwallet.actionInit"
+}
+
+// NewRwalletActionInit creates a new RwalletActionInit
+//
+// @param config
+func NewRwalletActionInit(config *RwalletConfig) *RwalletActionInit {
+	rwalletActionInitTemp := RwalletActionInit{
+		tonCommon: tonCommon{Type: "rwallet.actionInit"},
+		Config:    config,
+	}
+
+	return &rwalletActionInitTemp
+}
+
 // ActionNoop
 type ActionNoop struct {
 	tonCommon
@@ -1965,6 +2450,52 @@ func NewActionDns(actions []DnsAction) *ActionDns {
 	return &actionDnsTemp
 }
 
+// ActionPchan
+type ActionPchan struct {
+	tonCommon
+	Action PchanAction `json:"action"` //
+}
+
+// MessageType return the string telegram-type of ActionPchan
+func (actionPchan *ActionPchan) MessageType() string {
+	return "actionPchan"
+}
+
+// NewActionPchan creates a new ActionPchan
+//
+// @param action
+func NewActionPchan(action PchanAction) *ActionPchan {
+	actionPchanTemp := ActionPchan{
+		tonCommon: tonCommon{Type: "actionPchan"},
+		Action:    action,
+	}
+
+	return &actionPchanTemp
+}
+
+// ActionRwallet
+type ActionRwallet struct {
+	tonCommon
+	Action *RwalletActionInit `json:"action"` //
+}
+
+// MessageType return the string telegram-type of ActionRwallet
+func (actionRwallet *ActionRwallet) MessageType() string {
+	return "actionRwallet"
+}
+
+// NewActionRwallet creates a new ActionRwallet
+//
+// @param action
+func NewActionRwallet(action *RwalletActionInit) *ActionRwallet {
+	actionRwalletTemp := ActionRwallet{
+		tonCommon: tonCommon{Type: "actionRwallet"},
+		Action:    action,
+	}
+
+	return &actionRwalletTemp
+}
+
 // Fees
 type Fees struct {
 	tonCommon
@@ -2026,8 +2557,10 @@ func NewQueryFees(destinationFees []Fees, sourceFees *Fees) *QueryFees {
 // QueryInfo
 type QueryInfo struct {
 	tonCommon
+	Body       string `json:"body"`        //
 	BodyHash   string `json:"body_hash"`   //
 	Id         int64  `json:"id"`          //
+	InitState  string `json:"init_state"`  //
 	ValidUntil int64  `json:"valid_until"` //
 }
 
@@ -2038,14 +2571,18 @@ func (queryInfo *QueryInfo) MessageType() string {
 
 // NewQueryInfo creates a new QueryInfo
 //
+// @param body
 // @param bodyHash
 // @param id
+// @param initState
 // @param validUntil
-func NewQueryInfo(bodyHash string, id int64, validUntil int64) *QueryInfo {
+func NewQueryInfo(body string, bodyHash string, id int64, initState string, validUntil int64) *QueryInfo {
 	queryInfoTemp := QueryInfo{
 		tonCommon:  tonCommon{Type: "query.info"},
+		Body:       body,
 		BodyHash:   bodyHash,
 		Id:         id,
+		InitState:  initState,
 		ValidUntil: validUntil,
 	}
 
