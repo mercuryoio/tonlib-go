@@ -67,7 +67,8 @@ func estimateFee(cmd *cobra.Command, args []string) {
 	}
 
 	// get wallet adress info
-	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0)
+	sourceAccState := tonlib.NewWalletInitialAccountState(pKey.PublicKey)
+	addr, err := tonClient.GetAccountAddress(sourceAccState, 0, 0)
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)
@@ -86,6 +87,7 @@ func estimateFee(cmd *cobra.Command, args []string) {
 	queryInfo, err := tonClient.CreateQuery(
 		msgAction,
 		*addr,
+		sourceAccState,
 		inputKey,
 		300, // If this timeout will be exceeded - all request are go as usual but grams wil not be sent
 	)

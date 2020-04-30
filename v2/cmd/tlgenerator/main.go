@@ -44,7 +44,7 @@ func syncWtithTl(cmd *cobra.Command, args []string) {
 	fmt.Printf("Parsed entities: %d, interfaces: %d, enums: %d. ", len(*entities), len(*interfaces), len(*enums))
 
 	// generate gp`s structs based on parsed entities
-	structsContent, methodsContetnt := generateStructsFromTnEntities("tonlib", entities, interfaces, enums)
+	structsContent, methodsContetnt := generateStructsFromTnEntities("v2", entities, interfaces, enums)
 	structsFilePath := "./structs.go"
 	methodsFilePath := "./methods.go"
 

@@ -268,7 +268,7 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountAddress pKey: %#v", pKey))
 
 	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0)
+	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountAddress failed to WalletGetAccountAddress(): ", err)
 	}
@@ -309,7 +309,7 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountState pKey: %#v", pKey))
 
 	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0)
+	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState failed to WalletGetAccountAddress(): ", err)
 	}
@@ -400,7 +400,7 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	fmt.Println(fmt.Sprintf("TestClient_RawCreateAndSendMessage pKey: %#v", pKey))
 
 	// get wallet address info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0)
+	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage failed to WalletGetAccountAddress(): ", err)
 	}

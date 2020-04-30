@@ -55,6 +55,7 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
+	mu            sync.Mutex
 	client        unsafe.Pointer
 	config        Config
 	timeout       int64
@@ -73,6 +74,7 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLoggi
 	rand.Seed(time.Now().UnixNano())
 
 	client := Client{
+		mu:            sync.Mutex{},
 		client:        C.tonlib_client_json_create(),
 		config:        config,
 		timeout:       timeout,
@@ -200,7 +202,6 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 	result := C.tonlib_client_json_execute(client.client, cs)
-
 	var updateData TONResponse
 	res := C.GoString(result)
 	resB := []byte(res)
@@ -209,7 +210,10 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 }
 
 func (client *Client) Destroy() {
+	client.mu.Lock()
+	defer client.mu.Unlock()
 	C.tonlib_client_json_destroy(client.client)
+	C.free(client.client)
 }
 
 //sync node`s blocks to current
@@ -363,7 +367,7 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 }
 
 // for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
-func (client *Client) UpdateTonConnection() (error) {
+func (client *Client) UpdateTonConnection() error {
 	_, err := client.Close()
 	if err != nil {
 		return err
@@ -431,3 +435,6 @@ type DnsEntryData string
 
 type Action interface{ MessageType() string }
 type DnsAction Action
+
+type PchanState interface{ MessageType() string }
+type PchanAction interface{ MessageType() string }
