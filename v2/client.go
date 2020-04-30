@@ -132,7 +132,6 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		return &TONResult{}, err
 	}
 	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
 
 	if client.clientLogging {
 		fmt.Println("call", string(req))
@@ -198,7 +197,6 @@ execute ton-lib synchronously
 func (client *Client) executeSynchronously(data interface{}) (*TONResult, error) {
 	req, _ := json.Marshal(data)
 	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
 	result := C.tonlib_client_json_execute(client.client, cs)
 	var updateData TONResponse
 	res := C.GoString(result)
@@ -209,7 +207,6 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 
 func (client *Client) Destroy() {
 	C.tonlib_client_json_destroy(client.client)
-	//C.free(client.client)
 }
 
 //sync node`s blocks to current
@@ -226,7 +223,6 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 		return "", err
 	}
 	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
 	if client.clientLogging {
 		fmt.Println("call (sync)", string(req))
 	}
