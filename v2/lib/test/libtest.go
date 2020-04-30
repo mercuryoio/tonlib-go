@@ -16,7 +16,7 @@ func main() {
 		Options: *options,
 	}
 
-	_, err = tonlib.NewClient(&req, tonlib.Config{}, 60, false, 0)
+	_, err = tonlib.NewClient(&req, tonlib.Config{}, 60, true, 9)
 	if err != nil {
 		log.Fatalln("Init client error", err)
 	}

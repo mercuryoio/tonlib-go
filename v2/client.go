@@ -435,3 +435,6 @@ type DnsEntryData string
 
 type Action interface{ MessageType() string }
 type DnsAction Action
+
+type PchanState interface{ MessageType() string }
+type PchanAction interface{ MessageType() string }

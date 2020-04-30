@@ -68,7 +68,8 @@ func sendGramm(cmd *cobra.Command, args []string) {
 	}
 
 	// get wallet adress info
-	senderAddr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0)
+	sourceAccState := tonlib.NewWalletInitialAccountState(pKey.PublicKey)
+	senderAddr, err := tonClient.GetAccountAddress(sourceAccState, 0, 0)
 	if err != nil {
 		fmt.Println("get wallet address error: ", err, senderAddr)
 		os.Exit(0)
@@ -87,6 +88,7 @@ func sendGramm(cmd *cobra.Command, args []string) {
 	queryInfo, err := tonClient.CreateQuery(
 		msgAction,
 		*senderAddr,
+		sourceAccState,
 		inputKey,
 		300, // time out of sending money not executing request
 	)
