@@ -213,7 +213,6 @@ func (client *Client) Destroy() {
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	C.tonlib_client_json_destroy(client.client)
-	C.free(client.client)
 }
 
 //sync node`s blocks to current
