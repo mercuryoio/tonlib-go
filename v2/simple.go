@@ -6,15 +6,31 @@ import (
 	"strconv"
 )
 
+// SmcRunResultType sets name of json field for result response.
 const SmcRunResultType = "smc.runResult"
-const SmcElectionIdMethod = "active_election_id"
+
+// SmcActiveElectionIDMethod sets name for getting active elecetion id.
+const SmcActiveElectionIDMethod = "active_election_id"
+
+// SmcWalletSeqnoMethod sets method name to get smart-contract seqno.
 const SmcWalletSeqnoMethod = "seqno"
-const SmcParicipiantListMethod = "participant_list"
-const SmcParicipiantListExtendedMethod = "participant_list_extended"
+
+// SmcParticipantListMethod sets method name to get participant list.
+const SmcParticipantListMethod = "participant_list"
+
+// SmcParticipantListExtendedMethod sets method name to get participant_list_extended.
+const SmcParticipantListExtendedMethod = "participant_list_extended"
+
+// SmcParticipatesInMethod sets method name to get participates_in.
 const SmcParticipatesInMethod = "participates_in"
+
+// SmcComputeReturnedStakeMethod sets method name to get compute_returned_stake.
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
+
+// NoErrorCode sets code for successful response.
 const NoErrorCode = 0
 
+// ElectionParticipant struct for election participant.
 type ElectionParticipant struct {
 	Id                 string      `json:"id"`
 	Stake              string      `json:"stake"`
@@ -24,13 +40,14 @@ type ElectionParticipant struct {
 	Raw                interface{} `json:"-"`
 }
 
+// GetActiveElectionID return active election id if elections are running.
 func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	smcInfo, err := client.LoadContract(address)
 	if err != nil {
 		return 0, err
 	}
 
-	method := NewSmcMethodIdName(SmcElectionIdMethod)
+	method := NewSmcMethodIdName(SmcActiveElectionIDMethod)
 	params := []TvmStackEntry{}
 	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
 	if err != nil {
@@ -41,7 +58,7 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
 	}
 	if len(runMethodResult.Stack) < 1 {
-		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, fmt.Errorf("Empty stack response: %s. %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
@@ -66,6 +83,7 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
+// LoadContract by smart-contract address.
 func (client *Client) LoadContract(address string) (*SmcInfo, error) {
 	contract := NewAccountAddress(address)
 	smcInfo, err := client.SmcLoad(*contract)
@@ -75,6 +93,7 @@ func (client *Client) LoadContract(address string) (*SmcInfo, error) {
 	return smcInfo, nil
 }
 
+// GetWalletSeqno returns current seqno of smart-contract.
 func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	smcInfo, err := client.LoadContract(address)
 	if err != nil {
@@ -87,10 +106,10 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 		return 0, fmt.Errorf("runMethodResult failed. %v", err)
 	}
 	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
-		return 0, fmt.Errorf("Got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
+		return 0, fmt.Errorf("got response with type %s and with exit_code: %d", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1 {
-		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, fmt.Errorf("empty stack response:%s. %#v", runMethodResult.Type, *runMethodResult)
 	}
 
 	// map response
@@ -115,12 +134,13 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
+// GetParticipantList returns participant list for current election.
 func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, error) {
 	smcInfo, err := client.LoadContract(address)
 	if err != nil {
 		return nil, err
 	}
-	method := NewSmcMethodIdName(SmcParicipiantListMethod)
+	method := NewSmcMethodIdName(SmcParticipantListMethod)
 	params := []TvmStackEntry{}
 	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
 	if err != nil {
@@ -132,12 +152,13 @@ func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, erro
 	return &runMethodResult.Stack, nil
 }
 
+// GetParticipantListExtended returns extended participant list for current election.
 func (client *Client) GetParticipantListExtended(electorAddress string) (*[]ElectionParticipant, error) {
 	smcInfo, err := client.LoadContract(electorAddress)
 	if err != nil {
 		return nil, err
 	}
-	method := NewSmcMethodIdName(SmcParicipiantListExtendedMethod)
+	method := NewSmcMethodIdName(SmcParticipantListExtendedMethod)
 	params := []TvmStackEntry{}
 	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
 	if err != nil {
@@ -280,6 +301,7 @@ func (client *Client) GetParticipantListExtended(electorAddress string) (*[]Elec
 	return &participants, nil
 }
 
+// CheckParticipatesIn checks if pubKey participates in current election.
 func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error) {
 	smcInfo, err := client.LoadContract(address)
 	if err != nil {
@@ -297,7 +319,7 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 	}
 
 	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
-		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
+		return 0, fmt.Errorf("got response with type %s and with exit_code: %d", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1 {
 		return 0, fmt.Errorf("got an empty Stack in the response")
@@ -325,6 +347,7 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
+// CheckReward check if we have anything to recover from elections smart-contract.
 func (client *Client) CheckReward(address, electorAddress string) (int64, error) {
 	smcInfo, err := client.LoadContract(electorAddress)
 	if err != nil {
@@ -341,7 +364,7 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 		return 0, fmt.Errorf("runMethodResult failed with params %#v. error: %v", params, err)
 	}
 	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
-		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
+		return 0, fmt.Errorf("got response with type %s and with exit_code: %d", runMethodResult.Type, runMethodResult.ExitCode)
 	}
 	if len(runMethodResult.Stack) < 1 {
 		return 0, fmt.Errorf("got response with empty stack: %#v", runMethodResult)
@@ -369,15 +392,18 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
+// GetAccountStateSimple is wrapper around GetAccountState.
 func (client *Client) GetAccountStateSimple(address string) (*FullAccountState, error) {
 	accountAddress := NewAccountAddress(address)
 	return client.GetAccountState(*accountAddress)
 }
 
+// GetLastBlock syncs with the node until last block.
 func (client *Client) GetLastBlock() (string, error) {
 	return client.Sync(SyncState(SyncState{}))
 }
 
+// TonlibSendFile sends BoC file to the network.
 func (client *Client) TonlibSendFile(bocFilePath string) error {
 	if !fileExists(bocFilePath) {
 		return fmt.Errorf("file does not exist")

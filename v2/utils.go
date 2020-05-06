@@ -7,22 +7,27 @@ import (
 	"os"
 )
 
+// TonlibConfigServer stores config for tonlibjson.
 type TonlibConfigServer struct {
-	Liteservers []TonlibListenserverConfig `json:"liteservers"`
-	Validator   ValidatorConfig            `json:"validator"`
+	Liteservers []TonlibLiteServerConfig `json:"liteservers"`
+	Validator   ValidatorConfig          `json:"validator"`
 }
 
-type TonlibListenserverConfig struct {
+// TonlibLiteServerConfig stores lite-server credentials.
+type TonlibLiteServerConfig struct {
 	Type string            `json:"@type"`
 	Ip   int64             `json:"ip"`
 	Port string            `json:"port"`
 	ID   map[string]string `json:"id"`
 }
+
+// ValidatorConfig stores validator config.
 type ValidatorConfig struct {
 	Type      string    `json:"@type"`
 	ZeroState ZeroState `json:"zero_state"`
 }
 
+// ZeroState stores zero_state params from config.
 type ZeroState struct {
 	Workchain int    `json:"workchain"`
 	Shard     int64  `json:"shard"`
@@ -31,6 +36,7 @@ type ZeroState struct {
 	FileHash  string `json:"file_hash"`
 }
 
+// TonlibConfigFileConfig struct for config file network params.
 type TonlibConfigFileConfig struct {
 	Config                 TonlibConfigServer `json:"config"`
 	BlockchainName         string             `json:"blockchain_name"`
@@ -38,12 +44,13 @@ type TonlibConfigFileConfig struct {
 	IgnoreCache            bool               `json:"ignore_cache"`
 }
 
+// TonlibConfigFile handles key store type.
 type TonlibConfigFile struct {
 	Config   TonlibConfigFileConfig `json:"config"`
 	Keystore KeyStoreType           `json:"keystore_type"`
 }
 
-// ParseConfigFile parse JSON config file to
+// ParseConfigFile parses JSON config file.
 func ParseConfigFile(path string) (*Options, error) {
 	jsonFile, err := os.Open(path)
 	defer jsonFile.Close()

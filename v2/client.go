@@ -17,20 +17,26 @@ import (
 )
 
 const (
-	DEFAULT_TIMEOUT = 4.5
-	DefaultRetries  = 10
+	// DefaultTimeout for receive response.
+	DefaultTimeout = 4.5
+	// DefaultRetries number.
+	DefaultRetries = 10
 )
 
+// InputKey defines structure for private key and password.
 type InputKey struct {
 	Type          string        `json:"@type"`
 	LocalPassword string        `json:"local_password"`
 	Key           TONPrivateKey `json:"key"`
 }
+
+// TONPrivateKey stores public_key and secret for further private key usage.
 type TONPrivateKey struct {
 	PublicKey string `json:"public_key"`
 	Secret    string `json:"secret"`
 }
 
+// SyncState represents local sync state.
 type SyncState struct {
 	Type         string `json:"@type"`
 	FromSeqno    int    `json:"from_seqno"`
@@ -38,22 +44,22 @@ type SyncState struct {
 	CurrentSeqno int    `json:"current_seqno"`
 }
 
-// KeyStoreType directory
+// KeyStoreType directory.
 type KeyStoreType struct {
 	Type      string `json:"@type"`
 	Directory string `json:"directory"`
 }
 
-// TONResponse alias for use in TONResult
+// TONResponse alias for use in TONResult.
 type TONResponse map[string]interface{}
 
-// TONResult is used to unmarshal received json strings into
+// TONResult is used to unmarshal received json strings into.
 type TONResult struct {
 	Data TONResponse
 	Raw  []byte
 }
 
-// Client is the Telegram TdLib client
+// Client is the Telegram TdLib client.
 type Client struct {
 	mu            sync.Mutex
 	client        unsafe.Pointer
@@ -64,12 +70,13 @@ type Client struct {
 	options       Options
 }
 
+// TonInitRequest handles options for tonlibjson initialization.
 type TonInitRequest struct {
 	Type    string  `json:"@type"`
 	Options Options `json:"options"`
 }
 
-// NewClient Creates a new instance of TONLib.
+// NewClient creates a new client for tonlibjson.
 func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLogging bool, tonLogging int32) (*Client, error) {
 	rand.Seed(time.Now().UnixNano())
 
@@ -140,7 +147,7 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 		fmt.Println("call", string(req))
 	}
 	C.tonlib_client_json_send(client.client, cs)
-	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+	result := C.tonlib_client_json_receive(client.client, DefaultTimeout)
 
 	num := 0
 	for result == nil {
@@ -148,8 +155,8 @@ func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error
 			return &TONResult{}, fmt.Errorf("Client.executeAsynchronously: exided limit of retries to get json response from TON C`s lib. ")
 		}
 		time.Sleep(1 * time.Second)
-		result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
-		num += 1
+		result = C.tonlib_client_json_receive(client.client, DefaultTimeout)
+		num++
 	}
 
 	var updateData TONResponse
@@ -209,13 +216,14 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	return &TONResult{Data: updateData, Raw: resB}, err
 }
 
+// Destroy tonlibjson client.
 func (client *Client) Destroy() {
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	C.tonlib_client_json_destroy(client.client)
 }
 
-//sync node`s blocks to current
+// Sync client with node last block.
 func (client *Client) Sync(syncState SyncState) (string, error) {
 	data := struct {
 		Type      string    `json:"@type"`
@@ -235,13 +243,13 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 	}
 	C.tonlib_client_json_send(client.client, cs)
 	for {
-		result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+		result := C.tonlib_client_json_receive(client.client, DefaultTimeout)
 		for result == nil {
 			if client.clientLogging {
 				fmt.Println("empty response. next attempt")
 			}
 			time.Sleep(1 * time.Second)
-			result = C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+			result = C.tonlib_client_json_receive(client.client, DefaultTimeout)
 		}
 		syncResp := struct {
 			Type      string    `json:"@type"`
@@ -260,7 +268,7 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 			return "", fmt.Errorf("Got an error response from ton: `%s` ", res)
 		}
 		if syncResp.SyncState.Type == "syncStateDone" {
-			result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+			result := C.tonlib_client_json_receive(client.client, DefaultTimeout)
 			syncResp = struct {
 				Type      string    `json:"@type"`
 				SyncState SyncState `json:"sync_state"`
@@ -289,7 +297,7 @@ func (client *Client) Sync(syncState SyncState) (string, error) {
 	}
 }
 
-// QueryEstimateFees
+// QueryEstimateFees estimates fees before sending query
 // sometimes it`s respond with "@type: ok" instead of "query.fees"
 // @param id
 // @param ignoreChksig
@@ -365,7 +373,8 @@ func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees
 	}
 }
 
-// for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
+// UpdateTonConnection recreates tonlibjson client.
+// for now - a few requests may work wrong, cause it some times get respose form previos reqest for a few times
 func (client *Client) UpdateTonConnection() error {
 	_, err := client.Close()
 	if err != nil {
@@ -396,8 +405,7 @@ func (client *Client) UpdateTonConnection() error {
 	return fmt.Errorf("Unexpected client init response. %#v", optionsInfo)
 }
 
-// key struct cause it strings values no bytes
-// Key
+// Key struct cause it strings values no bytes
 type Key struct {
 	tonCommon
 	PublicKey string `json:"public_key"` //
@@ -423,17 +431,27 @@ func NewKey(publicKey string, secret string) *Key {
 	return &keyTemp
 }
 
+// InitialAccountState interface.
 // because of different subclasses in common class InitialAccountState and  AccountState
-// InitialAccountState
 type InitialAccountState interface{ MessageType() string }
 
+// AccountState represents RawAccountState.
 type AccountState RawAccountState
 
+// MsgData interface.
 type MsgData interface{}
+
+// DnsEntryData type.
 type DnsEntryData string
 
+// Action interface.
 type Action interface{ MessageType() string }
+
+// DnsAction interface.
 type DnsAction Action
 
+// PchanState interface.
 type PchanState interface{ MessageType() string }
+
+// PchanAction interface.
 type PchanAction interface{ MessageType() string }
