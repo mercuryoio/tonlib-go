@@ -13,6 +13,18 @@ const SmcParicipiantListMethod = "participant_list"
 const SmcParicipiantListExtendedMethod = "participant_list_extended"
 const SmcParticipatesInMethod = "participates_in"
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
+
+// SmcGetStdPeriod get standard period time for domain
+const SmcGetStdPeriod = "getstdperiod"
+
+// SmcGetPPR gets price per registration
+const SmcGetPPR = "getppr"
+
+// SmcGetPPB gets price per bit
+const SmcGetPPB = "getppb"
+
+// SmcGetPPC gets price per cell
+const SmcGetPPC = "getppc"
 const NoErrorCode = 0
 
 type ElectionParticipant struct {
@@ -37,33 +49,11 @@ func (client *Client) GetActiveElectionID(address string) (int64, error) {
 		return 0, err
 	}
 
-	if runMethodResult.Type != SmcRunResultType {
-		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
 	}
-	if len(runMethodResult.Stack) < 1 {
-		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
-	}
-
-	// map response
-	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
-	}
-	firstNum, ok := firstEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
-	}
-
-	secondEntity, ok := firstNum.(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
-	}
-	secondNum, ok := secondEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
-	}
-
-	return strconv.ParseInt(secondNum.(string), 10, 64)
+	return result, nil
 }
 
 func (client *Client) LoadContract(address string) (*SmcInfo, error) {
@@ -84,35 +74,14 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	params := []TvmStackEntry{}
 	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
 	if err != nil {
-		return 0, fmt.Errorf("runMethodResult failed. %v", err)
-	}
-	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
-		return 0, fmt.Errorf("Got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
-	}
-	if len(runMethodResult.Stack) < 1 {
-		return 0, fmt.Errorf("Empty stack response: %#v", runMethodResult.Type, *runMethodResult)
+		return 0, err
 	}
 
-	// map response
-	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
 	}
-	firstNum, ok := firstEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
-	}
-
-	secondEntity, ok := firstNum.(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
-	}
-	secondNum, ok := secondEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
-	}
-
-	return strconv.ParseInt(secondNum.(string), 10, 64)
+	return result, nil
 }
 
 func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, error) {
@@ -296,33 +265,11 @@ func (client *Client) CheckParticipatesIn(pubKey, address string) (int64, error)
 		return 0, err
 	}
 
-	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
-		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
 	}
-	if len(runMethodResult.Stack) < 1 {
-		return 0, fmt.Errorf("got an empty Stack in the response")
-	}
-
-	// map response
-	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
-	}
-	firstNum, ok := firstEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
-	}
-
-	secondEntity, ok := firstNum.(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
-	}
-	secondNum, ok := secondEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
-	}
-
-	return strconv.ParseInt(secondNum.(string), 10, 64)
+	return result, nil
 }
 
 func (client *Client) CheckReward(address, electorAddress string) (int64, error) {
@@ -338,35 +285,14 @@ func (client *Client) CheckReward(address, electorAddress string) (int64, error)
 	params = append(params, stnum)
 	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
 	if err != nil {
-		return 0, fmt.Errorf("runMethodResult failed with params %#v. error: %v", params, err)
-	}
-	if runMethodResult.Type != SmcRunResultType || runMethodResult.ExitCode != NoErrorCode {
-		return 0, fmt.Errorf("got response with type %s and with exit_code: %d.", runMethodResult.Type, runMethodResult.ExitCode)
-	}
-	if len(runMethodResult.Stack) < 1 {
-		return 0, fmt.Errorf("got response with empty stack: %#v", runMethodResult)
+		return 0, err
 	}
 
-	// map response
-	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
 	}
-	firstNum, ok := firstEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
-	}
-
-	secondEntity, ok := firstNum.(map[string]interface{})
-	if !ok {
-		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
-	}
-	secondNum, ok := secondEntity["number"]
-	if !ok {
-		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
-	}
-
-	return strconv.ParseInt(secondNum.(string), 10, 64)
+	return result, nil
 }
 
 func (client *Client) GetAccountStateSimple(address string) (*FullAccountState, error) {
@@ -389,4 +315,121 @@ func (client *Client) TonlibSendFile(bocFilePath string) error {
 
 	_, err = client.RawSendMessage(data)
 	return err
+}
+
+// GetStdPeriod gets standard period of domain registration
+func (client *Client) GetStdPeriod(address string) (int64, error) {
+	smcInfo, err := client.LoadContract(address)
+	if err != nil {
+		return 0, err
+	}
+	method := NewSmcMethodIdName(SmcGetStdPeriod)
+	params := []TvmStackEntry{}
+	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+// GetPPR gets price per registration for domain from dns smart-contract
+func (client *Client) GetPPR(address string) (int64, error) {
+	smcInfo, err := client.LoadContract(address)
+	if err != nil {
+		return 0, err
+	}
+	method := NewSmcMethodIdName(SmcGetPPR)
+	params := []TvmStackEntry{}
+	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+// GetPPB gets price per bit from dns smart-contract
+func (client *Client) GetPPB(address string) (int64, error) {
+	smcInfo, err := client.LoadContract(address)
+	if err != nil {
+		return 0, err
+	}
+	method := NewSmcMethodIdName(SmcGetPPB)
+	params := []TvmStackEntry{}
+	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+// GetPPC gets price per cell from dns smart-contract
+func (client *Client) GetPPC(address string) (int64, error) {
+	smcInfo, err := client.LoadContract(address)
+	if err != nil {
+		return 0, err
+	}
+	method := NewSmcMethodIdName(SmcGetPPC)
+	params := []TvmStackEntry{}
+	runMethodResult, err := client.SmcRunGetMethod(smcInfo.Id, method, params)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := runMethodResult.NumberResult()
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
+// NumberResult parses get method result if it consists only from tvmNumberDecimal
+func (runMethodResult *SmcRunResult) NumberResult() (int64, error) {
+	if runMethodResult.Type != SmcRunResultType {
+		return 0, fmt.Errorf("Unexpected response from tonlib with type: %s. %#v", runMethodResult.Type, *runMethodResult)
+	}
+	if runMethodResult.ExitCode != 0 {
+		return 0, fmt.Errorf("method exited with code: %d. %#v", runMethodResult.ExitCode, *runMethodResult)
+	}
+	if len(runMethodResult.Stack) < 1 {
+		return 0, fmt.Errorf("Empty stack response: %s. %#v", runMethodResult.Type, *runMethodResult)
+	}
+
+	// map response
+	firstEntity, ok := runMethodResult.Stack[0].(map[string]interface{})
+	if !ok {
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", runMethodResult.Stack[0])
+	}
+	firstNum, ok := firstEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty 'number': %#v", firstEntity)
+	}
+
+	secondEntity, ok := firstNum.(map[string]interface{})
+	if !ok {
+		return 0, fmt.Errorf("Failed to map `%#v  to `map[string]interface{}`", secondEntity)
+	}
+	secondNum, ok := secondEntity["number"]
+	if !ok {
+		return 0, fmt.Errorf("got response with empty second 'number': %#v", secondEntity)
+	}
+	result, err := strconv.ParseInt(secondNum.(string), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
 }
