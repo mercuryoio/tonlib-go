@@ -400,7 +400,10 @@ func (client *Client) GetPPC(address string) (int64, error) {
 // NumberResult parses get method result if it consists only from tvmNumberDecimal
 func (runMethodResult *SmcRunResult) NumberResult() (int64, error) {
 	if runMethodResult.Type != SmcRunResultType {
-		return 0, fmt.Errorf("Unexpected response from tonlib with type:%s. %#v", runMethodResult.Type, *runMethodResult)
+		return 0, fmt.Errorf("Unexpected response from tonlib with type: %s. %#v", runMethodResult.Type, *runMethodResult)
+	}
+	if runMethodResult.ExitCode != 0 {
+		return 0, fmt.Errorf("method exited with code: %d. %#v", runMethodResult.ExitCode, *runMethodResult)
 	}
 	if len(runMethodResult.Stack) < 1 {
 		return 0, fmt.Errorf("Empty stack response: %s. %#v", runMethodResult.Type, *runMethodResult)
