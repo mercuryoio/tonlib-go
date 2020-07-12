@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"sort"
+	"strconv"
 	"sync"
 	"time"
 	"unsafe"
@@ -391,6 +393,82 @@ func (client *Client) UpdateTonConnection() error {
 		return fmt.Errorf("Error ton client init. Message: %s. ", optionsInfo.tonCommon.Extra)
 	}
 	return fmt.Errorf("Unexpected client init response. %#v", optionsInfo)
+}
+
+type parsedParticipant struct {
+	Stake int64
+	MaxFactor int64
+	Id string
+}
+
+func (client *Client) GetElectionStakes(electorAddress string, minStake, maxStake, maxStakeFactor, minValidators int64) (minEffectStake, maxEffectStake int64, err error) {
+	participants, err := client.GetParticipantListExtended(electorAddress)
+	if err != nil{
+		return 0,0 , fmt.Errorf("failed to get participants")
+	}
+
+	// parse data
+	parsedPartisipants := []parsedParticipant{}
+	for _, p := range *participants{
+		stake, err := strconv.ParseInt(p.Stake, 10, 64)
+		if err != nil{
+			return 0,0 , fmt.Errorf("failed to parse participant %v stake. %v", p, err)
+		}
+		maxFactor, err := strconv.ParseInt(p.MaxFactor, 10, 64)
+		if err != nil{
+			return 0,0 , fmt.Errorf("failed to parse participant %v maxFactor. %v", p, err)
+		}
+		parsedPartisipants = append(parsedPartisipants, parsedParticipant{stake, min(maxStakeFactor, maxFactor), p.Id})
+	}
+
+	// sort array
+	sort.Slice(parsedPartisipants, func(i, j int) bool {
+		return parsedPartisipants[i].Stake > parsedPartisipants[j].Stake
+	})
+
+	// think that lis already sorted in desc
+	if int64(len(parsedPartisipants) + 1) <= minValidators{
+		minEffectStake = parsedPartisipants[len(parsedPartisipants)-1].Stake
+		minEffectStake = min(minEffectStake, minEffectStake*parsedPartisipants[len(parsedPartisipants)-1].MaxFactor >> 16)
+
+		maxEffectStake = parsedPartisipants[0].Stake
+		maxEffectStake = min(maxEffectStake, parsedPartisipants[0].MaxFactor*minEffectStake >> 16)
+		return minStake, maxEffectStake, nil
+	}
+
+	var bestStake, m, i int64 = 0, 0, 0
+	for _, p := range parsedPartisipants{
+		i += 1
+		if (p.Stake >= minStake) {
+			totalStake, err := computeTotalStake(&parsedPartisipants, i, p.Stake)
+			if err != nil{
+				return 0, 0, fmt.Errorf("failed to  computeTotalStake(participants, i (%d), stake (%d)): %v", i, p.Stake, err)
+			}
+			if (totalStake > bestStake){
+				bestStake = totalStake
+				m = i
+			}
+		}
+	}
+
+	// evaulate  minEffectStake
+	minEffectStake = parsedPartisipants[m-1].Stake
+	minEffectStake = min(minEffectStake, (parsedPartisipants[m-1].MaxFactor*minEffectStake) >> 16);
+
+	// evaluate maxEffectStake
+	newMinStake := minEffectStake
+	if m >1 {
+		newMinStake = parsedPartisipants[m-1].Stake
+		newMinStake = min(newMinStake, (parsedPartisipants[m-1].MaxFactor*newMinStake) >> 16);
+	}
+	maxEffectStake = parsedPartisipants[0].Stake
+
+	// real stake may differ cause m number may be extended
+	// calc real effective second max effective stake
+	maxEffectStake = min(maxEffectStake, (parsedPartisipants[0].MaxFactor*newMinStake) >> 16);
+	// calc new max stake
+	maxEffectStake = min(maxEffectStake + 1, (maxStakeFactor*newMinStake) >> 16);
+	return minEffectStake, maxEffectStake, nil
 }
 
 // key struct cause it strings values no bytes

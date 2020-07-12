@@ -2,6 +2,7 @@ package v2
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -89,4 +90,32 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func max(x, y int64) int64 {
+	if x < y {
+		return y
+	}
+	return x
+}
+
+func min(x, y int64) int64 {
+	if x > y {
+		return y
+	}
+	return x
+}
+
+func computeTotalStake(l *[]parsedParticipant, n, m_stake int64) (int64, error) {
+	var totStake int64
+	var i int64 = 0
+	if n > int64(len(*l)) {
+		return 0, fmt.Errorf("list has not enought length")
+	}
+	for i=0;  i < n; i++ {
+		p := (*l)[i]
+		stake := min(p.Stake, (p.MaxFactor * m_stake) >> 16);
+		totStake += stake;
+	}
+	return totStake, nil
 }
