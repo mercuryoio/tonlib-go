@@ -18,11 +18,13 @@ type TonlibListenserverConfig struct {
 	ID   map[string]string `json:"id"`
 }
 type ValidatorConfig struct {
-	Type      string    `json:"@type"`
-	ZeroState ZeroState `json:"zero_state"`
+	Type      string      `json:"@type"`
+	ZeroState InitBlock   `json:"zero_state"`
+	InitBlock InitBlock   `json:"init_block,omitempty"`
+	Hardforks []InitBlock `json:"hardforks,omitempty"`
 }
 
-type ZeroState struct {
+type InitBlock struct {
 	Workchain int    `json:"workchain"`
 	Shard     int64  `json:"shard"`
 	Seqno     int    `json:"seqno"`
