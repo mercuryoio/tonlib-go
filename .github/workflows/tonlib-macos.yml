@@ -17,7 +17,7 @@ jobs:
       - name: Fetch TON repo
         run: |
           cd ..
-          git clone --recursive https://github.com/ton-blockchain/ton
+          git clone --recursive https://github.com/newton-blockchain/ton
         
       - name: Build tonlibjson
         run: |
