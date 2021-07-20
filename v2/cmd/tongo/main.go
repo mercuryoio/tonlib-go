@@ -8,6 +8,8 @@ import (
 	"os/signal"
 )
 
+const walletID = 698983191
+
 var tonClient *tonlib.Client
 
 func init() {
