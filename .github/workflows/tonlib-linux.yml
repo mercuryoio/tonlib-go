@@ -37,7 +37,7 @@ jobs:
         run: |
           cd v2/lib/test
           mkdir test.keys
-          # go run libtest.go
+          go run libtest.go
           rm -rf test.keys
       - name: Commit updated Linux tonlib files
         env:
