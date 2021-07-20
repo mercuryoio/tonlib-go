@@ -43,7 +43,7 @@ func main() {
 		base64.StdEncoding.EncodeToString(loc),
 		tonlib.TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
 		},
 	}
 
