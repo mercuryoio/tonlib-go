@@ -55,7 +55,7 @@ func createPK(cmd *cobra.Command, args []string) {
 	fmt.Printf("Got a result: publicKey :%v; secret: %s. Errors: %v. \n", pKey.PublicKey, pKey.Secret, err)
 
 	// prepare key for transffering
-	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
+	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletV3InitialAccountState(pKey.PublicKey, walletID), 0, 0)
 	if err != nil {
 		log.Fatal("failed to get key address with error: ", err)
 		return

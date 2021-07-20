@@ -38,7 +38,7 @@ func walletState(cmd *cobra.Command, args []string) {
 
 	pKey := tonlib.TONPrivateKey{PublicKey: args[1], Secret: args[2]}
 
-	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
+	addr, err := tonClient.GetAccountAddress(tonlib.NewWalletV3InitialAccountState(pKey.PublicKey, walletID), 0, 0)
 	if err != nil {
 		fmt.Println("get wallet address error: ", err)
 		os.Exit(0)

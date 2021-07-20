@@ -813,7 +813,7 @@ type RawMessage struct {
 	Destination *AccountAddress `json:"destination"` //
 	FwdFee      JSONInt64       `json:"fwd_fee"`     //
 	IhrFee      JSONInt64       `json:"ihr_fee"`     //
-	MsgData     MsgData        `json:"msg_data"`    //
+	MsgData     *MsgData        `json:"msg_data"`    //
 	Source      *AccountAddress `json:"source"`      //
 	Value       JSONInt64       `json:"value"`       //
 }
@@ -833,7 +833,7 @@ func (rawMessage *RawMessage) MessageType() string {
 // @param msgData
 // @param source
 // @param value
-func NewRawMessage(bodyHash string, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData MsgData, source *AccountAddress, value JSONInt64) *RawMessage {
+func NewRawMessage(bodyHash string, createdLt JSONInt64, destination *AccountAddress, fwdFee JSONInt64, ihrFee JSONInt64, msgData *MsgData, source *AccountAddress, value JSONInt64) *RawMessage {
 	rawMessageTemp := RawMessage{
 		tonCommon:   tonCommon{Type: "raw.message"},
 		BodyHash:    bodyHash,
@@ -984,72 +984,6 @@ func NewRawInitialAccountState(code string, data string) *RawInitialAccountState
 	}
 
 	return &rawInitialAccountStateTemp
-}
-
-// TestGiverInitialAccountState
-type TestGiverInitialAccountState struct {
-	tonCommon
-}
-
-// MessageType return the string telegram-type of TestGiverInitialAccountState
-func (testGiverInitialAccountState *TestGiverInitialAccountState) MessageType() string {
-	return "testGiver.initialAccountState"
-}
-
-// NewTestGiverInitialAccountState creates a new TestGiverInitialAccountState
-//
-func NewTestGiverInitialAccountState() *TestGiverInitialAccountState {
-	testGiverInitialAccountStateTemp := TestGiverInitialAccountState{
-		tonCommon: tonCommon{Type: "testGiver.initialAccountState"},
-	}
-
-	return &testGiverInitialAccountStateTemp
-}
-
-// TestWalletInitialAccountState
-type TestWalletInitialAccountState struct {
-	tonCommon
-	PublicKey string `json:"public_key"` //
-}
-
-// MessageType return the string telegram-type of TestWalletInitialAccountState
-func (testWalletInitialAccountState *TestWalletInitialAccountState) MessageType() string {
-	return "testWallet.initialAccountState"
-}
-
-// NewTestWalletInitialAccountState creates a new TestWalletInitialAccountState
-//
-// @param publicKey
-func NewTestWalletInitialAccountState(publicKey string) *TestWalletInitialAccountState {
-	testWalletInitialAccountStateTemp := TestWalletInitialAccountState{
-		tonCommon: tonCommon{Type: "testWallet.initialAccountState"},
-		PublicKey: publicKey,
-	}
-
-	return &testWalletInitialAccountStateTemp
-}
-
-// WalletInitialAccountState
-type WalletInitialAccountState struct {
-	tonCommon
-	PublicKey string `json:"public_key"` //
-}
-
-// MessageType return the string telegram-type of WalletInitialAccountState
-func (walletInitialAccountState *WalletInitialAccountState) MessageType() string {
-	return "wallet.initialAccountState"
-}
-
-// NewWalletInitialAccountState creates a new WalletInitialAccountState
-//
-// @param publicKey
-func NewWalletInitialAccountState(publicKey string) *WalletInitialAccountState {
-	walletInitialAccountStateTemp := WalletInitialAccountState{
-		tonCommon: tonCommon{Type: "wallet.initialAccountState"},
-		PublicKey: publicKey,
-	}
-
-	return &walletInitialAccountStateTemp
 }
 
 // WalletV3InitialAccountState
@@ -1289,52 +1223,6 @@ func NewRawAccountState(code string, data string, frozenHash string) *RawAccount
 	return &rawAccountStateTemp
 }
 
-// TestWalletAccountState
-type TestWalletAccountState struct {
-	tonCommon
-	Seqno int32 `json:"seqno"` //
-}
-
-// MessageType return the string telegram-type of TestWalletAccountState
-func (testWalletAccountState *TestWalletAccountState) MessageType() string {
-	return "testWallet.accountState"
-}
-
-// NewTestWalletAccountState creates a new TestWalletAccountState
-//
-// @param seqno
-func NewTestWalletAccountState(seqno int32) *TestWalletAccountState {
-	testWalletAccountStateTemp := TestWalletAccountState{
-		tonCommon: tonCommon{Type: "testWallet.accountState"},
-		Seqno:     seqno,
-	}
-
-	return &testWalletAccountStateTemp
-}
-
-// WalletAccountState
-type WalletAccountState struct {
-	tonCommon
-	Seqno int32 `json:"seqno"` //
-}
-
-// MessageType return the string telegram-type of WalletAccountState
-func (walletAccountState *WalletAccountState) MessageType() string {
-	return "wallet.accountState"
-}
-
-// NewWalletAccountState creates a new WalletAccountState
-//
-// @param seqno
-func NewWalletAccountState(seqno int32) *WalletAccountState {
-	walletAccountStateTemp := WalletAccountState{
-		tonCommon: tonCommon{Type: "wallet.accountState"},
-		Seqno:     seqno,
-	}
-
-	return &walletAccountStateTemp
-}
-
 // WalletV3AccountState
 type WalletV3AccountState struct {
 	tonCommon
@@ -1408,29 +1296,6 @@ func NewWalletHighloadV2AccountState(walletId JSONInt64) *WalletHighloadV2Accoun
 	}
 
 	return &walletHighloadV2AccountStateTemp
-}
-
-// TestGiverAccountState
-type TestGiverAccountState struct {
-	tonCommon
-	Seqno int32 `json:"seqno"` //
-}
-
-// MessageType return the string telegram-type of TestGiverAccountState
-func (testGiverAccountState *TestGiverAccountState) MessageType() string {
-	return "testGiver.accountState"
-}
-
-// NewTestGiverAccountState creates a new TestGiverAccountState
-//
-// @param seqno
-func NewTestGiverAccountState(seqno int32) *TestGiverAccountState {
-	testGiverAccountStateTemp := TestGiverAccountState{
-		tonCommon: tonCommon{Type: "testGiver.accountState"},
-		Seqno:     seqno,
-	}
-
-	return &testGiverAccountStateTemp
 }
 
 // DnsAccountState
@@ -1601,7 +1466,7 @@ type PchanAccountState struct {
 	tonCommon
 	Config      *PchanConfig `json:"config"`      //
 	Description string       `json:"description"` //
-	State       PchanState  `json:"state"`       //
+	State       *PchanState  `json:"state"`       //
 }
 
 // MessageType return the string telegram-type of PchanAccountState
@@ -1614,7 +1479,7 @@ func (pchanAccountState *PchanAccountState) MessageType() string {
 // @param config
 // @param description
 // @param state
-func NewPchanAccountState(config *PchanConfig, description string, state PchanState) *PchanAccountState {
+func NewPchanAccountState(config *PchanConfig, description string, state *PchanState) *PchanAccountState {
 	pchanAccountStateTemp := PchanAccountState{
 		tonCommon:   tonCommon{Type: "pchan.accountState"},
 		Config:      config,
@@ -1882,7 +1747,7 @@ func NewMsgDataEncryptedText(text string) *MsgDataEncryptedText {
 // MsgDataEncrypted
 type MsgDataEncrypted struct {
 	tonCommon
-	Data   MsgData        `json:"data"`   //
+	Data   *MsgData        `json:"data"`   //
 	Source *AccountAddress `json:"source"` //
 }
 
@@ -1895,7 +1760,7 @@ func (msgDataEncrypted *MsgDataEncrypted) MessageType() string {
 //
 // @param data
 // @param source
-func NewMsgDataEncrypted(data MsgData, source *AccountAddress) *MsgDataEncrypted {
+func NewMsgDataEncrypted(data *MsgData, source *AccountAddress) *MsgDataEncrypted {
 	msgDataEncryptedTemp := MsgDataEncrypted{
 		tonCommon: tonCommon{Type: "msg.dataEncrypted"},
 		Data:      data,
@@ -1908,7 +1773,7 @@ func NewMsgDataEncrypted(data MsgData, source *AccountAddress) *MsgDataEncrypted
 // MsgDataDecrypted
 type MsgDataDecrypted struct {
 	tonCommon
-	Data  MsgData `json:"data"`  //
+	Data  *MsgData `json:"data"`  //
 	Proof string   `json:"proof"` //
 }
 
@@ -1921,7 +1786,7 @@ func (msgDataDecrypted *MsgDataDecrypted) MessageType() string {
 //
 // @param data
 // @param proof
-func NewMsgDataDecrypted(data MsgData, proof string) *MsgDataDecrypted {
+func NewMsgDataDecrypted(data *MsgData, proof string) *MsgDataDecrypted {
 	msgDataDecryptedTemp := MsgDataDecrypted{
 		tonCommon: tonCommon{Type: "msg.dataDecrypted"},
 		Data:      data,
@@ -2453,7 +2318,7 @@ func NewActionDns(actions []DnsAction) *ActionDns {
 // ActionPchan
 type ActionPchan struct {
 	tonCommon
-	Action PchanAction `json:"action"` //
+	Action *PchanAction `json:"action"` //
 }
 
 // MessageType return the string telegram-type of ActionPchan
@@ -2464,7 +2329,7 @@ func (actionPchan *ActionPchan) MessageType() string {
 // NewActionPchan creates a new ActionPchan
 //
 // @param action
-func NewActionPchan(action PchanAction) *ActionPchan {
+func NewActionPchan(action *PchanAction) *ActionPchan {
 	actionPchanTemp := ActionPchan{
 		tonCommon: tonCommon{Type: "actionPchan"},
 		Action:    action,
@@ -3163,6 +3028,219 @@ func NewLiteServerInfo(capabilities JSONInt64, now int64, version int32) *LiteSe
 	}
 
 	return &liteServerInfoTemp
+}
+
+// BlocksMasterchainInfo
+type BlocksMasterchainInfo struct {
+	tonCommon
+	Init          *TonBlockIdExt `json:"init"`            //
+	Last          *TonBlockIdExt `json:"last"`            //
+	StateRootHash string         `json:"state_root_hash"` //
+}
+
+// MessageType return the string telegram-type of BlocksMasterchainInfo
+func (blocksMasterchainInfo *BlocksMasterchainInfo) MessageType() string {
+	return "blocks.masterchainInfo"
+}
+
+// NewBlocksMasterchainInfo creates a new BlocksMasterchainInfo
+//
+// @param init
+// @param last
+// @param stateRootHash
+func NewBlocksMasterchainInfo(init *TonBlockIdExt, last *TonBlockIdExt, stateRootHash string) *BlocksMasterchainInfo {
+	blocksMasterchainInfoTemp := BlocksMasterchainInfo{
+		tonCommon:     tonCommon{Type: "blocks.masterchainInfo"},
+		Init:          init,
+		Last:          last,
+		StateRootHash: stateRootHash,
+	}
+
+	return &blocksMasterchainInfoTemp
+}
+
+// BlocksShards
+type BlocksShards struct {
+	tonCommon
+	Shards []TonBlockIdExt `json:"shards"` //
+}
+
+// MessageType return the string telegram-type of BlocksShards
+func (blocksShards *BlocksShards) MessageType() string {
+	return "blocks.shards"
+}
+
+// NewBlocksShards creates a new BlocksShards
+//
+// @param shards
+func NewBlocksShards(shards []TonBlockIdExt) *BlocksShards {
+	blocksShardsTemp := BlocksShards{
+		tonCommon: tonCommon{Type: "blocks.shards"},
+		Shards:    shards,
+	}
+
+	return &blocksShardsTemp
+}
+
+// BlocksAccountTransactionId
+type BlocksAccountTransactionId struct {
+	tonCommon
+	Account string    `json:"account"` //
+	Lt      JSONInt64 `json:"lt"`      //
+}
+
+// MessageType return the string telegram-type of BlocksAccountTransactionId
+func (blocksAccountTransactionId *BlocksAccountTransactionId) MessageType() string {
+	return "blocks.accountTransactionId"
+}
+
+// NewBlocksAccountTransactionId creates a new BlocksAccountTransactionId
+//
+// @param account
+// @param lt
+func NewBlocksAccountTransactionId(account string, lt JSONInt64) *BlocksAccountTransactionId {
+	blocksAccountTransactionIdTemp := BlocksAccountTransactionId{
+		tonCommon: tonCommon{Type: "blocks.accountTransactionId"},
+		Account:   account,
+		Lt:        lt,
+	}
+
+	return &blocksAccountTransactionIdTemp
+}
+
+// BlocksShortTxId
+type BlocksShortTxId struct {
+	tonCommon
+	Account string    `json:"account"` //
+	Hash    string    `json:"hash"`    //
+	Lt      JSONInt64 `json:"lt"`      //
+	Mode    int32     `json:"mode"`    //
+}
+
+// MessageType return the string telegram-type of BlocksShortTxId
+func (blocksShortTxId *BlocksShortTxId) MessageType() string {
+	return "blocks.shortTxId"
+}
+
+// NewBlocksShortTxId creates a new BlocksShortTxId
+//
+// @param account
+// @param hash
+// @param lt
+// @param mode
+func NewBlocksShortTxId(account string, hash string, lt JSONInt64, mode int32) *BlocksShortTxId {
+	blocksShortTxIdTemp := BlocksShortTxId{
+		tonCommon: tonCommon{Type: "blocks.shortTxId"},
+		Account:   account,
+		Hash:      hash,
+		Lt:        lt,
+		Mode:      mode,
+	}
+
+	return &blocksShortTxIdTemp
+}
+
+// BlocksTransactions
+type BlocksTransactions struct {
+	tonCommon
+	Id           *TonBlockIdExt    `json:"id"`           //
+	Incomplete   bool              `json:"incomplete"`   //
+	ReqCount     int32             `json:"req_count"`    //
+	Transactions []BlocksShortTxId `json:"transactions"` //
+}
+
+// MessageType return the string telegram-type of BlocksTransactions
+func (blocksTransactions *BlocksTransactions) MessageType() string {
+	return "blocks.transactions"
+}
+
+// NewBlocksTransactions creates a new BlocksTransactions
+//
+// @param id
+// @param incomplete
+// @param reqCount
+// @param transactions
+func NewBlocksTransactions(id *TonBlockIdExt, incomplete bool, reqCount int32, transactions []BlocksShortTxId) *BlocksTransactions {
+	blocksTransactionsTemp := BlocksTransactions{
+		tonCommon:    tonCommon{Type: "blocks.transactions"},
+		Id:           id,
+		Incomplete:   incomplete,
+		ReqCount:     reqCount,
+		Transactions: transactions,
+	}
+
+	return &blocksTransactionsTemp
+}
+
+// BlocksHeader
+type BlocksHeader struct {
+	tonCommon
+	AfterMerge             bool            `json:"after_merge"`               //
+	AfterSplit             bool            `json:"after_split"`               //
+	BeforeSplit            bool            `json:"before_split"`              //
+	CatchainSeqno          int32           `json:"catchain_seqno"`            //
+	EndLt                  JSONInt64       `json:"end_lt"`                    //
+	GlobalId               int32           `json:"global_id"`                 //
+	Id                     *TonBlockIdExt  `json:"id"`                        //
+	IsKeyBlock             bool            `json:"is_key_block"`              //
+	MinRefMcSeqno          int32           `json:"min_ref_mc_seqno"`          //
+	PrevBlocks             []TonBlockIdExt `json:"prev_blocks"`               //
+	PrevKeyBlockSeqno      int32           `json:"prev_key_block_seqno"`      //
+	StartLt                JSONInt64       `json:"start_lt"`                  //
+	ValidatorListHashShort int32           `json:"validator_list_hash_short"` //
+	Version                int32           `json:"version"`                   //
+	VertSeqno              int32           `json:"vert_seqno"`                //
+	WantMerge              bool            `json:"want_merge"`                //
+	WantSplit              bool            `json:"want_split"`                //
+}
+
+// MessageType return the string telegram-type of BlocksHeader
+func (blocksHeader *BlocksHeader) MessageType() string {
+	return "blocks.header"
+}
+
+// NewBlocksHeader creates a new BlocksHeader
+//
+// @param afterMerge
+// @param afterSplit
+// @param beforeSplit
+// @param catchainSeqno
+// @param endLt
+// @param globalId
+// @param id
+// @param isKeyBlock
+// @param minRefMcSeqno
+// @param prevBlocks
+// @param prevKeyBlockSeqno
+// @param startLt
+// @param validatorListHashShort
+// @param version
+// @param vertSeqno
+// @param wantMerge
+// @param wantSplit
+func NewBlocksHeader(afterMerge bool, afterSplit bool, beforeSplit bool, catchainSeqno int32, endLt JSONInt64, globalId int32, id *TonBlockIdExt, isKeyBlock bool, minRefMcSeqno int32, prevBlocks []TonBlockIdExt, prevKeyBlockSeqno int32, startLt JSONInt64, validatorListHashShort int32, version int32, vertSeqno int32, wantMerge bool, wantSplit bool) *BlocksHeader {
+	blocksHeaderTemp := BlocksHeader{
+		tonCommon:              tonCommon{Type: "blocks.header"},
+		AfterMerge:             afterMerge,
+		AfterSplit:             afterSplit,
+		BeforeSplit:            beforeSplit,
+		CatchainSeqno:          catchainSeqno,
+		EndLt:                  endLt,
+		GlobalId:               globalId,
+		Id:                     id,
+		IsKeyBlock:             isKeyBlock,
+		MinRefMcSeqno:          minRefMcSeqno,
+		PrevBlocks:             prevBlocks,
+		PrevKeyBlockSeqno:      prevKeyBlockSeqno,
+		StartLt:                startLt,
+		ValidatorListHashShort: validatorListHashShort,
+		Version:                version,
+		VertSeqno:              vertSeqno,
+		WantMerge:              wantMerge,
+		WantSplit:              wantSplit,
+	}
+
+	return &blocksHeaderTemp
 }
 
 func unmarshalLogStream(rawMsg *json.RawMessage) (LogStream, error) {

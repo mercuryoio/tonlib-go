@@ -1388,6 +1388,156 @@ func (client *Client) PchanUnpackPromise(data SecureBytes) (*PchanPromise, error
 
 }
 
+// BlocksGetMasterchainInfo
+func (client *Client) BlocksGetMasterchainInfo() (*BlocksMasterchainInfo, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type string `json:"@type"`
+		}{
+			Type: "blocks.getMasterchainInfo",
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var blocksMasterchainInfo BlocksMasterchainInfo
+	err = json.Unmarshal(result.Raw, &blocksMasterchainInfo)
+	return &blocksMasterchainInfo, err
+
+}
+
+// BlocksGetShards
+// @param id
+func (client *Client) BlocksGetShards(id TonBlockIdExt) (*BlocksShards, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type string        `json:"@type"`
+			Id   TonBlockIdExt `json:"id"`
+		}{
+			Type: "blocks.getShards",
+			Id:   id,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var blocksShards BlocksShards
+	err = json.Unmarshal(result.Raw, &blocksShards)
+	return &blocksShards, err
+
+}
+
+// BlocksLookupBlock
+// @param id
+// @param lt
+// @param mode
+// @param utime
+func (client *Client) BlocksLookupBlock(id TonBlockId, lt JSONInt64, mode int32, utime int32) (*TonBlockIdExt, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type  string     `json:"@type"`
+			Id    TonBlockId `json:"id"`
+			Lt    JSONInt64  `json:"lt"`
+			Mode  int32      `json:"mode"`
+			Utime int32      `json:"utime"`
+		}{
+			Type:  "blocks.lookupBlock",
+			Id:    id,
+			Lt:    lt,
+			Mode:  mode,
+			Utime: utime,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var tonBlockIdExt TonBlockIdExt
+	err = json.Unmarshal(result.Raw, &tonBlockIdExt)
+	return &tonBlockIdExt, err
+
+}
+
+// BlocksGetTransactions
+// @param after
+// @param count
+// @param id
+// @param mode
+func (client *Client) BlocksGetTransactions(after BlocksAccountTransactionId, count int32, id TonBlockIdExt, mode int32) (*BlocksTransactions, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type  string                     `json:"@type"`
+			After BlocksAccountTransactionId `json:"after"`
+			Count int32                      `json:"count"`
+			Id    TonBlockIdExt              `json:"id"`
+			Mode  int32                      `json:"mode"`
+		}{
+			Type:  "blocks.getTransactions",
+			After: after,
+			Count: count,
+			Id:    id,
+			Mode:  mode,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var blocksTransactions BlocksTransactions
+	err = json.Unmarshal(result.Raw, &blocksTransactions)
+	return &blocksTransactions, err
+
+}
+
+// BlocksGetBlockHeader
+// @param id
+func (client *Client) BlocksGetBlockHeader(id TonBlockIdExt) (*BlocksHeader, error) {
+	result, err := client.executeAsynchronously(
+		struct {
+			Type string        `json:"@type"`
+			Id   TonBlockIdExt `json:"id"`
+		}{
+			Type: "blocks.getBlockHeader",
+			Id:   id,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var blocksHeader BlocksHeader
+	err = json.Unmarshal(result.Raw, &blocksHeader)
+	return &blocksHeader, err
+
+}
+
 // OnLiteServerQueryResult
 // @param bytes
 // @param id
@@ -1725,35 +1875,5 @@ func (client *Client) GetLogTagVerbosityLevel(tag string) (*LogVerbosityLevel, e
 	var logVerbosityLevel LogVerbosityLevel
 	err = json.Unmarshal(result.Raw, &logVerbosityLevel)
 	return &logVerbosityLevel, err
-
-}
-
-// AddLogMessage Adds a message to tonlib internal log. This is an offline method. Can be called before authorization. Can be called synchronously
-// @param text Text of a message to log
-// @param verbosityLevel Minimum verbosity level needed for the message to be logged, 0-1023
-func (client *Client) AddLogMessage(text string, verbosityLevel int32) (*Ok, error) {
-	result, err := client.executeAsynchronously(
-		struct {
-			Type           string `json:"@type"`
-			Text           string `json:"text"`
-			VerbosityLevel int32  `json:"verbosity_level"`
-		}{
-			Type:           "addLogMessage",
-			Text:           text,
-			VerbosityLevel: verbosityLevel,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	var ok Ok
-	err = json.Unmarshal(result.Raw, &ok)
-	return &ok, err
 
 }
