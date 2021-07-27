@@ -3,7 +3,7 @@ name: Build tonlib Linux
 on:
   push:
     branches:
-    - develop-tonlib
+    - alpine-linux
 
 jobs:
   build:
