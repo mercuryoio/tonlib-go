@@ -129,6 +129,9 @@ func (client *Client) executeSetLogLevel(logLevel int32) error {
 execute ton-lib asynchronously
 */
 func (client *Client) executeAsynchronously(data interface{}) (*TONResult, error) {
+	client.mu.Lock()
+	defer client.mu.Unlock()
+
 	req, err := json.Marshal(data)
 	if err != nil {
 		return &TONResult{}, err
