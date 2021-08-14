@@ -2,9 +2,17 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"math/big"
 	"os"
+	"reflect"
+)
+
+var (
+	ErrorGetTypeIsNotStruct = errors.New("getType error. Value is not struct")
+	ErrorGetTypeIsNotString = errors.New("getType error. Type field is not string")
+	ErrorGetTypeIsNotValid  = errors.New("getType error. Type field is not valid")
 )
 
 type TonlibConfigServer struct {
@@ -91,4 +99,22 @@ func fileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func getType(data interface{}) (string, error) {
+	ps := reflect.ValueOf(data)
+	if ps.Kind() != reflect.Struct {
+		return "", ErrorGetTypeIsNotStruct
+	}
+
+	f := ps.FieldByName("Extra")
+	if f.Kind() != reflect.String {
+		return "", ErrorGetTypeIsNotString
+	}
+
+	if !f.IsValid() {
+		return "", ErrorGetTypeIsNotValid
+	}
+
+	return f.String(), nil
 }

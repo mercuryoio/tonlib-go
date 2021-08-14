@@ -423,3 +423,26 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	}
 	fmt.Printf("TestClient_RawCreateAndSendMessage: create and send msg msgSentOk: %#v, err: %v. ", msgSentOk, err)
 }
+
+func TestGetType(t *testing.T) {
+	wantValue := "query.estimateFees"
+
+	data := struct {
+		Type         string `json:"@type"`
+		Id           int64  `json:"id"`
+		IgnoreChksig bool   `json:"ignore_chksig"`
+	}{
+		Type:         wantValue,
+		Id:           1,
+		IgnoreChksig: true,
+	}
+
+	actualValue, err := getType(interface{}(data))
+	if err != nil {
+		t.Errorf("Error getType. Data: %v. Error: %v", data, err)
+	}
+
+	if wantValue != actualValue {
+		t.Errorf("Error getType. WantValue: %s, ActualValue: %s", wantValue, actualValue)
+	}
+}
