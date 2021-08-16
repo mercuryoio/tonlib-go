@@ -62,8 +62,6 @@ type Client struct {
 	extraToResponse map[string]*TONResult
 	respMapMu       *sync.RWMutex
 
-	wgService *sync.WaitGroup
-
 	receiveMu *sync.Mutex
 
 	serviceMu *sync.RWMutex
@@ -97,8 +95,6 @@ func NewClient(tonCnf *TonInitRequest, config Config, timeout int64, clientLoggi
 		respMapMu:       &sync.RWMutex{},
 		receiveMu:       &sync.Mutex{},
 		serviceMu: &sync.RWMutex{},
-
-		wgService: &sync.WaitGroup{},
 
 		uniqExtra: &extra,
 		stopChan:  make(chan struct{}),
@@ -138,6 +134,10 @@ func (client *Client) getNewExtra() string {
 }
 
 func (client *Client) sendAsync(data interface{}) error {
+	// mutex for block when service func executes
+	//client.serviceMu.RLock()
+	//defer client.serviceMu.RUnlock()
+
 	req, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -174,6 +174,9 @@ func (client *Client) execReceive() []byte {
 }
 
 func (client *Client) receiveOne() error {
+	client.serviceMu.Lock()
+	defer client.serviceMu.Unlock()
+
 	resB := client.execReceive()
 	if resB == nil {
 		return nil
@@ -193,26 +196,35 @@ func (client *Client) receiveOne() error {
 
 	client.checkNeedService(data)
 
-	extraRaw, ok := updateData["@extra"]
+	err = client.putResponseToStore(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *Client) putResponseToStore(data *TONResult) error {
+	extraRaw, ok := data.Data["@extra"]
 	if !ok {
-		return errors.New(fmt.Sprintf("extra field not found in responce. Skip. Resp: %v", updateData))
+		return errors.New(fmt.Sprintf("put receive to store. Extra field not found in responce. Skip. Resp: %v", string(data.Raw)))
 	}
 
 	extra, ok := extraRaw.(string)
 	if !ok || extra == "" {
-		return errors.New(fmt.Sprintf("extra field is emptry in responce. Skip. Resp: %v", updateData))
+		return errors.New(fmt.Sprintf("put receive to store. Extra field is emptry in responce. Skip. Resp: %v", string(data.Raw)))
 	}
 
 	client.respMapMu.Lock()
 	defer client.respMapMu.Unlock()
 
 	if _, ok = client.extraToResponse[extra]; ok {
-		return errors.New(fmt.Sprintf("received duplicate extra in responce. Skip. Extra: %s, Resp: %v", extra, updateData))
+		return errors.New(fmt.Sprintf("put receive to store. Received duplicate extra in responce. Skip. Extra: %s, Resp: %v", extra, string(data.Raw)))
 	}
 
 	client.extraToResponse[extra] = data
 
-	return nil
+	return	nil
 }
 
 func (client *Client) checkNeedService(data *TONResult) {
@@ -227,8 +239,8 @@ func (client *Client) checkNeedService(data *TONResult) {
 
 	//client.wgService.Wait()
 
-	client.serviceMu.Lock()
-	defer client.serviceMu.Unlock()
+	//client.serviceMu.Lock()
+	//defer client.serviceMu.Unlock()
 	//fmt.Println("wg.Add")
 	//client.wgService.Add(1)
 	//defer func() {
@@ -256,10 +268,6 @@ func (client *Client) checkNeedService(data *TONResult) {
 				fmt.Println(fmt.Sprintf("error unmarshal SyncState. Error: %v", err))
 				return
 			}
-		}
-
-		if client.clientLogging {
-			fmt.Println("run sync", string(data.Raw))
 		}
 
 		err = client.syncNew(syncResp.SyncState)
@@ -316,7 +324,6 @@ func (client *Client) getStoredResponse(extra string) *TONResult {
 
 func (client *Client) waitResponse(extra string, retryCount int) (*TONResult, error) {
 	for i := 0; i < retryCount; i++ {
-		//client.wgService.Wait()
 		client.serviceMu.RLock()
 		client.serviceMu.RUnlock()
 
@@ -365,9 +372,6 @@ func (client *Client) executeSetLogLevel(logLevel int32) error {
 
 func (client *Client) executeAsynchronously(extra string, data interface{}) (*TONResult, error) {
 	//client.wgService.Wait()
-	client.serviceMu.RLock()
-	client.serviceMu.RUnlock()
-
 	err := client.sendAsync(data)
 	if err != nil {
 		return nil, err
@@ -541,18 +545,28 @@ func (client *Client) syncNew(syncState SyncState) error {
 		SyncState: syncState,
 	}
 
-	err := client.sendAsync(data)
+	req, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
+
+	if client.clientLogging {
+		fmt.Println("run sync call:", string(req))
+	}
+
+	cs := C.CString(string(req))
+	defer C.free(unsafe.Pointer(cs))
+
+	// send may be async
+	C.tonlib_client_json_send(client.client, cs)
 
 	for {
 		time.Sleep(1 * time.Second)
 		//result, err := client.waitResponse(extra, DefaultRetries*2)
 		result := client.execReceive()
-		//if err != nil {
-		//	return err
-		//}
+		if err != nil {
+			return err
+		}
 
 		if result == nil {
 			continue
@@ -572,12 +586,11 @@ func (client *Client) syncNew(syncState SyncState) error {
 		}
 
 		if syncResp.Type == "error" {
-			return fmt.Errorf("Got an error response from ton: `%s` ", string(result))
+			return fmt.Errorf("sync. Got an error response from ton: `%s` ", string(result))
 		}
 
 		if syncResp.SyncState.Type == "syncStateDone" {
 			return nil
-
 		}
 		if syncResp.Type == "ok" {
 			// continue updating
@@ -592,7 +605,21 @@ func (client *Client) syncNew(syncState SyncState) error {
 			continue
 		}
 
-		return nil
+		if client.clientLogging {
+			fmt.Println(fmt.Sprintf("sync. WARNING received unexpected type. Resp: %s", string(result)))
+		}
+
+		var tonResp TONResponse
+		err = json.Unmarshal(result, &tonResp)
+		if err != nil {
+			return err
+		}
+		err = client.putResponseToStore(&TONResult{Data: tonResp, Raw: result})
+		if err != nil {
+			return err
+		}
+
+		continue
 	}
 }
 
