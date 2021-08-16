@@ -3,23 +3,24 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	tonlib "github.com/mercuryoio/tonlib-go/v2"
 	"log"
+
+	"github.com/mercuryoio/tonlib-go/v2"
 )
 
 func main() {
 	// parse config
-	options, err := tonlib.ParseConfigFile("./tonlib.config.json.example")
+	options, err := v2.ParseConfigFile("./tonlib.config.json.example")
 	if err != nil {
 		log.Fatal("failed parse config error. ", err)
 	}
 
 	// make req
-	req := tonlib.TonInitRequest{
+	req := v2.TonInitRequest{
 		"init",
 		*options,
 	}
-	cln, err := tonlib.NewClient(&req, tonlib.Config{}, 10, true, 9)
+	cln, err := v2.NewClient(&req, v2.Config{}, 10, true, 9)
 	if err != nil {
 		log.Fatalln("Init client error", err)
 	}
@@ -27,23 +28,23 @@ func main() {
 
 	// create private key
 	// prepare data
-	loc := tonlib.SecureBytes(TEST_PASSWORD)
-	mem := tonlib.SecureBytes(TEST_PASSWORD)
-	seed := tonlib.SecureBytes("")
+	loc := v2.SecureBytes(TEST_PASSWORD)
+	mem := v2.SecureBytes(TEST_PASSWORD)
+	seed := v2.SecureBytes("")
 
 	// create new key
-	pKey, err := cln.CreateNewKey(&loc, &mem, &seed)
+	pKey, err := cln.CreateNewKey(loc, mem, seed)
 	if err != nil {
 		log.Fatalln("Ton create key for send grams error", err)
 	}
 
 	// prepare input key
-	inputKey := tonlib.InputKey{
+	inputKey := v2.InputKey{
 		"inputKeyRegular",
 		base64.StdEncoding.EncodeToString(loc),
-		tonlib.TONPrivateKey{
+		v2.TONPrivateKey{
 			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString((*pKey.Secret)[:]),
+			base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
 		},
 	}
 
@@ -51,7 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Ton init wallet for send gramms error", err)
 	}
-	address, err := cln.WalletGetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey))
+	address, err := cln.WalletGetAccountAddress(v2.NewWalletInitialAccountState(pKey.PublicKey))
 	if err != nil {
 		log.Fatalln("Ton get address for send grams error", err)
 	}
@@ -60,7 +61,7 @@ func main() {
 	sendResult, err := cln.GenericSendGrams(
 		true,
 		TEST_AMOUNT,
-		tonlib.NewAccountAddress(TEST_ADDRESS),
+		v2.NewAccountAddress(TEST_ADDRESS),
 		[]byte(""),
 		&inputKey,
 		address,

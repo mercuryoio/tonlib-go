@@ -10,9 +10,14 @@ import (
 )
 
 var (
-	ErrorGetTypeIsNotStruct = errors.New("getType error. Value is not struct")
-	ErrorGetTypeIsNotString = errors.New("getType error. Type field is not string")
-	ErrorGetTypeIsNotValid  = errors.New("getType error. Type field is not valid")
+	ErrorReflectStringFieldIsNotStruct = errors.New("reflectStringField error. Value is not struct")
+	ErrorReflectStringFieldIsNotString = errors.New("reflectStringField error. Type field is not string")
+	ErrorReflectStringFieldIsNotValid  = errors.New("reflectStringField error. Type field is not valid")
+)
+
+const (
+	extraFieldName = "Extra"
+	typeFiledName = "Type"
 )
 
 type TonlibConfigServer struct {
@@ -102,18 +107,26 @@ func fileExists(filename string) bool {
 }
 
 func getType(data interface{}) (string, error) {
+	return reflectStringField(data, typeFiledName)
+}
+
+func getExtra(data interface{}) (string, error) {
+	return reflectStringField(data, extraFieldName)
+}
+
+func reflectStringField(data interface{}, fieldName string) (string, error) {
 	ps := reflect.ValueOf(data)
 	if ps.Kind() != reflect.Struct {
-		return "", ErrorGetTypeIsNotStruct
+		return "", ErrorReflectStringFieldIsNotStruct
 	}
 
-	f := ps.FieldByName("Extra")
+	f := ps.FieldByName(fieldName)
 	if f.Kind() != reflect.String {
-		return "", ErrorGetTypeIsNotString
+		return "", ErrorReflectStringFieldIsNotString
 	}
 
 	if !f.IsValid() {
-		return "", ErrorGetTypeIsNotValid
+		return "", ErrorReflectStringFieldIsNotValid
 	}
 
 	return f.String(), nil

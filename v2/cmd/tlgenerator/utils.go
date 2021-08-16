@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/asaskevich/govalidator"
 	"strings"
+
+	"github.com/asaskevich/govalidator"
 )
 
 func checkIsInterface(input string, interfaces *[]InterfaceInfo) bool {
@@ -104,7 +105,7 @@ func convertDataType(input string, changeBytesToString bool) (string, bool) {
 		propType = strings.Replace(input, "int53", "int64", 1)
 
 	} else if strings.Contains(input, "bytes") {
-		if changeBytesToString{
+		if changeBytesToString {
 			propType = strings.Replace(input, "bytes", "string", 1)
 		} else {
 			propType = strings.Replace(input, "bytes", "[]byte", 1)
