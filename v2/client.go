@@ -185,6 +185,9 @@ func (client *Client) sendAsync(extra string, data interface{}) error {
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 
+	client.serviceMu.RLock()
+	client.serviceMu.RUnlock()
+
 	// send may be async
 	C.tonlib_client_json_send(client.client, cs)
 
@@ -192,9 +195,6 @@ func (client *Client) sendAsync(extra string, data interface{}) error {
 }
 
 func (client *Client) execReceive() []byte {
-	client.receiveMu.Lock()
-	defer client.receiveMu.Unlock()
-
 	// receive must be sync
 	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
 
@@ -209,11 +209,9 @@ func (client *Client) execReceive() []byte {
 }
 
 func (client *Client) receiveOne() error {
-	// there is possible situation that one thread on sync and other thread exec Receive.
-	// This situation handled in sync method via check seq_to=0
-	// It is more safe to use Lock/defer Unlock but it is slow down app for 2-5 times
-	client.serviceMu.RLock()
-	client.serviceMu.RUnlock()
+	// receive and sync must be syncrinious
+	client.receiveMu.Lock()
+	defer client.receiveMu.Unlock()
 
 	resB := client.execReceive()
 	if resB == nil {
@@ -233,6 +231,7 @@ func (client *Client) receiveOne() error {
 
 	data := &TONResult{Data: updateData, Raw: resB}
 
+	// lock for sync / send. Should be here cause in sync we inwoke putResponseToStrore
 	client.serviceMu.Lock()
 	defer client.serviceMu.Unlock()
 
@@ -307,17 +306,6 @@ func (client *Client) checkNeedService(data *TONResult) {
 				}
 				return
 			}
-		}
-
-		// seq_to=0 node set for new sync request. It is leaked sync msg out of sync method
-		if syncResp.SyncState.ToSeqno != 0 {
-			if client.clientLogging {
-				fmt.Println(
-					client.formatLogString(extra,
-						fmt.Sprintf("error sync receive seq_to=0. "+
-							"Possible sinc msg received out of sync method. Skip. Resp:%s", string(data.Raw))))
-			}
-			return
 		}
 
 		err = client.sync(syncResp.SyncState)
@@ -506,6 +494,7 @@ func (client *Client) Destroy() {
 
 // sync node`s blocks to current
 func (client *Client) sync(syncState SyncState) (err error) {
+	// for sync we must stop send and receive
 	extra := client.getNewExtra()
 	data := struct {
 		Type      string    `json:"@type"`
@@ -579,8 +568,6 @@ func (client *Client) sync(syncState SyncState) (err error) {
 			// continue updating
 			continue
 		}
-
-		i--
 
 		if client.clientLogging {
 			fmt.Println(
