@@ -20,10 +20,8 @@ import (
 )
 
 const (
-	DEFAULT_TIMEOUT     = 4.5
-	DefaultRetries      = 600 // 600 * 100ms = 1min
-	DefaultRetryTimeout = 100 * time.Millisecond
-	SinkLimitTries      = 1000
+	NodeTimeoutSeconds = 4.5
+	WaitTimeout        = 60 * time.Second
 )
 
 type InputKey struct {
@@ -64,7 +62,7 @@ func (o TONResponse) getType() (string, bool) {
 func (o TONResponse) getExtra() (string, bool) {
 	extra, ok := o["@extra"].(string)
 	if !ok {
-		extra = "undef"
+		extra = ""
 	}
 
 	return extra, ok
@@ -78,7 +76,9 @@ type TONResult struct {
 
 // Client is the Telegram TdLib client
 type Client struct {
-	extraToResponse map[string]*TONResult
+	syncInProgress bool
+
+	extraToRespChan map[string]chan *TONResult
 
 	respMapMu *sync.RWMutex
 	receiveMu *sync.Mutex
@@ -87,7 +87,9 @@ type Client struct {
 	uniqClientID string
 
 	uniqExtra *uint64
-	stopChan  chan struct{}
+
+	stopChan chan struct{}
+	syncChan chan *TONResult
 
 	client        unsafe.Pointer
 	config        Config
@@ -120,7 +122,8 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 	extra := uint64(0)
 
 	client := Client{
-		extraToResponse: map[string]*TONResult{},
+		syncInProgress:  false,
+		extraToRespChan: make(map[string]chan *TONResult),
 		respMapMu:       &sync.RWMutex{},
 		receiveMu:       &sync.Mutex{},
 		serviceMu:       &sync.RWMutex{},
@@ -128,7 +131,9 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 		uniqClientID: uniqClientID,
 
 		uniqExtra: &extra,
-		stopChan:  make(chan struct{}),
+
+		stopChan: make(chan struct{}),
+		syncChan: make(chan *TONResult),
 
 		client:        cli,
 		config:        config,
@@ -142,30 +147,39 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 	err := client.executeSetLogLevel(tonLogging)
 	if err != nil {
 		return nil, errors.New(
-			client.formatLogString("", fmt.Sprintf("error set log level. Error:%v", err)))
+			client.formatLog("", fmt.Sprintf("error set log level. Error:%v", err)))
 	}
 
 	go client.receiveWorker()
+	go client.syncWorker()
 
 	optionsInfo, err := client.Init(tonCnf.Options)
 	if err != nil {
 		return nil, errors.New(
-			client.formatLogString(optionsInfo.tonCommon.Extra, fmt.Sprintf("error init client. Error:%v", err)))
+			client.formatLog(optionsInfo.tonCommon.Extra, fmt.Sprintf("error init client. Error:%v", err)))
 	}
 	if optionsInfo.tonCommon.Type == "options.info" {
 		return &client, nil
 	}
 
 	client.stopChan <- struct{}{}
+	close(client.stopChan)
+	close(client.syncChan)
 	if optionsInfo.tonCommon.Type == "error" {
-		return nil, fmt.Errorf(client.formatLogString(optionsInfo.tonCommon.Extra, "error client init"))
+		return nil, fmt.Errorf(client.formatLog(optionsInfo.tonCommon.Extra, "error client init"))
 	}
 
-	return nil, fmt.Errorf(client.formatLogString(optionsInfo.tonCommon.Extra, "error NewClient"))
+	return nil, fmt.Errorf(client.formatLog(optionsInfo.tonCommon.Extra, "error NewClient"))
 }
 
-func (client *Client) formatLogString(extra string, logStr string) string {
+func (client *Client) formatLog(extra, logStr string) string {
 	return fmt.Sprintf("clientID:%s, extra:%s, log:%s", client.uniqClientID, extra, logStr)
+}
+
+func (client *Client) printLog(extra, logStr string) {
+	if client.clientLogging {
+		fmt.Println(client.formatLog(extra, logStr))
+	}
 }
 
 func (client *Client) getNewExtra() string {
@@ -178,15 +192,10 @@ func (client *Client) sendAsync(extra string, data interface{}) error {
 		return err
 	}
 
-	if client.clientLogging {
-		fmt.Println(client.formatLogString(extra, fmt.Sprintf("call: %s", string(req))))
-	}
+	client.printLog(extra, fmt.Sprintf("call: %s", string(req)))
 
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
-
-	client.serviceMu.RLock()
-	client.serviceMu.RUnlock()
 
 	// send may be async
 	C.tonlib_client_json_send(client.client, cs)
@@ -196,7 +205,7 @@ func (client *Client) sendAsync(extra string, data interface{}) error {
 
 func (client *Client) execReceive() []byte {
 	// receive must be sync
-	result := C.tonlib_client_json_receive(client.client, DEFAULT_TIMEOUT)
+	result := C.tonlib_client_json_receive(client.client, NodeTimeoutSeconds)
 
 	if result == nil {
 		return nil
@@ -224,101 +233,62 @@ func (client *Client) receiveOne() error {
 		return err
 	}
 
-	if client.clientLogging {
-		extra, _ := updateData.getExtra()
-		fmt.Println(client.formatLogString(extra, fmt.Sprintf("fetch data: %s", string(resB))))
-	}
-
 	data := &TONResult{Data: updateData, Raw: resB}
 
-	// lock for sync / send. Should be here cause in sync we inwoke putResponseToStrore
-	client.serviceMu.Lock()
-	defer client.serviceMu.Unlock()
+	extra, extraOk := data.Data.getExtra()
 
-	err = client.putResponseToStore(data)
+	client.printLog(extra, fmt.Sprintf("fetch data: %s", string(resB)))
+
+	respType, ok := data.Data.getType()
+	if !ok {
+		return errors.New(
+			client.formatLog(extra,
+				fmt.Sprintf("error. Resp does not contains type field. Resp: %s", string(data.Raw))))
+	}
+
+	needService := client.checkNeedService(extra, respType, data)
+	if needService {
+		return nil
+	}
+
+	if !extraOk {
+		return errors.New(
+			client.formatLog(extra,
+				fmt.Sprintf("error. Resp does not contains extra field. Resp: %s", string(data.Raw))))
+	}
+
+	ch, err := client.getFromStore(extra)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (client *Client) putResponseToStore(data *TONResult) error {
-	client.checkNeedService(data)
-
-	extra, ok := data.Data.getExtra()
-	if !ok {
-		return errors.New(
-			client.formatLogString(extra,
-				fmt.Sprintf("error put receive to store. Extra field not found in responce. Skip. Resp: %s",
-					string(data.Raw))))
-	}
-
-	client.respMapMu.Lock()
-	defer client.respMapMu.Unlock()
-
-	if _, ok = client.extraToResponse[extra]; ok {
-		return errors.New(
-			client.formatLogString(extra,
-				fmt.Sprintf("error put receive to store. Received duplicate extra in responce. Skip. Resp: %s",
-					string(data.Raw))))
-	}
-
-	client.extraToResponse[extra] = data
+	ch <- data
 
 	return nil
 }
 
-func (client *Client) checkNeedService(data *TONResult) {
-	extra, _ := data.Data.getExtra()
-	respType, ok := data.Data.getType()
-	if !ok {
-		if client.clientLogging {
-			fmt.Println(client.formatLogString(extra, "error. checkNeedService. Resp does not contains type field"))
-		}
-
-		return
-	}
-
+func (client *Client) checkNeedService(extra, respType string, data *TONResult) bool {
 	switch respType {
 	case "updateSendLiteServerQuery":
 		go func() {
 			_, err := client.onLiteServerQueryResult(data.Data["data"].([]byte), data.Data["id"].(JSONInt64))
 			if err != nil {
-				fmt.Println(
-					client.formatLogString(extra, fmt.Sprintf("error OnLiteServerQueryResult. Error: %v", err)))
-				return
+				client.printLog(extra, fmt.Sprintf("error OnLiteServerQueryResult. Error: %v", err))
 			}
 		}()
-		break
+		return true
 
 	case "updateSyncState":
-		syncResp := struct {
-			Type      string    `json:"@type"`
-			SyncState SyncState `json:"sync_state"`
-		}{}
-		err := json.Unmarshal(data.Raw, &syncResp)
-		if err != nil {
-			if err != nil {
-				if client.clientLogging {
-					fmt.Println(
-						client.formatLogString(extra, fmt.Sprintf("error unmarshal SyncState. Error: %v", err)))
-				}
-				return
-			}
-		}
+		go func() {
+			client.syncChan <- data
+		}()
+		return true
 
-		err = client.sync(syncResp.SyncState)
-		if err != nil {
-			if client.clientLogging {
-				fmt.Println(client.formatLogString(extra, fmt.Sprintf("error sync. Error: %v", err)))
-			}
-			return
-		}
-		break
+	case "ton.blockIdExt":
+		return true
 
 	default:
-		return
+		return false
 	}
 }
 
@@ -326,16 +296,12 @@ func (client *Client) receiveWorker() {
 	for {
 		select {
 		case <-client.stopChan:
-			if client.clientLogging {
-				fmt.Println(client.formatLogString("", "receiveWorker. Stop"))
-			}
+			client.printLog("", "receiveWorker. Stop")
 			return
 
 		default:
 			if err := client.receiveOne(); err != nil {
-				if client.clientLogging {
-					fmt.Println(client.formatLogString("", fmt.Sprintf("error receiveOne. Error: %v", err)))
-				}
+				client.printLog("", fmt.Sprintf("error receiveOne. Error: %v", err))
 			}
 
 			break
@@ -343,37 +309,70 @@ func (client *Client) receiveWorker() {
 	}
 }
 
-func (client *Client) getStoredResponse(extra string) *TONResult {
-	client.respMapMu.RLock()
-	defer client.respMapMu.RUnlock()
-
-	val, ok := client.extraToResponse[extra]
-	if !ok {
-		return nil
-	}
-
-	return val
-}
-
-func (client *Client) waitResponse(extra string, retryCount int) (*TONResult, error) {
-	for i := 0; i < retryCount; i++ {
-		client.serviceMu.RLock()
-		client.serviceMu.RUnlock()
-
-		val := client.getStoredResponse(extra)
-		if val != nil {
-			client.respMapMu.Lock()
-			defer client.respMapMu.Unlock()
-
-			delete(client.extraToResponse, extra)
-
-			return val, nil
+func (client *Client) syncWorker() {
+	for {
+		data, ok := <-client.syncChan
+		if !ok {
+			client.printLog("", "sync. stop sync worker")
+			return
 		}
 
-		time.Sleep(DefaultRetryTimeout)
-	}
+		respType, _ := data.Data.getType()
+		if respType != "updateSyncState" {
+			client.printLog("", fmt.Sprintf("sync. received wrong type. Skip. Resp:%s", string(data.Raw)))
+			continue
+		}
 
-	return nil, errors.New("timeout for wait resp for extra")
+		syncResp := struct {
+			Type      string    `json:"@type"`
+			SyncState SyncState `json:"sync_state"`
+		}{}
+
+		err := json.Unmarshal(data.Raw, &syncResp)
+		if err != nil {
+			client.syncInProgress = false
+
+			client.printLog("",
+				fmt.Sprintf("sync. Error unmarshal response. Skip. Resp:%s, Error:%v", string(data.Raw), err))
+
+			continue
+		}
+
+		if syncResp.SyncState.Type == "syncStateDone" {
+			client.syncInProgress = false
+
+			client.printLog("", "sync. Received syncStateDone. SyncInProgress=false")
+
+			continue
+		}
+
+		if client.syncInProgress {
+			client.printLog("", fmt.Sprintf("sync. Sync in progress. Resp: %s", string(data.Raw)))
+
+			continue
+		}
+
+		// for sync we must stop send and receive
+		extra := client.getNewExtra()
+		startSyncData := struct {
+			Type      string    `json:"@type"`
+			Extra     string    `json:"extra"`
+			SyncState SyncState `json:"sync_state"`
+		}{
+			Type:      "sync",
+			Extra:     extra,
+			SyncState: syncResp.SyncState,
+		}
+
+		client.syncInProgress = true
+
+		client.printLog(extra, fmt.Sprintf("sync. Start sync. SyncInProgress=true. Req:%+v", startSyncData))
+
+		if err = client.sendAsync(extra, startSyncData); err != nil {
+			client.printLog(extra,
+				fmt.Sprintf("sync. Error send start sync. Req:%+v, Error:%v", startSyncData, err))
+		}
+	}
 }
 
 // disable ton client C lib`s logs
@@ -392,28 +391,67 @@ func (client *Client) executeSetLogLevel(logLevel int32) error {
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 
-	if client.clientLogging {
-		fmt.Println(
-			client.formatLogString("", fmt.Sprintf("call execute setLogVerbosityLevel: %s", string(req))))
-	}
+	client.printLog("", fmt.Sprintf("call execute setLogVerbosityLevel: %s", string(req)))
 
 	C.tonlib_client_json_execute(client.client, cs)
 
 	return nil
 }
 
+func (client *Client) putToStore(extra string, ch chan *TONResult) {
+	client.respMapMu.Lock()
+	defer client.respMapMu.Unlock()
+
+	client.extraToRespChan[extra] = ch
+}
+
+func (client *Client) getFromStore(extra string) (chan *TONResult, error) {
+	client.respMapMu.Lock()
+	defer client.respMapMu.Unlock()
+
+	ch, ok := client.extraToRespChan[extra]
+	if !ok {
+		return nil, errors.New("extra not found in store")
+	}
+
+	return ch, nil
+}
+
+func (client *Client) deleteFromStore(extra string) {
+	client.respMapMu.Lock()
+	defer client.respMapMu.Unlock()
+
+	delete(client.extraToRespChan, extra)
+}
+
 func (client *Client) executeAsynchronously(extra string, data interface{}) (*TONResult, error) {
+	ch := make(chan *TONResult)
+	defer close(ch)
+
+	client.putToStore(extra, ch)
+	defer client.deleteFromStore(extra)
+
 	err := client.sendAsync(extra, data)
 	if err != nil {
-		return nil, errors.New(client.formatLogString(extra, fmt.Sprintf("error sendAsync. Error: %v", err)))
+		return nil, errors.New(client.formatLog(extra, fmt.Sprintf("error sendAsync. Error: %v", err)))
 	}
 
-	resp, err := client.waitResponse(extra, DefaultRetries)
-	if err != nil {
-		return nil, errors.New(client.formatLogString(extra, fmt.Sprintf("error waitResponse. Error: %v", err)))
-	}
+	timeout := time.NewTimer(WaitTimeout)
+	defer timeout.Stop()
 
-	return resp, nil
+	select {
+	case <-timeout.C:
+		return nil, errors.New(client.formatLog(extra, "timeout for wait response"))
+	case resp := <-ch:
+		extraResp, _ := resp.Data.getExtra()
+		if extraResp != extra {
+			return nil, errors.New(client.formatLog(extra,
+				fmt.Sprintf("req extra != resp extra. ReqExtra: %s, RespExtra: %s, Req:%+v, Resp:%+v",
+					extra, extraResp, data, resp.Data)))
+		}
+
+		return resp, nil
+	}
 }
 
 /**
@@ -421,7 +459,7 @@ execute ton-lib asynchronously
 */
 func (client *Client) onLiteServerQueryResult(bytes []byte, id JSONInt64) (*Ok, error) {
 	extra := client.getNewExtra()
-	err := client.sendAsync(extra,
+	result, err := client.executeAsynchronously(extra,
 		struct {
 			Type  string    `json:"@type"`
 			Extra string    `json:"@extra"`
@@ -434,14 +472,6 @@ func (client *Client) onLiteServerQueryResult(bytes []byte, id JSONInt64) (*Ok, 
 			Id:    id,
 		},
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := client.waitResponse(extra, DefaultRetries)
-	if err != nil {
-		return nil, err
-	}
 
 	if result.Data["@type"].(string) == "error" {
 		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
@@ -465,9 +495,7 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	cs := C.CString(string(req))
 	defer C.free(unsafe.Pointer(cs))
 
-	if client.clientLogging {
-		fmt.Println(client.formatLogString("", fmt.Sprintf("call sycroniously: %v", data)))
-	}
+	client.printLog("", fmt.Sprintf("call sycroniously: %v", data))
 
 	result := C.tonlib_client_json_execute(client.client, cs)
 
@@ -475,9 +503,7 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 	res := C.GoString(result)
 	resB := []byte(res)
 
-	if client.clientLogging {
-		fmt.Println(client.formatLogString("", fmt.Sprintf("fetch sycroniously: %s", string(resB))))
-	}
+	client.printLog("", fmt.Sprintf("fetch sycroniously: %s", string(resB)))
 
 	err = json.Unmarshal(resB, &updateData)
 
@@ -485,110 +511,11 @@ func (client *Client) executeSynchronously(data interface{}) (*TONResult, error)
 }
 
 func (client *Client) Destroy() {
-	if client.clientLogging {
-		fmt.Println(client.formatLogString("", "destroy client"))
-	}
+	client.printLog("", "destroy client")
 	client.stopChan <- struct{}{}
+	close(client.stopChan)
+	close(client.syncChan)
 	C.tonlib_client_json_destroy(client.client)
-}
-
-// sync node`s blocks to current
-func (client *Client) sync(syncState SyncState) (err error) {
-	// for sync we must stop send and receive
-	extra := client.getNewExtra()
-	data := struct {
-		Type      string    `json:"@type"`
-		Extra     string    `json:"extra"`
-		SyncState SyncState `json:"sync_state"`
-	}{
-		Type:      "sync",
-		Extra:     extra,
-		SyncState: syncState,
-	}
-
-	req, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	if client.clientLogging {
-		fmt.Println(client.formatLogString(extra,
-			fmt.Sprintf("run sync. call: %s", string(req))))
-	}
-
-	cs := C.CString(string(req))
-	defer C.free(unsafe.Pointer(cs))
-
-	// send may be async
-	C.tonlib_client_json_send(client.client, cs)
-
-	for i := 0; i < SinkLimitTries; i++ {
-		result := client.execReceive()
-		if err != nil {
-			return err
-		}
-
-		if result == nil {
-			continue
-		}
-
-		if client.clientLogging {
-			fmt.Println(client.formatLogString(extra,
-				fmt.Sprintf("sync iter:%d, fetch: %s", i, string(result))))
-		}
-
-		syncResp := struct {
-			Type      string    `json:"@type"`
-			SyncState SyncState `json:"sync_state"`
-		}{}
-		err = json.Unmarshal(result, &syncResp)
-		if err != nil {
-			return err
-		}
-
-		if syncResp.Type == "error" {
-			return fmt.Errorf(
-				client.formatLogString(extra,
-					fmt.Sprintf("sync. Got an error response from ton: `%s`", string(result))))
-		}
-
-		if syncResp.SyncState.Type == "syncStateDone" {
-			return nil
-		}
-		if syncResp.Type == "ok" {
-			// continue updating
-			continue
-		}
-		if syncResp.Type == "ton.blockIdExt" {
-			// continue updating
-			continue
-		}
-		if syncResp.Type == "updateSyncState" {
-			time.Sleep(100 * time.Millisecond)
-			// continue updating
-			continue
-		}
-
-		if client.clientLogging {
-			fmt.Println(
-				client.formatLogString(extra,
-					fmt.Sprintf("sync. WARNING received unexpected type. Resp: %s", string(result))))
-		}
-
-		var tonResp TONResponse
-		err = json.Unmarshal(result, &tonResp)
-		if err != nil {
-			return err
-		}
-		err = client.putResponseToStore(&TONResult{Data: tonResp, Raw: result})
-		if err != nil {
-			return err
-		}
-
-		continue
-	}
-
-	return errors.New(client.formatLogString(extra, "sync reach limit of tries. Interrupt sync"))
 }
 
 // for now - a few requests may works wrong, cause it some times get respose form previos reqest for a few times
@@ -618,14 +545,13 @@ func (client *Client) UpdateTonConnection() error {
 	}
 	if optionsInfo.tonCommon.Type == "error" {
 		return fmt.Errorf(
-			client.formatLogString(optionsInfo.Extra,
-				fmt.Sprintf("error update ton connection. Ton client init. Message: %s. ",
-					optionsInfo.tonCommon.Extra)))
+			client.formatLog(optionsInfo.Extra,
+				fmt.Sprintf("error update ton connection. Ton client init. Message: %+v", optionsInfo)))
 	}
 
 	return fmt.Errorf(
-		client.formatLogString(optionsInfo.Extra,
-			fmt.Sprintf("error update ton connection. Unexpected client init response. %#v", optionsInfo)))
+		client.formatLog(optionsInfo.Extra,
+			fmt.Sprintf("error update ton connection. Unexpected client init response. %+v", optionsInfo)))
 }
 
 // key struct cause it strings values no bytes
