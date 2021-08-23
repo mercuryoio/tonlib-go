@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/mercuryoio/tonlib-go"
 )
 
 const (
@@ -153,7 +155,7 @@ func TestClient_ExportKey(t *testing.T) {
 			pKey.PublicKey,
 			pKey.Secret,
 		},
-	}, )
+	})
 	if err != nil {
 		t.Fatal("Ton export key error", err)
 	}
@@ -268,7 +270,7 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountAddress pKey: %#v", pKey))
 
 	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
+	addrr, err := cln.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountAddress failed to WalletGetAccountAddress(): ", err)
 	}
@@ -309,7 +311,7 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountState pKey: %#v", pKey))
 
 	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
+	addrr, err := cln.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
 	if err != nil {
 		t.Fatal("TestClient_WalletGetAccountState failed to WalletGetAccountAddress(): ", err)
 	}
@@ -400,7 +402,7 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 	fmt.Println(fmt.Sprintf("TestClient_RawCreateAndSendMessage pKey: %#v", pKey))
 
 	// get wallet address info
-	addrr, err := cln.GetAccountAddress(NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
+	addrr, err := cln.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage failed to WalletGetAccountAddress(): ", err)
 	}
@@ -422,4 +424,27 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 		t.Fatal("TestClient_RawCreateAndSendMessage failed to RawCreateAndSendMessage(): ", err)
 	}
 	fmt.Printf("TestClient_RawCreateAndSendMessage: create and send msg msgSentOk: %#v, err: %v. ", msgSentOk, err)
+}
+
+func TestGetType(t *testing.T) {
+	wantValue := "query.estimateFees"
+
+	data := struct {
+		Type         string `json:"@type"`
+		Id           int64  `json:"id"`
+		IgnoreChksig bool   `json:"ignore_chksig"`
+	}{
+		Type:         wantValue,
+		Id:           1,
+		IgnoreChksig: true,
+	}
+
+	actualValue, err := getType(interface{}(data))
+	if err != nil {
+		t.Errorf("Error getType. Data: %v. Error: %v", data, err)
+	}
+
+	if wantValue != actualValue {
+		t.Errorf("Error getType. WantValue: %s, ActualValue: %s", wantValue, actualValue)
+	}
 }

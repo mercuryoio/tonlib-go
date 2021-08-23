@@ -374,10 +374,6 @@ func (client *Client) GetAccountStateSimple(address string) (*FullAccountState, 
 	return client.GetAccountState(*accountAddress)
 }
 
-func (client *Client) GetLastBlock() (string, error) {
-	return client.Sync(SyncState(SyncState{}))
-}
-
 func (client *Client) TonlibSendFile(bocFilePath string) error {
 	if !fileExists(bocFilePath) {
 		return fmt.Errorf("file does not exist")
