@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -20,8 +21,9 @@ import (
 )
 
 const (
-	NodeTimeoutSeconds = 4.5
-	WaitTimeout        = 60 * time.Second
+	NodeTimeoutSeconds    = 4.5
+	WaitTimeout            = 60 * time.Second
+	ForceUnlockSyncTimeout = 10 * time.Second
 )
 
 type InputKey struct {
@@ -53,7 +55,7 @@ type TONResponse map[string]interface{}
 func (o TONResponse) getType() (string, bool) {
 	t, ok := o["@type"].(string)
 	if !ok {
-		t = "undef"
+		t = ""
 	}
 
 	return t, ok
@@ -82,11 +84,14 @@ type Client struct {
 
 	respMapMu *sync.RWMutex
 	receiveMu *sync.Mutex
-	serviceMu *sync.RWMutex
+	syncMu    *sync.RWMutex
+	syncUtilsMu    *sync.Mutex
 
 	uniqClientID string
 
 	uniqExtra *uint64
+
+	filterLogRe *regexp.Regexp
 
 	stopChan chan struct{}
 	syncChan chan *TONResult
@@ -126,11 +131,14 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 		extraToRespChan: make(map[string]chan *TONResult),
 		respMapMu:       &sync.RWMutex{},
 		receiveMu:       &sync.Mutex{},
-		serviceMu:       &sync.RWMutex{},
+		syncMu:          &sync.RWMutex{},
+		syncUtilsMu: &sync.Mutex{},
 
 		uniqClientID: uniqClientID,
 
 		uniqExtra: &extra,
+
+		filterLogRe: regexp.MustCompile(`"(local_password|mnemonic_password|secret|word_list)":("(\\"|[^"])*"|\[("(\\"|[^"])*"(,"(\\"|[^"])*")*)?\])`),
 
 		stopChan: make(chan struct{}),
 		syncChan: make(chan *TONResult),
@@ -173,6 +181,8 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 }
 
 func (client *Client) formatLog(extra, logStr string) string {
+	logStr = client.filterLogRe.ReplaceAllString(logStr, "\"$1\":\"hided\"")
+
 	return fmt.Sprintf("clientID:%s, extra:%s, log:%s", client.uniqClientID, extra, logStr)
 }
 
@@ -309,6 +319,36 @@ func (client *Client) receiveWorker() {
 	}
 }
 
+func (client *Client) timerSyncProgress(t *time.Timer) {
+	<-t.C
+
+	client.syncUnlock()
+}
+
+func (client *Client) syncLock() {
+	client.syncUtilsMu.Lock()
+	defer client.syncUtilsMu.Unlock()
+
+	if !client.syncInProgress {
+		client.syncInProgress = true
+		client.syncMu.Lock()
+
+		client.printLog("", "sync lock")
+	}
+}
+
+func (client *Client) syncUnlock() {
+	client.syncUtilsMu.Lock()
+	defer client.syncUtilsMu.Unlock()
+
+	if client.syncInProgress {
+		client.syncInProgress = false
+		client.syncMu.Unlock()
+
+		client.printLog("", "sync unlock")
+	}
+}
+
 func (client *Client) syncWorker() {
 	for {
 		data, ok := <-client.syncChan
@@ -330,7 +370,7 @@ func (client *Client) syncWorker() {
 
 		err := json.Unmarshal(data.Raw, &syncResp)
 		if err != nil {
-			client.syncInProgress = false
+			client.syncUnlock()
 
 			client.printLog("",
 				fmt.Sprintf("sync. Error unmarshal response. Skip. Resp:%s, Error:%v", string(data.Raw), err))
@@ -339,7 +379,7 @@ func (client *Client) syncWorker() {
 		}
 
 		if syncResp.SyncState.Type == "syncStateDone" {
-			client.syncInProgress = false
+			client.syncUnlock()
 
 			client.printLog("", "sync. Received syncStateDone. SyncInProgress=false")
 
@@ -364,10 +404,13 @@ func (client *Client) syncWorker() {
 			SyncState: syncResp.SyncState,
 		}
 
-		client.syncInProgress = true
+		client.syncLock()
+		t := time.NewTimer(ForceUnlockSyncTimeout)
+		go client.timerSyncProgress(t)
 
 		client.printLog(extra, fmt.Sprintf("sync. Start sync. SyncInProgress=true. Req:%+v", startSyncData))
 
+		// resend start sync msg is ok. We will just receive one more ton.blockIdExt message
 		if err = client.sendAsync(extra, startSyncData); err != nil {
 			client.printLog(extra,
 				fmt.Sprintf("sync. Error send start sync. Req:%+v, Error:%v", startSyncData, err))
@@ -430,6 +473,9 @@ func (client *Client) executeAsynchronously(extra string, data interface{}) (*TO
 
 	client.putToStore(extra, ch)
 	defer client.deleteFromStore(extra)
+
+	client.syncMu.RLock()
+	client.syncMu.RUnlock()
 
 	err := client.sendAsync(extra, data)
 	if err != nil {
