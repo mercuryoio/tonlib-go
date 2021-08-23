@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	NodeTimeoutSeconds    = 4.5
+	NodeTimeoutSeconds     = 4.5
 	WaitTimeout            = 60 * time.Second
 	ForceUnlockSyncTimeout = 10 * time.Second
 )
@@ -82,10 +82,10 @@ type Client struct {
 
 	extraToRespChan map[string]chan *TONResult
 
-	respMapMu *sync.RWMutex
-	receiveMu *sync.Mutex
-	syncMu    *sync.RWMutex
-	syncUtilsMu    *sync.Mutex
+	respMapMu   *sync.RWMutex
+	receiveMu   *sync.Mutex
+	syncMu      *sync.RWMutex
+	syncUtilsMu *sync.Mutex
 
 	uniqClientID string
 
@@ -132,7 +132,7 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 		respMapMu:       &sync.RWMutex{},
 		receiveMu:       &sync.Mutex{},
 		syncMu:          &sync.RWMutex{},
-		syncUtilsMu: &sync.Mutex{},
+		syncUtilsMu:     &sync.Mutex{},
 
 		uniqClientID: uniqClientID,
 
