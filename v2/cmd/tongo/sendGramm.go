@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	tonlib "github.com/mercuryoio/tonlib-go/v2"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"strconv"
+
+	tonlib "github.com/mercuryoio/tonlib-go/v2"
+	"github.com/spf13/cobra"
 )
 
 var sendGrammCmd = &cobra.Command{
@@ -83,6 +84,7 @@ func sendGramm(cmd *cobra.Command, args []string) {
 			tonlib.NewMsgDataText(message),
 			tonlib.NewAccountAddress(destinationAddr),
 			"",
+			-1,
 		)},
 	)
 	queryInfo, err := tonClient.CreateQuery(

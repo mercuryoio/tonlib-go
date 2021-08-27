@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"os/exec"
 	"os/signal"
+
+	"github.com/spf13/cobra"
 )
 
 var syncWithTlCmd = &cobra.Command{

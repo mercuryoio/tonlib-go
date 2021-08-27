@@ -241,8 +241,8 @@ func (client *Client) ExportKey(inputKey InputKey) (*ExportedKey, error) {
 
 	var exportedKey ExportedKey
 	err = json.Unmarshal(result.Raw, &exportedKey)
-	return &exportedKey, err
 
+	return &exportedKey, err
 }
 
 // ExportPemKey
@@ -307,8 +307,8 @@ func (client *Client) ExportEncryptedKey(inputKey InputKey, keyPassword SecureBy
 
 	var exportedEncryptedKey ExportedEncryptedKey
 	err = json.Unmarshal(result.Raw, &exportedEncryptedKey)
-	return &exportedEncryptedKey, err
 
+	return &exportedEncryptedKey, err
 }
 
 // ExportUnencryptedKey
@@ -337,8 +337,8 @@ func (client *Client) ExportUnencryptedKey(inputKey InputKey) (*ExportedUnencryp
 
 	var exportedUnencryptedKey ExportedUnencryptedKey
 	err = json.Unmarshal(result.Raw, &exportedUnencryptedKey)
-	return &exportedUnencryptedKey, err
 
+	return &exportedUnencryptedKey, err
 }
 
 // ImportKey
@@ -445,8 +445,8 @@ func (client *Client) ImportEncryptedKey(exportedEncryptedKey ExportedEncryptedK
 
 	var keyDummy Key
 	err = json.Unmarshal(result.Raw, &keyDummy)
-	return &keyDummy, err
 
+	return &keyDummy, err
 }
 
 // ImportUnencryptedKey
@@ -544,8 +544,8 @@ func (client *Client) Encrypt(decryptedData SecureBytes, secret SecureBytes) (*D
 
 	var data Data
 	err = json.Unmarshal(result.Raw, &data)
-	return &data, err
 
+	return &data, err
 }
 
 // Decrypt
@@ -1176,6 +1176,39 @@ func (client *Client) QueryForget(id int64) (*Ok, error) {
 	err = json.Unmarshal(result.Raw, &ok)
 
 	return &ok, err
+}
+
+// QueryEstimateFees
+// @param id
+// @param ignoreChksig
+func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
+	extra := client.getNewExtra()
+	result, err := client.executeAsynchronously(extra,
+		struct {
+			Type         string `json:"@type"`
+			Extra        string `json:"@extra"`
+			Id           int64  `json:"id"`
+			IgnoreChksig bool   `json:"ignore_chksig"`
+		}{
+			Type:         "query.estimateFees",
+			Extra:        extra,
+			Id:           id,
+			IgnoreChksig: ignoreChksig,
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result.Data["@type"].(string) == "error" {
+		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
+	}
+
+	var queryFees QueryFees
+	err = json.Unmarshal(result.Raw, &queryFees)
+
+	return &queryFees, err
 }
 
 // QueryGetInfo
@@ -2068,42 +2101,4 @@ func (client *Client) GetLogTagVerbosityLevel(tag string) (*LogVerbosityLevel, e
 	err = json.Unmarshal(result.Raw, &logVerbosityLevel)
 
 	return &logVerbosityLevel, err
-}
-
-// QueryEstimateFees
-// sometimes it`s respond with "@type: ok" instead of "query.fees"
-// @param id
-// @param ignoreChksig
-func (client *Client) QueryEstimateFees(id int64, ignoreChksig bool) (*QueryFees, error) {
-	extra := client.getNewExtra()
-	result, err := client.executeAsynchronously(extra,
-		struct {
-			Type         string `json:"@type"`
-			Extra        string `json:"@extra"`
-			Id           int64  `json:"id"`
-			IgnoreChksig bool   `json:"ignore_chksig"`
-		}{
-			Type:         "query.estimateFees",
-			Extra:        extra,
-			Id:           id,
-			IgnoreChksig: ignoreChksig,
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if result.Data["@type"].(string) == "error" {
-		return nil, fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])
-	}
-
-	if result.Data["@type"].(string) != "query.fees" && result.Data["@type"].(string) != "query.estimateFees" {
-		return nil, fmt.Errorf("error! query extimate fee. Received wront type: %s", result.Data["@type"].(string))
-	}
-
-	var queryFees QueryFees
-	err = json.Unmarshal(result.Raw, &queryFees)
-
-	return &queryFees, err
 }
