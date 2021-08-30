@@ -571,16 +571,27 @@ func (client *Client) UpdateTonConnection() error {
 	if err != nil {
 		return err
 	}
+	client.syncMu.Lock()
+
 	// destroy old c.ient
 	client.Destroy()
 
 	// create new C client
 	client.client = C.tonlib_client_json_create()
+
+	client.syncMu.Unlock()
+
 	// set log level
 	err = client.executeSetLogLevel(client.tonLogging)
 	if err != nil {
 		return err
 	}
+
+	client.stopChan = make(chan struct{})
+	client.syncChan = make(chan *TONResult)
+
+	go client.receiveWorker()
+	go client.syncWorker()
 
 	// init client
 	optionsInfo, err := client.Init(client.options)
