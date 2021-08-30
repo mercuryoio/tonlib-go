@@ -32,6 +32,7 @@ type InputKey struct {
 	Key           TONPrivateKey `json:"key"`
 }
 type TONPrivateKey struct {
+	Type      string `json:"@type"`
 	PublicKey string `json:"public_key"`
 	Secret    string `json:"secret"`
 }

@@ -23,7 +23,7 @@ var createPKCmd = &cobra.Command{
 		}
 		_, err := os.Stat(args[0])
 		if err != nil {
-			errors.New("please choose config path")
+			return errors.New("please choose config path")
 		}
 		return nil
 	},
@@ -46,8 +46,8 @@ func createPK(cmd *cobra.Command, args []string) {
 	mem := tonlib.SecureBytes(mnPass)
 	seed := tonlib.SecureBytes("")
 
-	// create ne wkey
-	pKey, err := tonClient.CreateNewKey(loc, mem, seed, )
+	// create new key
+	pKey, err := tonClient.CreateNewKey(loc, mem, seed)
 	if err != nil {
 		log.Fatal("failed to create new key with error: ", err)
 		return

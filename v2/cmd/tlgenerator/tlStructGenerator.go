@@ -13,7 +13,7 @@ var StructNamesExcludedFromGenerator = []string{
 }
 
 var SkipMethodNames = []string{
-	"sync", "query.estimateFees",
+	"sync",
 }
 
 func generateStructsFromTnEntities(
@@ -181,7 +181,7 @@ func generateStructsFromTnEntities(
 
 			// sort params to enshure the same params order in each generation
 			sort.Slice(itemInfo.Properties, func(i, j int) bool {
-				if (itemInfo.Properties[i].Name > itemInfo.Properties[j].Name){
+				if itemInfo.Properties[i].Name > itemInfo.Properties[j].Name {
 					return false
 				}
 				return true
@@ -343,7 +343,7 @@ func generateStructsFromTnEntities(
 
 			// sort params to enshure the same params order in each generation
 			sort.Slice(itemInfo.Properties, func(i, j int) bool {
-				if (itemInfo.Properties[i].Name > itemInfo.Properties[j].Name){
+				if itemInfo.Properties[i].Name > itemInfo.Properties[j].Name {
 					return false
 				}
 				return true
@@ -406,12 +406,15 @@ func generateStructsFromTnEntities(
 				}
 
 				methodsContent += fmt.Sprintf(` {
-					result, err := client.executeAsynchronously(
+					extra := client.getNewExtra()
+					result, err := client.executeAsynchronously(extra, 
 						struct {
 							Type string `+"`json:\"@type\"`"+`
+							Extra string `+"`json:\"@extra\"`"+`
 							%s	
 						}{
 							Type: "%s",
+							Extra: extra,
 							%s
 						},
 					)
@@ -436,12 +439,15 @@ func generateStructsFromTnEntities(
 
 			} else {
 				methodsContent += fmt.Sprintf(` {
-					result, err := client.executeAsynchronously(
+					extra := client.getNewExtra()
+					result, err := client.executeAsynchronously(extra, 
 						struct {
 							Type string `+"`json:\"@type\"`"+`
+							Extra string `+"`json:\"@extra\"`"+`
 							%s	
 						}{
 							Type: "%s",
+							Extra: extra,
 							%s
 						},
 					)
@@ -456,8 +462,8 @@ func generateStructsFromTnEntities(
 	
 					var %s %s
 					err = json.Unmarshal(result.Raw, &%s)
+
 					return %s%s, err
-	
 					}
 					
 					`, clientCallStructAttrs, itemInfo.Name, paramsStr, illStr, returnTypeCamel,

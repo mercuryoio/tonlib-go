@@ -1846,9 +1846,10 @@ func NewMsgDataDecryptedArray(elements []MsgDataDecrypted) *MsgDataDecryptedArra
 type MsgMessage struct {
 	tonCommon
 	Amount      JSONInt64       `json:"amount"`      //
-	Data        MsgData        `json:"data"`        //
+	Data        MsgData         `json:"data"`        //
 	Destination *AccountAddress `json:"destination"` //
 	PublicKey   string          `json:"public_key"`  //
+	SendMode    int32           `json:"send_mode"`   //
 }
 
 // MessageType return the string telegram-type of MsgMessage
@@ -1862,13 +1863,15 @@ func (msgMessage *MsgMessage) MessageType() string {
 // @param data
 // @param destination
 // @param publicKey
-func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress, publicKey string) *MsgMessage {
+// @param sendMode
+func NewMsgMessage(amount JSONInt64, data MsgData, destination *AccountAddress, publicKey string, sendMode int32) *MsgMessage {
 	msgMessageTemp := MsgMessage{
 		tonCommon:   tonCommon{Type: "msg.message"},
 		Amount:      amount,
 		Data:        data,
 		Destination: destination,
 		PublicKey:   publicKey,
+		SendMode:    sendMode,
 	}
 
 	return &msgMessageTemp
