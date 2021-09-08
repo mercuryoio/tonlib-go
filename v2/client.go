@@ -165,7 +165,7 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 	optionsInfo, err := client.Init(tonCnf.Options)
 	if err != nil {
 		return nil, errors.New(
-			client.formatLog(optionsInfo.tonCommon.Extra, fmt.Sprintf("error init client. Error:%v", err)))
+			client.formatLog("", fmt.Sprintf("error init client. Error:%v", err)))
 	}
 	if optionsInfo.tonCommon.Type == "options.info" {
 		return &client, nil
@@ -175,10 +175,10 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 	close(client.stopChan)
 	close(client.syncChan)
 	if optionsInfo.tonCommon.Type == "error" {
-		return nil, fmt.Errorf(client.formatLog(optionsInfo.tonCommon.Extra, "error client init"))
+		return nil, fmt.Errorf(client.formatLog(optionsInfo.Extra, "error client init"))
 	}
 
-	return nil, fmt.Errorf(client.formatLog(optionsInfo.tonCommon.Extra, "error NewClient"))
+	return nil, fmt.Errorf(client.formatLog(optionsInfo.Extra, "error NewClient"))
 }
 
 func (client *Client) formatLog(extra, logStr string) string {
