@@ -4,9 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"testing"
-
-	"github.com/mercuryoio/tonlib-go"
 )
 
 const (
@@ -154,6 +153,7 @@ func TestClient_ExportKey(t *testing.T) {
 		TONPrivateKey{
 			pKey.PublicKey,
 			pKey.Secret,
+			"",
 		},
 	})
 	if err != nil {
@@ -201,6 +201,7 @@ func TestClient_ExportPemKey(t *testing.T) {
 		TONPrivateKey{
 			pKey.PublicKey,
 			pKey.Secret,
+			"",
 		},
 	}, loc)
 	if err != nil {
@@ -256,26 +257,40 @@ func TestClient_WalletGetAccountAddress(t *testing.T) {
 		t.Fatal("TestClient_WalletGetAccountAddress Init client error. ", err)
 	}
 	defer cln.Destroy()
+	defer cln.Close()
 
-	// prepare data
-	loc := SecureBytes(TestPassword)
-	mem := SecureBytes(TestPassword)
-	seed := SecureBytes("")
+	//prepare data
+	testAddress := "EQDfYZhDfNJ0EePoT5ibfI9oG9bWIU6g872oX5h9rL5PHY9a"
 
-	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	//get address pair
+	addrUnpacked, err := cln.UnpackAccountAddress(testAddress)
 	if err != nil {
-		t.Fatal("TestClient_WalletGetAccountAddress create key for init wallet error", err)
-	}
-	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountAddress pKey: %#v", pKey))
-
-	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
-	if err != nil {
-		t.Fatal("TestClient_WalletGetAccountAddress failed to WalletGetAccountAddress(): ", err)
+		t.Fatal("Error unpack account address", err)
 	}
 
-	fmt.Printf("TestClient_WalletGetAccountAddress: get account adress addr: %#v, err: %v. ", addrr, err)
+	isBounceable := addrUnpacked.Bounceable
+
+	addrPacked, err := cln.PackAccountAddress(*addrUnpacked)
+	if err != nil {
+		t.Fatal("Error pack account address", err)
+	}
+
+	addrUnpacked.Bounceable = !addrUnpacked.Bounceable
+	addrPackedInverse, err := cln.PackAccountAddress(*addrUnpacked)
+	if err != nil {
+		t.Fatal("Error pack account address", err)
+	}
+	var bounceAddr, unBounceAddr *AccountAddress
+	if isBounceable {
+		bounceAddr = addrPacked
+		unBounceAddr = addrPackedInverse
+	} else {
+		bounceAddr = addrPackedInverse
+		unBounceAddr = addrPacked
+	}
+
+	fmt.Printf("TestClient_WalletGetAccountAddress: get account adress addr. " +
+		"Bounceable: %#v, Unbounceable, %#v, Err: %v. ", bounceAddr, unBounceAddr, err)
 }
 
 func TestClient_WalletGetAccountState(t *testing.T) {
@@ -297,32 +312,14 @@ func TestClient_WalletGetAccountState(t *testing.T) {
 		t.Fatal("TestClient_WalletGetAccountState Init client error. ", err)
 	}
 	defer cln.Destroy()
+	defer cln.Close()
 
-	// prepare data
-	loc := SecureBytes(TestPassword)
-	mem := SecureBytes(TestPassword)
-	seed := SecureBytes("")
-
-	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	state, err := cln.GetAccountStateSimple(TestAccountAddress)
 	if err != nil {
-		t.Fatal("TestClient_WalletGetAccountState create key for init wallet error", err)
-	}
-	fmt.Println(fmt.Sprintf("TestClient_WalletGetAccountState pKey: %#v", pKey))
-
-	// get wallet adress info
-	addrr, err := cln.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
-	if err != nil {
-		t.Fatal("TestClient_WalletGetAccountState failed to WalletGetAccountAddress(): ", err)
+		t.Fatal("TestClient_WalletGetAccountState Get account state simple error. ", err)
 	}
 
-	// get wallet account state info
-	state, err := cln.GetAccountState(*addrr)
-	if err != nil {
-		t.Fatal("TestClient_WalletGetAccountState failed to WalletGetAccountState(): ", err)
-	}
-
-	fmt.Printf("TestClient_WalletGetAccountState: get account stater: %#v, err: %v. ", state, err)
+	fmt.Printf("TestClient_WalletGetAccountState: get account state: %#v, err: %v. ", state, err)
 }
 
 func TestClient_RawGetTransactions(t *testing.T) {
@@ -388,21 +385,32 @@ func TestClient_RawCreateAndSendMessage(t *testing.T) {
 		t.Fatal("TestClient_RawCreateAndSendMessage Init client error. ", err)
 	}
 	defer cln.Destroy()
+	defer cln.Close()
 
 	// prepare data
-	loc := SecureBytes(TestPassword)
-	mem := SecureBytes(TestPassword)
-	seed := SecureBytes("")
+	// generate new 24 words mnemo on tonwallet.me or https://github.com/cryptoboyio/ton-mnemonic
+	// mnemonicPass should be empty
+	var mnemonic []string
+	var mnemonicPass string
 
-	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
-	if err != nil {
-		t.Fatal("TestClient_RawCreateAndSendMessage create key for init wallet error", err)
+	walletID := int64(698983191)
+	revision := 1
+	workchainID := 0
+
+	wordList := make([]SecureString, 0, len(mnemonic))
+	for _, word := range mnemonic {
+		wordList = append(wordList, SecureString(word))
 	}
-	fmt.Println(fmt.Sprintf("TestClient_RawCreateAndSendMessage pKey: %#v", pKey))
 
+	exportedKey := NewExportedKey(wordList)
+	key, err := cln.ImportKey(*exportedKey, SecureBytes(mnemonicPass), SecureBytes(mnemonicPass))
+	if err != nil {
+		log.Fatalln("Import key error", err)
+	}
+
+	sourceAccState := NewWalletV3InitialAccountState(key.PublicKey, JSONInt64(walletID))
 	// get wallet address info
-	addrr, err := cln.GetAccountAddress(tonlib.NewWalletInitialAccountState(pKey.PublicKey), 0, 0)
+	addrr, err := cln.GetAccountAddress(sourceAccState, int32(revision), int32(workchainID))
 	if err != nil {
 		t.Fatal("TestClient_RawCreateAndSendMessage failed to WalletGetAccountAddress(): ", err)
 	}

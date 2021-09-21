@@ -25,50 +25,67 @@ func main() {
 		log.Fatalln("Init client error", err)
 	}
 	defer cln.Destroy()
+	defer cln.Close()
 
-	// create private key
 	// prepare data
-	loc := v2.SecureBytes(TEST_PASSWORD)
-	mem := v2.SecureBytes(TEST_PASSWORD)
-	seed := v2.SecureBytes("")
+	// generate new 24 words mnemo on tonwallet.me or https://github.com/cryptoboyio/ton-mnemonic
+	// mnemonicPass should be empty
+	var mnemonic []string
+	var mnemonicPass string
 
-	// create new key
-	pKey, err := cln.CreateNewKey(loc, mem, seed)
+	walletID := int64(698983191)
+	revision := 1
+	workchainID := 0
+
+	wordList := make([]v2.SecureString, 0, len(mnemonic))
+	for _, word := range mnemonic {
+		wordList = append(wordList, v2.SecureString(word))
+	}
+
+	exportedKey := v2.NewExportedKey(wordList)
+	key, err := cln.ImportKey(*exportedKey, v2.SecureBytes(mnemonicPass), v2.SecureBytes(mnemonicPass))
 	if err != nil {
-		log.Fatalln("Ton create key for send grams error", err)
+		log.Fatalln("Import key error", err)
 	}
 
-	// prepare input key
-	inputKey := v2.InputKey{
-		"inputKeyRegular",
-		base64.StdEncoding.EncodeToString(loc),
-		v2.TONPrivateKey{
-			pKey.PublicKey,
-			base64.StdEncoding.EncodeToString([]byte(pKey.Secret)),
-		},
-	}
-
-	_, err = cln.WalletInit(&inputKey)
+	sourceAccState := v2.NewWalletV3InitialAccountState(key.PublicKey, v2.JSONInt64(walletID))
+	accountAddr, err := cln.GetAccountAddress(sourceAccState, int32(revision), int32(workchainID))
 	if err != nil {
-		log.Fatalln("Ton init wallet for send gramms error", err)
-	}
-	address, err := cln.WalletGetAccountAddress(v2.NewWalletInitialAccountState(pKey.PublicKey))
-	if err != nil {
-		log.Fatalln("Ton get address for send grams error", err)
+		log.Fatalln("Get account address error", err)
 	}
 
-	// send grams
-	sendResult, err := cln.GenericSendGrams(
+	msgAction := v2.NewActionMsg(
 		true,
-		TEST_AMOUNT,
-		v2.NewAccountAddress(TEST_ADDRESS),
-		[]byte(""),
-		&inputKey,
-		address,
-		5,
+		[]v2.MsgMessage{*v2.NewMsgMessage(
+			v2.JSONInt64(TEST_AMOUNT),
+			v2.NewMsgDataText(""),
+			v2.NewAccountAddress(TEST_ADDRESS),
+			"",
+			-1,
+		)},
+	)
+
+	inputKey := v2.InputKey{
+		Type:          "inputKeyRegular",
+		LocalPassword: base64.StdEncoding.EncodeToString(v2.SecureBytes(mnemonicPass)),
+		Key:           v2.TONPrivateKey{Type: "key", PublicKey: key.PublicKey, Secret: key.Secret},
+	}
+
+	queryInfo, err := cln.CreateQuery(
+		msgAction,
+		*accountAddr,
+		sourceAccState,
+		inputKey,
+		90, // If this timeout will be exceeded - all request are go as usual but grams wil not be sent
 	)
 	if err != nil {
-		log.Fatalln("Ton send grams error ", err)
+		log.Fatalln("Create query error", err)
 	}
-	fmt.Println(fmt.Sprintf("Send grams with resp: %#v. ", sendResult))
+
+	ok, err := cln.QuerySend(queryInfo.Id)
+	if err != nil {
+		log.Fatalln("Send query error", err)
+	}
+
+	fmt.Println(fmt.Sprintf("Send grams with queryInfo: %#v, queryResult: %#v", queryInfo, ok))
 }
