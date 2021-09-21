@@ -26,6 +26,7 @@ jobs:
           cd build
           cmake ../ton -DOPENSSL_ROOT_DIR=$(brew --prefix)/opt/openssl -DCMAKE_BUILD_TYPE=Release
           cmake --build . --target tonlibjson
+          make tonlibjson_static
           
       - name: Copy built lib
         run: |
