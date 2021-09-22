@@ -13,14 +13,8 @@
 ./vendor
 
 # tonlib-c files
-v2/lib/linux*
-v2/lib/linux
-
 lib/linux*
 lib/linux
-
-v2/lib/linux/*.so
-v2/lib/linux/*.a
 
 lib/linux/*.so
 lib/linux/*.a
