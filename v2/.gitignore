@@ -12,8 +12,5 @@
 .idea
 ./vendor
 
-lib/linux/*.so
-lib/linux/*.a
-
 # auto generated files
 test.keys/*
