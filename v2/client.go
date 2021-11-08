@@ -156,7 +156,7 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 	err := client.executeSetLogLevel(tonLogging)
 	if err != nil {
 		return nil, errors.New(
-			client.formatLog("", fmt.Sprintf("error set log level. Error:%v", err)))
+			client.formatLog("", fmt.Sprintf("error set log level. Error: %v", err)))
 	}
 
 	go client.receiveWorker()
@@ -165,7 +165,7 @@ func NewClientWithUniqID(tonCnf *TonInitRequest, config Config, timeout int64,
 	optionsInfo, err := client.Init(tonCnf.Options)
 	if err != nil {
 		return nil, errors.New(
-			client.formatLog("", fmt.Sprintf("error init client. Error:%v", err)))
+			client.formatLog("", fmt.Sprintf("error init client. Error: %v", err)))
 	}
 	if optionsInfo.tonCommon.Type == "options.info" {
 		return &client, nil
