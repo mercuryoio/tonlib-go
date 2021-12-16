@@ -15,12 +15,18 @@ const SmcParticipatesInMethod = "participates_in"
 const SmcComputeReturnedStakeMethod = "compute_returned_stake"
 const NoErrorCode = 0
 
-type ElectionParticipant struct {
+type ElectionParticipantExtended struct {
 	Id                 string      `json:"id"`
 	Stake              string      `json:"stake"`
 	MaxFactor          string      `json:"max_factor"`
 	ParticipantAddress string      `json:"participant_address"`
 	AdnlAddress        string      `json:"adnl_address"`
+	Raw                interface{} `json:"-"`
+}
+
+type ElectionParticipant struct {
+	Id                 string      `json:"id"`
+	Stake              string      `json:"stake"`
 	Raw                interface{} `json:"-"`
 }
 
@@ -115,7 +121,7 @@ func (client *Client) GetWalletSeqno(address string) (int64, error) {
 	return strconv.ParseInt(secondNum.(string), 10, 64)
 }
 
-func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, error) {
+func (client *Client) GetParticipantList(address string) (*[]ElectionParticipant, error) {
 	smcInfo, err := client.LoadContract(address)
 	if err != nil {
 		return nil, err
@@ -129,10 +135,112 @@ func (client *Client) GetParticipantList(address string) (*[]TvmStackEntry, erro
 	if runMethodResult.Type != SmcRunResultType {
 		return nil, fmt.Errorf("Got response with type `%s` instead of `%s`", runMethodResult.Type, SmcRunResultType)
 	}
-	return &runMethodResult.Stack, nil
+
+	if len(runMethodResult.Stack) != 1 {
+		return nil, fmt.Errorf("expected length of Stack: 1, but got: %d. Resp: %#v", len(runMethodResult.Stack), runMethodResult.Stack)
+	}
+	stackEntryList, ok := runMethodResult.Stack[0].(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("#1 failed to parse element as map[string]interface{}. element: %#v", runMethodResult.Stack[0])
+	}
+	listValueInterface, ok := stackEntryList["list"]
+	if !ok {
+		return nil, fmt.Errorf("#2 failed to find `list` in dict. element: %#v", stackEntryList)
+	}
+	tvmList, ok := listValueInterface.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("#3 failed to parse element as map[string]interface{}. element: %#v", listValueInterface)
+	}
+	elementsListInterface, ok := tvmList["elements"]
+	if !ok {
+		return nil, fmt.Errorf("#4 failed to find `elements` in dict. element: %#v", tvmList)
+	}
+	elementsList, ok := elementsListInterface.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("#5 failed to parse element as []interface{}. element: %#v", elementsListInterface)
+	}
+
+	// parse elements
+	participants := []ElectionParticipant{}
+	for _, el := range elementsList {
+		tupleEl, ok := el.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#6 failed to parse element as map[string]interface{}. element: %#v", el)
+		}
+		tupleElementsInterface, ok := tupleEl["tuple"]
+		if !ok {
+			return nil, fmt.Errorf("#7 failed to find `tuple` in dict. element: %#v", tupleEl)
+		}
+		tupleElementsDict, ok := tupleElementsInterface.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#8 failed to parse element as map[string]interface{}. element: %#v", tupleElementsInterface)
+		}
+		elElementsInterface, ok := tupleElementsDict["elements"]
+		if !ok {
+			return nil, fmt.Errorf("#9 failed to find `elements` in dict. element: %#v", tupleElementsDict)
+		}
+		elElements, ok := elElementsInterface.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#10 failed to parse element as []interface{}. element: %#v", elElementsInterface)
+		}
+		if len(elElements) != 2 {
+			return nil, fmt.Errorf("#11 expected length of elElements: 2, but got: %d. elements: %#v", len(elElements), elElements)
+		}
+		// parse id
+		idElementDict, ok := elElements[0].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#12 failed to parse element as map[string]interface{}. element: %#v", elElements[0])
+		}
+		idElementNumberInterface, ok := idElementDict["number"]
+		if !ok {
+			return nil, fmt.Errorf("#13 failed to find `number` in dict. element: %#v", idElementDict)
+		}
+		idElementNumberDict, ok := idElementNumberInterface.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#14 failed to parse element as map[string]interface{}. element: %#v", idElementNumberInterface)
+		}
+		idElementNumberValueInterface, ok := idElementNumberDict["number"]
+		if !ok {
+			return nil, fmt.Errorf("#15 failed to find `number` in dict. element: %#v", idElementNumberDict)
+		}
+		idElementValue, ok := idElementNumberValueInterface.(string)
+		if !ok {
+			return nil, fmt.Errorf("#16 failed to parse element as string. element: %#v", idElementNumberValueInterface)
+		}
+
+		// parse stake value
+		stakeElementDict, ok := elElements[1].(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#17 failed to parse element as map[string]interface{}. element: %#v", elElements[1])
+		}
+		stakeElementNumberInterface, ok := stakeElementDict["number"]
+		if !ok {
+			return nil, fmt.Errorf("#18 failed to find `number` in dict. element: %#v", stakeElementDict)
+		}
+		stakeElementNumberDict, ok := stakeElementNumberInterface.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("#19 failed to parse element as map[string]interface{}. element: %#v", stakeElementNumberInterface)
+		}
+		stakeElementValueInterface, ok := stakeElementNumberDict["number"]
+		if !ok {
+			return nil, fmt.Errorf("#20 failed to find `number` in dict. element: %#v", stakeElementNumberDict)
+		}
+		stakeElementValue, ok := stakeElementValueInterface.(string)
+		if !ok {
+			return nil, fmt.Errorf("#21 failed to parse element as []interface{}. element: %#v", stakeElementValueInterface)
+		}
+
+		item := ElectionParticipant{
+			Id:                 idElementValue,
+			Stake:              stakeElementValue,
+		}
+		participants = append(participants, item)
+	}
+
+	return &participants, nil
 }
 
-func (client *Client) GetParticipantListExtended(electorAddress string) (*[]ElectionParticipant, error) {
+func (client *Client) GetParticipantListExtended(electorAddress string) (*[]ElectionParticipantExtended, error) {
 	smcInfo, err := client.LoadContract(electorAddress)
 	if err != nil {
 		return nil, err
@@ -171,7 +279,7 @@ func (client *Client) GetParticipantListExtended(electorAddress string) (*[]Elec
 	}
 
 	// parse elements
-	participants := []ElectionParticipant{}
+	participants := []ElectionParticipantExtended{}
 	for _, el := range elementsList {
 		tupleEl, ok := el.(map[string]interface{})
 		if !ok {
@@ -266,7 +374,7 @@ func (client *Client) GetParticipantListExtended(electorAddress string) (*[]Elec
 			}
 		}
 
-		item := ElectionParticipant{
+		item := ElectionParticipantExtended{
 			Id:                 idElementValue,
 			Stake:              values[0],
 			MaxFactor:          values[1],
