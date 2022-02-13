@@ -382,7 +382,7 @@ func generateStructsFromTnEntities(
 				}
 			}
 
-			illStr := `fmt.Errorf("error! code: %d msg: %s", result.Data["code"], result.Data["message"])`
+			illStr := `fmt.Errorf("error! code: %v msg: %s", result.Data["code"], result.Data["message"])`
 			if strings.Contains(paramsStr, returnTypeCamel) {
 				returnTypeCamel = returnTypeCamel + "Dummy"
 			}
